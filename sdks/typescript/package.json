@@ -1,7 +1,7 @@
 {
-  "name": "@docaiq/sdk",
+  "name": "@docaiquest/sdk",
   "version": "0.1.0",
-  "description": "Official TypeScript/JavaScript SDK for the DocAIQ document-intelligence API",
+  "description": "Official TypeScript/JavaScript SDK for the DocAIQuest document-intelligence API",
   "type": "module",
   "main": "index.js",
   "types": "index.d.ts",
@@ -11,10 +11,10 @@
     "README.md"
   ],
   "license": "MIT",
-  "author": "DocAIQ",
+  "author": "DocAIQuest",
   "homepage": "https://docaiq.jicama.tech",
   "keywords": [
-    "docaiq",
+    "docaiquest",
     "document-intelligence",
     "sdk"
   ]

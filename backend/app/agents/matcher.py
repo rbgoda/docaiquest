@@ -59,7 +59,7 @@ log = logging.getLogger("docaiq.agents.matcher")
 # confidence MUST be near zero. Reusing the chat prompt caused a false
 # positive where a confident "no" came back at 0.88 and got auto-attached.
 _MATCH_SYSTEM_PROMPT = """\
-You are DocAIQ's Matcher — deciding whether a document satisfies a specific
+You are DocAIQuest's Matcher — deciding whether a document satisfies a specific
 compliance requirement.
 
 Read the evidence excerpts. Decide if they DIRECTLY establish that the

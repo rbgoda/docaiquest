@@ -1,9 +1,9 @@
 {
-  "name": "docaiq",
+  "name": "docaiquest",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Multi-Agentic Graph RAG Self-Learning Auto-Audit Platform",
+  "description": "Open-source document intelligence engine — parse, extract, graph, chat.",
   "scripts": {
     "sync-faq": "mkdir -p public/help && (test -f docs/FAQ.md && cp docs/FAQ.md public/help/FAQ.md) || true",
     "predev": "npm run sync-faq",

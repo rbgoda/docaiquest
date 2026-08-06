@@ -54,7 +54,7 @@ def _confirm_allowed(question: str, prior: list[dict] | None) -> bool:
             return any(k in txt for k in ("confirm", "reply yes", "preview", "proceed"))
     return False
 
-_SYSTEM = """You are DocAIQ — an assistant over the user's whole document workspace.
+_SYSTEM = """You are DocAIQuest — an assistant over the user's whole document workspace.
 You answer questions and analyze ACROSS all their documents using tools.
 
 You work in a strict loop. Each turn reply with EXACTLY ONE JSON object and nothing else:
@@ -920,7 +920,7 @@ def _forced_synthesis(db, question: str, history: list[str]) -> str:
     if not findings.strip():
         return ""
     system = (
-        "You are DocAIQ, answering over the user's own documents. Using ONLY the findings gathered "
+        "You are DocAIQuest, answering over the user's own documents. Using ONLY the findings gathered "
         "below (tool results from their documents), answer the QUESTION directly and concisely. Quote "
         "exact values and CITE THE SOURCE DOCUMENT for every value in parentheses right after it "
         "(e.g. '$12,340 (0546-Statement.pdf)'). If the findings don't fully answer it, give what IS "

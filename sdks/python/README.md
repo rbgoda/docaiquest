@@ -1,17 +1,17 @@
-# docaiq — Python SDK
+# docaiquest — Python SDK
 
-Official Python SDK for the [DocAIQ](https://docaiq.jicama.tech) document-intelligence API.
+Official Python SDK for the [DocAIQuest](https://docaiq.jicama.tech) document-intelligence API.
 
 ## Install
 
 ```bash
-pip install docaiq
+pip install docaiquest
 ```
 
 ## Usage
 
 ```python
-from docaiq import Client
+from docaiquest import Client
 
 client = Client("dq_live_…")
 
@@ -42,7 +42,7 @@ Non-2xx responses raise `DocaiqError`, which carries `status_code` and the
 API's `detail` message:
 
 ```python
-from docaiq import Client, DocaiqError
+from docaiquest import Client, DocaiqError
 
 try:
     client.ask("…")

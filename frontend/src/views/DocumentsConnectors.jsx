@@ -200,7 +200,7 @@ export default function DocumentsConnectors({ onSynced }) {
                 </div>
               </div>
               <div className="ink3" style={{ fontSize: 11, marginTop: 10, lineHeight: 1.5 }}>
-                Drop files into the <b className="mono" style={{ color: "var(--ink2)" }}>docaiq_docs</b> folder in your Google Drive, then Sync. DocAIQ only ever looks at this one folder.
+                Drop files into the <b className="mono" style={{ color: "var(--ink2)" }}>docaiq_docs</b> folder in your Google Drive, then Sync. DocAIQuest only ever looks at this one folder.
               </div>
               {inbox?.files?.length > 0 && (
                 <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4 }}>

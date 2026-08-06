@@ -51,7 +51,7 @@ def trace_for_message(message_pk: int, db: Session = Depends(get_session)) -> di
     if not is_cloud():
         raise HTTPException(status_code=403, detail={
             "code": "cloud_feature",
-            "message": "LLM cost analytics is a DocAIQ Cloud feature — not available on this OSS deployment.",
+            "message": "LLM cost analytics is a DocAIQuest Cloud feature — not available on this OSS deployment.",
         })
     tid = get_current_tenant()
     rows = db.scalars(

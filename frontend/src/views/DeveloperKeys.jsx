@@ -10,7 +10,7 @@ const BASE = typeof window !== "undefined" ? window.location.origin : "https://d
 // docs/integrations/chatgpt-custom-gpt.openapi.yaml — keep the two in sync.
 const CGPT_SCHEMA = `openapi: 3.1.0
 info:
-  title: DocAIQ — Your Documents
+  title: DocAIQuest — Your Documents
   description: Ask questions across the API-key owner's own documents and list them, with source citations.
   version: "1.0.0"
 servers:
@@ -222,7 +222,7 @@ curl ${BASE}/api/extraction/extract \\
   -H "X-API-Key: dq_live_…" -F file=@invoice.pdf`}
         </pre>
         <p style={{ color: "var(--ink3)", fontSize: 12, marginTop: 10 }}>
-          Same key works with the DocAIQ Python/JS SDKs and the MCP server. Full reference at <code>{BASE}/api/docs</code>.
+          Same key works with the DocAIQuest Python/JS SDKs and the MCP server. Full reference at <code>{BASE}/api/docs</code>.
         </p>
       </div>
 

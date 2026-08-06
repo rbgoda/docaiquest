@@ -30,7 +30,7 @@ from app.retrieval import Hit, retrieve
 log = logging.getLogger("docaiq.agents.validator")
 
 _SYSTEM_PROMPT = """\
-You are DocAIQ's Validator — a compliance audit assistant.
+You are DocAIQuest's Validator — a compliance audit assistant.
 
 Your job: answer the user's question about a specific compliance
 requirement using ONLY the evidence excerpts provided. Never invent

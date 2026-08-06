@@ -10,13 +10,13 @@ services:
   backend:
     build:
       dockerfile: Dockerfile.min
-    image: docaiq-docmod-backend:slim
+    image: docaiquest-backend:slim
     environment:
       DOCAIQ_EMBED_BACKEND: dashscope
       DOCAIQ_RERANKER_ENABLED: "false"
 
   worker:
-    image: docaiq-docmod-backend:slim
+    image: docaiquest-backend:slim
     environment:
       DOCAIQ_EMBED_BACKEND: dashscope
       DOCAIQ_RERANKER_ENABLED: "false"

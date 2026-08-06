@@ -1,5 +1,5 @@
-# Standalone DocAIQ Documents module.
-PROJECT=docaiq-docmod
+# Standalone DocAIQuest module.
+PROJECT=docaiquest
 up:
 	docker compose -p $(PROJECT) --env-file .env up -d --build
 	@echo "→ Documents at http://localhost:$${DOCAIQ_HOST_PORT:-8085}"

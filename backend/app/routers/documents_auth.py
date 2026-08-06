@@ -251,14 +251,14 @@ def contact_us(payload: ContactPayload) -> dict:
     to = settings.contact_email or settings.email_from
     e = _html.escape
     html_body = (
-        "<p><b>New contact request — DocAIQ</b></p>"
+        "<p><b>New contact request — DocAIQuest</b></p>"
         f"<p><b>Name:</b> {e(fn)} {e(ln)}<br><b>Business email:</b> {e(email)}</p>"
         f"<p><b>Message:</b><br>{e(desc).replace(chr(10), '<br>')}</p>"
     )
     text_body = f"New contact — {fn} {ln} <{email}>\n\n{desc}"
     try:
         from app.email import send_email
-        send_email(to=to, subject=f"DocAIQ contact: {fn} {ln}", html=html_body, text=text_body)
+        send_email(to=to, subject=f"DocAIQuest contact: {fn} {ln}", html=html_body, text=text_body)
     except Exception as ex:  # noqa: BLE001
         log.warning("contact_us: send failed: %s", ex)  # send_email logs in dev mode anyway
     return {"ok": True}

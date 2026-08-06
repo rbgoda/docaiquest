@@ -259,7 +259,7 @@ function PdfPage({ pdf, pageNumber, zoom, highlights, focusedHl, onPinClick, ext
     });
     if (!matches.length) return null;
     console.warn(
-      "[DocAIQ bbox] text-search fallback used",
+      "[DocAIQuest bbox] text-search fallback used",
       { hlId: hl.id, pin: hl.pin, page: pageNumber, needles: needles.slice(0, 5), matchCount: matches.length },
       "— bbox not in line_map/block_map; highlight may be imprecise",
     );

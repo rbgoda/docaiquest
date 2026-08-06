@@ -253,7 +253,7 @@ def _answer_type_listing(db: Session, tenant_id: str, wkey: str, phrase: str,
         compact = _json.dumps(f, ensure_ascii=False)[:2500] if isinstance(f, dict) else "{}"
         blocks.append(f"Document: {d.name} (type={d.doc_type})\nExtracted fields: {compact}")
     system = (
-        f"You are DocAIQ. Tabulate the {phrase} documents below — these are ONLY the "
+        f"You are DocAIQuest. Tabulate the {phrase} documents below — these are ONLY the "
         f"workspace's {phrase} documents, already selected by their classified type, "
         "with their extracted fields. Output ONE markdown table, one row per "
         "document, with sensible columns for this kind (e.g. Document, Name, ID "
@@ -467,7 +467,7 @@ def _general_assistant(question: str, prior: list | None) -> str | None:
     if "/" not in model:  # gateway routes by provider prefix
         model = f"dashscope/{model}"
     sys = (
-        "You are DocAIQ's assistant. DocAIQ helps users with THEIR uploaded documents. Decide: if "
+        "You are DocAIQuest's assistant. DocAIQuest helps users with THEIR uploaded documents. Decide: if "
         "this question is about the user's personal or uploaded documents (their invoices, IDs, "
         "statements, resumes, or finding/summarising/comparing specific files), reply with EXACTLY "
         "'NEED_DOCUMENT' and nothing else. Otherwise answer the general question helpfully and "
@@ -1003,7 +1003,7 @@ def post_message(
         doc_list += f"\n  · …and {len(docs) - 40} more"
 
     _intro = (
-        "You are DocAIQ — a document audit assistant answering across a SET "
+        "You are DocAIQuest — a document audit assistant answering across a SET "
         "of documents. Be precise. No filler.\n\n"
     )
     _applied_frags: list[str] | None = None

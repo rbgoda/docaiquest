@@ -1,6 +1,6 @@
 // Type declarations for @docaiq/sdk.
 
-export interface DocaiqClientOptions {
+export interface DocaiquestClientOptions {
   /** Owner-scoped API key, e.g. `dq_live_...`. */
   apiKey: string;
   /** API base URL. Defaults to https://docaiq.jicama.tech */
@@ -36,8 +36,8 @@ export interface ExtractResult {
   confidence?: number;
 }
 
-export declare class DocaiqClient {
-  constructor(options: DocaiqClientOptions);
+export declare class DocaiquestClient {
+  constructor(options: DocaiquestClientOptions);
 
   /** Ask a grounded question across the owner's documents. */
   ask(
@@ -52,4 +52,4 @@ export declare class DocaiqClient {
   extract(file: Blob | File, filename?: string): Promise<ExtractResult>;
 }
 
-export default DocaiqClient;
+export default DocaiquestClient;

@@ -211,12 +211,12 @@ def event_ics(
     ymd = dt.strftime("%Y%m%d")
     uid = f"{doc.id_external}-{field}@docaiq"
     lines = [
-        "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//DocAIQ//Assistant//EN",
+        "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//DocAIQuest//Assistant//EN",
         "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
         "BEGIN:VEVENT", f"UID:{uid}",
         f"DTSTART;VALUE=DATE:{ymd}", f"DTEND;VALUE=DATE:{ymd}",
         f"SUMMARY:{_ics_escape(summary)}",
-        f"DESCRIPTION:{_ics_escape(suggestion + '  · From DocAIQ · ' + (doc.name or ''))}",
+        f"DESCRIPTION:{_ics_escape(suggestion + '  · From DocAIQuest · ' + (doc.name or ''))}",
         "TRANSP:TRANSPARENT",
         "BEGIN:VALARM", f"TRIGGER:-P{remind_days}D", "ACTION:DISPLAY",
         f"DESCRIPTION:{_ics_escape(summary)}", "END:VALARM",

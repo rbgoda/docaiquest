@@ -8,7 +8,7 @@ export const Logo = () => (
   <div className="row gap-2" style={{ gap: 10 }}>
     <div className="brand-mark">Aiq</div>
     <div className="serif font-semibold app-logo-text" style={{ fontSize: 17, letterSpacing: "-0.01em" }}>
-      DocAIQ<span className="italic font-normal ink2"> / audit</span>
+      DocAIQuest
     </div>
   </div>
 );

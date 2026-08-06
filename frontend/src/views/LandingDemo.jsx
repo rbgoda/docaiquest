@@ -396,7 +396,7 @@ function CorrectDemo() {
         </div>
         <div className="lddemo-ctxt">
           <div className="lddemo-csteps">
-            {["AI flags a low-confidence field", "You draw the right box — one fix", "DocAIQ learns it — next time it's automatic"].map((t, i) => (
+            {["AI flags a low-confidence field", "You draw the right box — one fix", "DocAIQuest learns it — next time it's automatic"].map((t, i) => (
               <div key={i} className={`lddemo-cstep${phase === i ? " on" : ""}`}><b>{i + 1}</b> {t}</div>
             ))}
           </div>
@@ -550,7 +550,7 @@ export default function LandingDemo() {
       <style>{LDDEMO_CSS}</style>
       <div className="ld-wrap">
         <div className="ld-kicker">See it in action · no signup</div>
-        <h2 className="ld-h2">Watch DocAIQ <span className="ld-gold">read a document.</span></h2>
+        <h2 className="ld-h2">Watch DocAIQuest <span className="ld-gold">read a document.</span></h2>
 
         {/* document-type switcher — proves "any type" with real boxes on each, + a cross-doc chat */}
         <div className="lddemo-switch" role="tablist" aria-label="Demo document">

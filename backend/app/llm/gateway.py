@@ -961,7 +961,7 @@ def _proxy_stub(model: str, messages: list[Message]) -> CompletionResult:
     tasks reach here when proxy_base_url/proxy_api_key are unset. Refuses
     loudly instead of silently degrading to canned answers."""
     raise CloudProxyUnavailableError(
-        f"Model {model!r} requires the DocAIQ Cloud proxy, which is not configured "
+        f"Model {model!r} requires the DocAIQuest Cloud proxy, which is not configured "
         "on this deployment. Set DOCAIQ_LICENSE_MODE=cloud and configure "
         "DOCAIQ_PROXY_BASE_URL / DOCAIQ_PROXY_API_KEY, or use a local "
         "provider-prefixed model instead."

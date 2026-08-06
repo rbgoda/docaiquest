@@ -61,12 +61,12 @@ function PlanBadge({ sub, isCloud }) {
       <span className="mono" style={{
         fontSize: 11, color: "var(--green)", border: "1px solid var(--green)",
         borderRadius: 999, padding: "3px 9px", whiteSpace: "nowrap",
-      }}>DocAIQ OSS</span>
+      }}>DocAIQuest OSS</span>
     );
   }
   if (!sub) return null;
   const eff = sub.effectivePlan;
-  const upgrade = () => { window.location.href = "mailto:sales@docaiq.jicama.tech?subject=DocAIQ%20Pro%20upgrade"; };
+  const upgrade = () => { window.location.href = "mailto:sales@docaiq.jicama.tech?subject=DocAIQuest%20Pro%20upgrade"; };
   let label, tone = "var(--ink3)", showUpgrade = false;
   if (eff === "trial") {
     const d = sub.trialDaysLeft ?? 0;

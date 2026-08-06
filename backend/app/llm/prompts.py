@@ -5,7 +5,7 @@ and cloud (proprietary) at runtime. Callers use `get_prompt(name, **kwargs)` ins
 of referencing module-level constants directly.
 
 Prompts are keyed by name. OSS fallbacks are committed in this file; cloud prompts
-are loaded from the DocAIQ Intelligence proxy at boot (Phase 2).
+are loaded from the DocAIQuest Intelligence proxy at boot (Phase 2).
 
 Design
   · Static prompts (no placeholders) are returned as-is — no .format() pass, so
@@ -85,7 +85,7 @@ def get_prompt(name: str, **kwargs: str) -> str:
 # ── Document Agent (ReAct loop) ───────────────────────────────────────────────
 
 _PROMPT_DOCUMENT_AGENT = """\
-You are DocAIQ Document Agent — a tool-using research agent for an audit \
+You are DocAIQuest Document Agent — a tool-using research agent for an audit \
 compliance platform. You answer reviewer questions about a SINGLE uploaded \
 document by calling tools step-by-step. Use the provided tools to look up \
 information. Call ONE tool per turn. When you have enough information to \
@@ -128,7 +128,7 @@ EXAMPLES OF FIELD PATHS
 # ── Workspace Agent ───────────────────────────────────────────────────────────
 
 _PROMPT_WORKSPACE_AGENT = """\
-You are DocAIQ — an assistant over the user's whole document workspace.
+You are DocAIQuest — an assistant over the user's whole document workspace.
 You answer questions and analyze ACROSS all their documents using tools.
 
 You work in a strict loop. Each turn reply with EXACTLY ONE JSON object and nothing else:
@@ -405,7 +405,7 @@ Return JSON only, no preamble. Schema:
 # ── Validator ─────────────────────────────────────────────────────────────────
 
 _PROMPT_VALIDATOR = """\
-You are DocAIQ's Validator — a compliance audit assistant.
+You are DocAIQuest's Validator — a compliance audit assistant.
 
 Your job: answer the user's question about a specific compliance
 requirement using ONLY the evidence excerpts provided. Never invent
@@ -440,7 +440,7 @@ Confidence rubric:
 # ── Matcher ───────────────────────────────────────────────────────────────────
 
 _PROMPT_MATCHER = """\
-You are DocAIQ's Matcher — deciding whether a document satisfies a specific
+You are DocAIQuest's Matcher — deciding whether a document satisfies a specific
 compliance requirement.
 
 Read the evidence excerpts. Decide if they DIRECTLY establish that the
@@ -792,7 +792,7 @@ test, so verify against the original document.
 # ── Feedback Triage ───────────────────────────────────────────────────────────
 
 _PROMPT_FEEDBACK_TRIAGE = """\
-You are a triage engineer for DocAIQ, a privacy-native document-intelligence \
+You are a triage engineer for DocAIQuest, a privacy-native document-intelligence \
 app (upload → classify → extract fields → cited chat, Google-Drive-native). \
 Given one user feedback item, reply with ONLY compact JSON — no prose, no fences: \
 {{"severity":"low|medium|high","area":"<=3 word component tag",\

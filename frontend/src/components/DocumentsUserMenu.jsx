@@ -64,7 +64,7 @@ function WorkspacePanel() {
     if (turningOn) {
       const ok = await confirmDialog({
         title: "Encrypt your files in Google Drive?",
-        body: "Your files stored in Drive will be replaced with encrypted versions — Google can't read them, and you'll only be able to open them through DocAIQ (not directly in Drive). Existing files are re-encrypted now. You can turn this off later.",
+        body: "Your files stored in Drive will be replaced with encrypted versions — Google can't read them, and you'll only be able to open them through DocAIQuest (not directly in Drive). Existing files are re-encrypted now. You can turn this off later.",
         confirmLabel: "Encrypt my Drive files",
       });
       if (!ok) return;
@@ -89,7 +89,7 @@ function WorkspacePanel() {
           We can package everything we hold for you — documents, extracted data,
           chat, and learned types — into a single <strong>encrypted</strong> file
           and store it in <strong>your own Google Drive</strong>
-          (<code>docaiq_docs/.workspace/</code>). Only you (via DocAIQ) can decrypt it.
+          (<code>docaiq_docs/.workspace/</code>). Only you (via DocAIQuest) can decrypt it.
         </div>
       </div>
       {status === undefined ? <div className="ink4" style={{ fontSize: 12 }}>Loading…</div>
@@ -129,7 +129,7 @@ function WorkspacePanel() {
             <div className="font-semibold" style={{ fontSize: 13 }}>Encrypt my Drive files</div>
             <div className="ink3" style={{ fontSize: 11, marginTop: 2, lineHeight: 1.5 }}>
               Replace your files in Drive with encrypted versions. Google can't read them;
-              you open them via DocAIQ only (not directly in Drive).
+              you open them via DocAIQuest only (not directly in Drive).
             </div>
           </span>
           <input type="checkbox" checked={!!encOn} disabled={encBusy || encOn === null}
@@ -138,8 +138,8 @@ function WorkspacePanel() {
         {encBusy && <div className="ink4" style={{ fontSize: 11, marginTop: 6 }}>Re-encrypting your Drive files…</div>}
       </div>
       <div className="ink4" style={{ fontSize: 11 }}>
-        Experimental. Your data also stays in DocAIQ for now — this is the first
-        step toward DocAIQ keeping nothing durable.
+        Experimental. Your data also stays in DocAIQuest for now — this is the first
+        step toward DocAIQuest keeping nothing durable.
       </div>
     </div>
   );
@@ -163,7 +163,7 @@ function LearnedTypesPanel() {
   if (!types.length) return <div className="ink3" style={{ fontSize: 13, fontStyle: "italic" }}>No learned types yet. As your documents are classified, the vocabulary grows here.</div>;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <div className="ink3" style={{ fontSize: 12 }}>Types DocAIQ learned from your docs. <strong>Distilled</strong> = similar docs auto-type with no AI call.</div>
+      <div className="ink3" style={{ fontSize: 12 }}>Types DocAIQuest learned from your docs. <strong>Distilled</strong> = similar docs auto-type with no AI call.</div>
       {types.map(t => {
         const c = cands[t.slug];
         return (
@@ -287,7 +287,7 @@ function ProfilePanel({ user }) {
         {row("Workspace", "Private to you")}
       </div>
       <div className="ink4" style={{ fontSize: 11, marginTop: 14, lineHeight: 1.5 }}>
-        Your email is your DocAIQ profile ID — it's how your private workspace is keyed. Documents, extractions, and chats are isolated to this account; no one else can see them.
+        Your email is your DocAIQuest profile ID — it's how your private workspace is keyed. Documents, extractions, and chats are isolated to this account; no one else can see them.
       </div>
     </div>
   );
@@ -405,7 +405,7 @@ function FeedbackPanel() {
     <div style={{ textAlign: "center", padding: "24px 0" }}>
       <div style={{ fontSize: 34, marginBottom: 8 }}>🙏</div>
       <div style={{ color: "var(--ink)", fontWeight: 600, marginBottom: 4 }}>Thanks for the feedback!</div>
-      <div className="ink3" style={{ fontSize: 12 }}>We read every note — it helps us improve DocAIQ.</div>
+      <div className="ink3" style={{ fontSize: 12 }}>We read every note — it helps us improve DocAIQuest.</div>
     </div>
   );
   const CATS = [["bug", "🐞", "Bug"], ["idea", "💡", "Idea"], ["praise", "💚", "Praise"], ["other", "💬", "Other"]];
@@ -420,7 +420,7 @@ function FeedbackPanel() {
   return (
     <div>
       <div className="ink3" style={{ fontSize: 12, marginBottom: 12 }}>
-        Tell us how DocAIQ is working for you — bugs, ideas, anything.
+        Tell us how DocAIQuest is working for you — bugs, ideas, anything.
       </div>
       {/* category tabs (Bug / Idea / Praise / Other) */}
       <div className="row" style={{ gap: 8, marginBottom: 14 }}>
@@ -518,7 +518,7 @@ function AppearancePanel() {
   };
   return (
     <div>
-      <div className="ink3" style={{ fontSize: 12, marginBottom: 12 }}>Choose how DocAIQ Documents looks. Saved to this browser.</div>
+      <div className="ink3" style={{ fontSize: 12, marginBottom: 12 }}>Choose how DocAIQuest looks. Saved to this browser.</div>
       <div className="row gap-3">
         {card("dark", "Dark", "Editorial default", "linear-gradient(135deg,#15130f,#211c14)")}
         {card("light", "Light", "Warm paper cream", "linear-gradient(135deg,#F4EFE6,#E8E0D2)")}
@@ -541,7 +541,7 @@ function PrivacyPanel({ onOpenConnectors }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {item("🔒", "Per-user isolation", "Every document, extraction, and answer is scoped to your account at the database layer.")}
       {item("🛡️", "PII-safe AI", "Personal identifiers are redacted before any text is sent to an LLM, and the redactions are logged to an audit ledger.")}
-      {item("🗂️", "Your data, your control", "Your original files stay in your own Google Drive. The actions below cover the data DocAIQ processes server-side.")}
+      {item("🗂️", "Your data, your control", "Your original files stay in your own Google Drive. The actions below cover the data DocAIQuest processes server-side.")}
       <DataRightsActions />
       {onOpenConnectors && (
         <button onClick={onOpenConnectors} className="border bg2 hover-bg row gap-2"
@@ -563,7 +563,7 @@ function DataRightsActions() {
     try {
       const data = await exportMyData();
       const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
-      const a = document.createElement("a"); a.href = url; a.download = "docaiq-my-data.json"; a.click(); URL.revokeObjectURL(url);
+      const a = document.createElement("a"); a.href = url; a.download = "docaiquest-my-data.json"; a.click(); URL.revokeObjectURL(url);
     } catch (e) { alert("Export failed: " + (e.message || "")); } finally { setBusy(null); }
   };
   const onErase = async () => {

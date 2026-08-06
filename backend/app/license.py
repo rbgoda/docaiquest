@@ -10,5 +10,5 @@ from app.config import get_settings
 
 
 def is_cloud() -> bool:
-    """Return True when the deployment is DocAIQ Cloud (premium proxy-based)."""
+    """Return True when the deployment is DocAIQuest Cloud (premium proxy-based)."""
     return get_settings().license_mode == "cloud"

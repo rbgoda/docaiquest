@@ -204,7 +204,7 @@ export function buildReportHtml(theme, dash, tfLabel, insights, nowStr) {
     .sort((a, b) => { const w = (k) => (k === "table" || k === "trend" || k === "multitrend" || k === "panels" || k === "matrix") ? 1 : 0; return w(a.kind) - w(b.kind); });
   const cards = sections.map(cardHtml).join("");
 
-  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(theme.label)} — DocAIQ</title><style>
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(theme.label)} — DocAIQuest</title><style>
     @page { size: A4; margin: 13mm; }
     * { box-sizing: border-box; }
     body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #141821; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -298,7 +298,7 @@ export function buildReportHtml(theme, dash, tfLabel, insights, nowStr) {
     ${summaryBlock(theme, dash, tfLabel)}
     ${insightsHtml(insights)}
     <div class="grid">${cards}</div>
-    <footer><span>DocAIQ · Analytics</span><span>Generated ${esc(now)}</span></footer>
+    <footer><span>DocAIQuest · Analytics</span><span>Generated ${esc(now)}</span></footer>
   </body></html>`;
   return html;
 }

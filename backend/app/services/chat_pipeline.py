@@ -473,7 +473,7 @@ def _step_full_doc_ctx(ctx: ChatContext) -> ChatMessage | None:
     # filler. The materialized JSON (when present) helps the model lock
     # onto exact values instead of paraphrasing them.
     system = (
-        "You are DocAIQ — document audit assistant. Be precise. No filler.\n\n"
+        "You are DocAIQuest — document audit assistant. Be precise. No filler.\n\n"
         "RULES:\n"
         "  · Single-value question (how much / when / who / what number) → "
         "ONE LINE answer. Quote the exact value from the document. No preamble.\n"
@@ -765,7 +765,7 @@ def _step_rag_retrieval(ctx: ChatContext) -> ChatMessage | None:
         evidence, cap=600, empty="(no evidence retrieved)", prefix_lines=list(hl_lines))
 
     system = (
-        "You are DocAIQ — document audit assistant. Be precise. No filler.\n\n"
+        "You are DocAIQuest — document audit assistant. Be precise. No filler.\n\n"
         "RULES:\n"
         "  · Single-value question → ONE LINE. Quote the exact value.\n"
         "  · List question → markdown table or short bullet list.\n"

@@ -1,10 +1,10 @@
-// Official TypeScript/JavaScript SDK for the DocAIQ document-intelligence API.
+// Official TypeScript/JavaScript SDK for the DocAIQuest document-intelligence API.
 //
 // Zero runtime dependencies: uses the global `fetch` and `FormData` (Node 18+
 // and all modern browsers). Every request is authenticated with an owner-scoped
 // API key sent in the `X-API-Key` header (a key looks like `dq_live_...`).
 
-export class DocaiqClient {
+export class DocaiquestClient {
   /**
    * @param {{ apiKey: string, baseUrl?: string }} opts
    */
@@ -82,4 +82,4 @@ export class DocaiqClient {
   }
 }
 
-export default DocaiqClient;
+export default DocaiquestClient;

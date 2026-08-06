@@ -159,7 +159,7 @@ export default function DocumentsLanding({ onSignIn }) {
         <div className="ld-wrap ld-navrow">
           <a className="ld-brand" href="#top">
             <span className="ld-mark">D</span>
-            <span className="ld-wordmark">Doc<span>AIQ</span><small>Documents</small></span>
+            <span className="ld-wordmark">Doc<span>AIQuest</span></span>
           </a>
           <div className="ld-links">
             <a href="#flow">How it works</a>
@@ -198,7 +198,7 @@ export default function DocumentsLanding({ onSignIn }) {
       {/* WHY DIFFERENT — the three genuinely unique values, tightened */}
       <section id="why" className="ld-sec">
         <div className="ld-wrap">
-          <div className="ld-kicker">Why DocAIQ</div>
+          <div className="ld-kicker">Why DocAIQuest</div>
           <h2 className="ld-h2">Three things <span className="ld-gold">no one else does together.</span></h2>
           <div className="ld-grid ld-g3 ld-why">
             <div className="ld-uc ld-uc1">
@@ -249,7 +249,7 @@ export default function DocumentsLanding({ onSignIn }) {
           <h2 className="ld-h2">They ground AI on your data — <span className="ld-gold">but keep it on their cloud.</span></h2>
           <div className="ld-tablewrap">
             <table className="ld-cmp">
-              <thead><tr><th>Capability</th><th>Office AI suite</th><th>Workspace AI</th><th>AI chatbot</th><th className="ld-col-us">DocAIQ Documents</th></tr></thead>
+              <thead><tr><th>Capability</th><th>Office AI suite</th><th>Workspace AI</th><th>AI chatbot</th><th className="ld-col-us">DocAIQuest</th></tr></thead>
               <tbody>
                 <tr><td>Where your data lives</td><td>Vendor cloud</td><td>Vendor cloud</td><td>Vendor cloud</td><td className="ld-col-us ld-us">Your own Drive</td></tr>
                 <tr><td>Keeps a copy of your originals</td><td className="ld-no">Yes</td><td className="ld-no">Yes</td><td className="ld-no">Yes</td><td className="ld-col-us ld-us">No — they stay in your Drive</td></tr>
@@ -398,9 +398,9 @@ export default function DocumentsLanding({ onSignIn }) {
           <div className="ld-faq">
             {[
               ['How does it work?',
-               'Upload documents or connect a Drive folder → DocAIQ extracts the key facts, builds dashboards, and answers questions across everything — with answers you can trace to the source.'],
+               'Upload documents or connect a Drive folder → DocAIQuest extracts the key facts, builds dashboards, and answers questions across everything — with answers you can trace to the source.'],
               ['Where do my documents live? Do you keep a copy?',
-               'Always in your own Google Drive (encryption optional) — delete your account anytime to purge all DocAIQ metadata; your Drive and files stay with you.'],
+               'Always in your own Google Drive (encryption optional) — delete your account anytime to purge all DocAIQuest metadata; your Drive and files stay with you.'],
               ['Is my private data safe?',
                'Yes — sensitive details (passport, account number, DOB, email…) are masked before processing; on paid plans your uploads are never used for training.'],
               ['Can it answer across all my documents?',
@@ -420,7 +420,7 @@ export default function DocumentsLanding({ onSignIn }) {
       {/* CTA BAND */}
       <section className="ld-sec ld-ctaband">
         <div className="ld-wrap">
-          <h2 className="ld-h2">Most document AI keeps your documents.<br/><span className="ld-gold">DocAIQ keeps them in your Drive.</span></h2>
+          <h2 className="ld-h2">Most document AI keeps your documents.<br/><span className="ld-gold">DocAIQuest keeps them in your Drive.</span></h2>
           <p className="ld-ctap">Any document, in your own Drive, purge anytime — start free in seconds.</p>
           <div className="ld-cta-row" style={{ justifyContent: "center" }}>
             <GoogleBtn />
@@ -431,12 +431,12 @@ export default function DocumentsLanding({ onSignIn }) {
 
       <footer className="ld-foot">
         <div className="ld-wrap ld-footrow">
-          <span>DocAIQ Documents — universal, privacy-native document intelligence</span>
+          <span>DocAIQuest — universal, privacy-native document intelligence</span>
           <span>
             <button type="button" className="ld-foot-link" onClick={() => setContactOpen(true)}>Contact us</button>
             {" · "}<a href="/privacy">Privacy</a> · <a href="/termsofservice">Terms</a>
             {" · "}PII-safe · GDPR · PDPA · your data stays yours
-            {" · "}<span className="ld-powered">Powered by DocAIQ</span>
+            {" · "}<span className="ld-powered">Powered by DocAIQuest</span>
           </span>
         </div>
       </footer>

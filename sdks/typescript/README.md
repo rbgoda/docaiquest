@@ -1,19 +1,19 @@
-# @docaiq/sdk — TypeScript / JavaScript SDK
+# @docaiquest/sdk — TypeScript / JavaScript SDK
 
-Official SDK for the [DocAIQ](https://docaiq.jicama.tech) document-intelligence API.
+Official SDK for the [DocAIQuest](https://docaiq.jicama.tech) document-intelligence API.
 Zero runtime dependencies — uses the global `fetch` and `FormData` (Node 18+ and
 modern browsers).
 
 ## Install
 
 ```bash
-npm i @docaiq/sdk
+npm i @docaiquest/sdk
 ```
 
 ## Usage
 
 ```js
-import { DocaiqClient } from "@docaiq/sdk";
+import { DocaiqClient } from "@docaiquest/sdk";
 
 const client = new DocaiqClient({ apiKey: "dq_live_…" });
 

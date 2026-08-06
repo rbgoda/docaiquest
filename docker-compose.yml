@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────
-# DocAIQ · per-tenant compose stack
+# DocAIQuest · per-tenant compose stack
 # ─────────────────────────────────────────────────────────────────────────
 # CRITICAL CONTRACT (TODO #33):
 #   Tenant isolation is enforced by the COMPOSE PROJECT NAME, not by the
@@ -9,12 +9,12 @@
 #   data crossover.
 #
 # ALWAYS launch via the Makefile:
-#   make up                     → project `docaiq-docmod`, port 8085
-#   make tenant-up T=acme       → project `docaiq-acme`,    port 8081 (or PORT=…)
+#   make up                     → project `docaiquest`, port 8085
+#   make tenant-up T=acme       → project `docaiquest-acme`, port 8081 (or PORT=…)
 #
 # DO NOT run `docker compose up` directly from this file without -p. The
-# default project name (`docaiq-docmod`) would NOT match the prod namespace
-# (`docaiq`, set via deploy.sh). The Makefile and deploy.sh each handle this
+# default project name (`docaiquest`) would NOT match the prod namespace
+# (`docaiquest`, set via deploy.sh). The Makefile and deploy.sh each handle this
 # correctly; bypass at your own risk.
 #
 # Each tenant ALSO has its own .tenants/<slug>.env with a cryptographically
@@ -24,7 +24,7 @@
 #
 # Compose v2 syntax. No top-level `version:` key needed.
 
-name: docaiq-docmod
+name: docaiquest
 
 services:
   postgres:
@@ -32,15 +32,15 @@ services:
     # as a drop-in. The migration enables the extension on first boot.
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_USER: docaiq
-      POSTGRES_PASSWORD: ${DOCAIQ_DB_PASSWORD:-docaiq-dev}
-      POSTGRES_DB: docaiq
+      POSTGRES_USER: docaiquest
+      POSTGRES_PASSWORD: ${DOCAIQ_DB_PASSWORD:-docaiquest-dev}
+      POSTGRES_DB: docaiquest
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - docaiq-net
+      - docaiquest-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U docaiq -d docaiq"]
+      test: ["CMD-SHELL", "pg_isready -U docaiquest -d docaiquest"]
       interval: 5s
       timeout: 3s
       start_period: 5s
@@ -51,7 +51,7 @@ services:
     image: redis:7-alpine
     command: redis-server --save "" --appendonly no
     networks:
-      - docaiq-net
+      - docaiquest-net
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -71,12 +71,12 @@ services:
     image: ${DOCAIQ_MINIO_IMAGE:-quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z}
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${DOCAIQ_S3_ACCESS_KEY:-docaiq}
-      MINIO_ROOT_PASSWORD: ${DOCAIQ_S3_SECRET_KEY:-docaiq-dev-secret-please-rotate}
+      MINIO_ROOT_USER: ${DOCAIQ_S3_ACCESS_KEY:-docaiquest}
+      MINIO_ROOT_PASSWORD: ${DOCAIQ_S3_SECRET_KEY:-docaiquest-dev-secret-please-rotate}
     volumes:
       - minio-data:/data
     networks:
-      - docaiq-net
+      - docaiquest-net
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s
@@ -89,7 +89,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: ${COMPOSE_PROJECT_NAME:-docaiq-docmod}-backend:dev
+    image: ${COMPOSE_PROJECT_NAME:-docaiquest}-backend:dev
     # No container_name: lets compose auto-name (<project>-backend-1) so a second
     # tenant under a different project name doesn't collide on the Docker daemon.
     # M44.P13 · tenant stacks are separate compose projects, so they reach the
@@ -111,7 +111,7 @@ services:
       # nginx and the SPA share an origin, so technically only the host port
       # matters here. Listed for clarity / direct-access debugging.
       DOCAIQ_CORS_ORIGINS: '["http://localhost:8080","http://127.0.0.1:8080"]'
-      DOCAIQ_DATABASE_URL: postgresql+psycopg://docaiq:${DOCAIQ_DB_PASSWORD:-docaiq-dev}@postgres:5432/docaiq
+      DOCAIQ_DATABASE_URL: postgresql+psycopg://docaiquest:${DOCAIQ_DB_PASSWORD:-docaiquest-dev}@postgres:5432/docaiquest
       # Per-tenant JWT secret. Required — compose refuses to boot without it.
       # `make up` / `make tenant-up` generate a cryptographically random
       # secret per tenant at .tenants/<slug>.env on first run and reuse it
@@ -124,9 +124,9 @@ services:
       # (no CORS, no presign rewriting, works identically per-tenant). In
       # production swap the endpoint to AWS S3 / Azure Blob / GCS via env.
       DOCAIQ_S3_ENDPOINT: http://minio:9000
-      DOCAIQ_S3_ACCESS_KEY: ${DOCAIQ_S3_ACCESS_KEY:-docaiq}
-      DOCAIQ_S3_SECRET_KEY: ${DOCAIQ_S3_SECRET_KEY:-docaiq-dev-secret-please-rotate}
-      DOCAIQ_S3_BUCKET: docaiq-${DOCAIQ_TENANT_ID:-default}
+      DOCAIQ_S3_ACCESS_KEY: ${DOCAIQ_S3_ACCESS_KEY:-docaiquest}
+      DOCAIQ_S3_SECRET_KEY: ${DOCAIQ_S3_SECRET_KEY:-docaiquest-dev-secret-please-rotate}
+      DOCAIQ_S3_BUCKET: docaiquest-${DOCAIQ_TENANT_ID:-default}
       DOCAIQ_S3_REGION: us-east-1
       DOCAIQ_REDIS_URL: redis://redis:6379/0
       # `local` = sentence-transformers all-MiniLM-L6-v2 (384d native, CPU, no API
@@ -195,7 +195,7 @@ services:
       DOCAIQ_DOCUMENTS_SUPERADMIN_EMAILS: ${DOCAIQ_DOCUMENTS_SUPERADMIN_EMAILS:-}
       DOCAIQ_SESSION_COOKIE_DOMAIN: ${DOCAIQ_SESSION_COOKIE_DOMAIN:-}
       DOCAIQ_RESEND_API_KEY: ${DOCAIQ_RESEND_API_KEY:-}
-      DOCAIQ_EMAIL_FROM: ${DOCAIQ_EMAIL_FROM:-DocAIQ <no-reply@docaiq.jicama.tech>}
+      DOCAIQ_EMAIL_FROM: ${DOCAIQ_EMAIL_FROM:-DocAIQuest <no-reply@docaiq.jicama.tech>}
       DOCAIQ_CONTACT_EMAIL: ${DOCAIQ_CONTACT_EMAIL:-}
       # M44.P6 · Alibaba Dashscope (Qwen3-VL direct). When set, models
       # prefixed `dashscope/` (e.g. dashscope/qwen3-vl-235b-a22b) route
@@ -269,7 +269,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - docaiq-net
+      - docaiquest-net
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8001/api/health').status==200 else 1)"]
       interval: 10s
@@ -282,7 +282,7 @@ services:
     # Same image as backend; just runs arq instead of uvicorn. One container
     # per tenant — the worker reads the tenant from DOCAIQ_TENANT_ID so jobs
     # always have a tenant context, identical to the API path.
-    image: ${COMPOSE_PROJECT_NAME:-docaiq-docmod}-backend:dev
+    image: ${COMPOSE_PROJECT_NAME:-docaiquest}-backend:dev
     command: ["arq", "app.worker.WorkerSettings"]
     # M44.P13 · the nightly knowledge promoter + sync crons (and the startup
     # seed) run HERE in the worker and call the control plane over the host.
@@ -294,15 +294,15 @@ services:
       DOCAIQ_ENVIRONMENT: ${DOCAIQ_ENVIRONMENT:-development}
       DOCAIQ_AUTH_PROVIDER: ${DOCAIQ_AUTH_PROVIDER:-dev}
       DOCAIQ_PRODUCT: ${DOCAIQ_PRODUCT:-auditing}
-      DOCAIQ_DATABASE_URL: postgresql+psycopg://docaiq:${DOCAIQ_DB_PASSWORD:-docaiq-dev}@postgres:5432/docaiq
+      DOCAIQ_DATABASE_URL: postgresql+psycopg://docaiquest:${DOCAIQ_DB_PASSWORD:-docaiquest-dev}@postgres:5432/docaiquest
       # Worker shares the tenant's JWT secret (so it can decode cookies the
       # API issued — used when worker emits authenticated callbacks). Same
       # required-or-fail behavior as backend.
       DOCAIQ_JWT_SECRET: ${DOCAIQ_JWT_SECRET:?DOCAIQ_JWT_SECRET must be set — use `make up` or `make tenant-up T=...`}
       DOCAIQ_S3_ENDPOINT: http://minio:9000
-      DOCAIQ_S3_ACCESS_KEY: ${DOCAIQ_S3_ACCESS_KEY:-docaiq}
-      DOCAIQ_S3_SECRET_KEY: ${DOCAIQ_S3_SECRET_KEY:-docaiq-dev-secret-please-rotate}
-      DOCAIQ_S3_BUCKET: docaiq-${DOCAIQ_TENANT_ID:-default}
+      DOCAIQ_S3_ACCESS_KEY: ${DOCAIQ_S3_ACCESS_KEY:-docaiquest}
+      DOCAIQ_S3_SECRET_KEY: ${DOCAIQ_S3_SECRET_KEY:-docaiquest-dev-secret-please-rotate}
+      DOCAIQ_S3_BUCKET: docaiquest-${DOCAIQ_TENANT_ID:-default}
       DOCAIQ_S3_REGION: us-east-1
       DOCAIQ_REDIS_URL: redis://redis:6379/0
       # `local` = sentence-transformers all-MiniLM-L6-v2 (384d native, CPU, no API
@@ -403,7 +403,7 @@ services:
       DOCAIQ_DOCUMENTS_SUPERADMIN_EMAILS: ${DOCAIQ_DOCUMENTS_SUPERADMIN_EMAILS:-}
       DOCAIQ_SESSION_COOKIE_DOMAIN: ${DOCAIQ_SESSION_COOKIE_DOMAIN:-}
       DOCAIQ_RESEND_API_KEY: ${DOCAIQ_RESEND_API_KEY:-}
-      DOCAIQ_EMAIL_FROM: ${DOCAIQ_EMAIL_FROM:-DocAIQ <no-reply@docaiq.jicama.tech>}
+      DOCAIQ_EMAIL_FROM: ${DOCAIQ_EMAIL_FROM:-DocAIQuest <no-reply@docaiq.jicama.tech>}
       DOCAIQ_CONTACT_EMAIL: ${DOCAIQ_CONTACT_EMAIL:-}
       # M44.P11 · PII redaction also applies to worker-side LLM calls
       # (KYC extraction, matcher validator, materializer). Same flag.
@@ -430,25 +430,25 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - docaiq-net
+      - docaiquest-net
     restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    image: ${COMPOSE_PROJECT_NAME:-docaiq-docmod}-frontend:dev
+    image: ${COMPOSE_PROJECT_NAME:-docaiquest}-frontend:dev
     depends_on:
       backend:
         condition: service_healthy
     ports:
       - "${DOCAIQ_HOST_PORT:-8085}:80"
     networks:
-      - docaiq-net
+      - docaiquest-net
     restart: unless-stopped
 
 networks:
-  docaiq-net:
+  docaiquest-net:
     driver: bridge
 
 volumes:

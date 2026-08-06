@@ -1,4 +1,4 @@
-"""Thin HTTP client for the DocAIQ REST API.
+"""Thin HTTP client for the DocAIQuest REST API.
 
 Every request is authenticated with an owner-scoped API key sent in the
 ``X-API-Key`` header (a key looks like ``dq_live_...``).
@@ -12,8 +12,8 @@ from typing import Any, Dict, List
 import requests
 
 
-class DocaiqError(Exception):
-    """Raised when the DocAIQ API returns a non-2xx response.
+class DocaiquestError(Exception):
+    """Raised when the DocAIQuest API returns a non-2xx response.
 
     ``status_code`` holds the HTTP status; the message is taken from the
     response body's ``detail`` field when present, otherwise the raw body.
@@ -25,11 +25,11 @@ class DocaiqError(Exception):
 
 
 class Client:
-    """A minimal, dependency-light DocAIQ API client.
+    """A minimal, dependency-light DocAIQuest API client.
 
     Example::
 
-        from docaiq import Client
+        from docaiquest import Client
         client = Client("dq_live_...")
         print(client.ask("Which invoices are due this month?")["answer"])
     """
@@ -63,7 +63,7 @@ class Client:
                 detail = detail or resp.text
             except ValueError:
                 detail = resp.text
-            raise DocaiqError(detail or f"HTTP {resp.status_code}", resp.status_code)
+            raise DocaiquestError(detail or f"HTTP {resp.status_code}", resp.status_code)
 
         return resp
 

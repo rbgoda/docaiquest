@@ -1,4 +1,4 @@
-# DocAIQ FAQ
+# DocAIQuest FAQ
 
 This is the canonical FAQ. It powers the in-app Help drawer (the **?** icon in the top bar) — each `### Q:` heading becomes one collapsible entry, filtered by the user's role.
 
@@ -8,7 +8,7 @@ If you add a question, follow the format: `### Q: <question text>` with optional
 
 ## Getting started
 
-### Q: What is DocAIQ?
+### Q: What is DocAIQuest?
 **Role:** all
 
 A multi-agentic, graph-backed, RAG-grounded auto-audit platform. AI agents do the first-pass evidence matching across hundreds of compliance requirements (SOC 2, ISO 27001, HIPAA, PCI-DSS, KYC, etc.), then surface uncertain cases to human auditors with reasoning traces, cited evidence spans, and side-by-side document comparisons.

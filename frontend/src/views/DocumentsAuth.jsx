@@ -161,7 +161,7 @@ export default function DocumentsAuth({ onBack }) {
                 <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)}
                   style={{ marginTop: 2, accentColor: "var(--gold2)", flexShrink: 0 }} />
                 <span className="ink2">
-                  I consent to DocAIQ processing my documents to extract data and answer
+                  I consent to DocAIQuest processing my documents to extract data and answer
                   questions, including sending <strong>redacted</strong> text to third-party
                   AI providers. My original files stay in my own Google Drive. I agree to the{" "}
                   <a href="/terms.html" target="_blank" rel="noopener" style={{ color: "var(--gold2)" }}>Terms</a>

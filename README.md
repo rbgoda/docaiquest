@@ -1,4 +1,4 @@
-# DocAIQ Documents
+# DocAIQuest
 
 **Open-source document intelligence engine.** Ingest, parse, chunk, embed,
 retrieve, and extract structured data from your documents — with AI-powered
@@ -8,7 +8,7 @@ chat. Originals stay in your own Google Drive. Privacy-native by default.
 
 ## What it does
 
-DocAIQ is a complete document intelligence platform covering the full chain:
+DocAIQuest is a complete document intelligence platform covering the full chain:
 **parse → chunk → embed → retrieve → extract → graph → chat → API → SDK.**
 
 ### File Type Support
@@ -184,7 +184,7 @@ DocAIQ is a complete document intelligence platform covering the full chain:
 ## Quick start
 
 ```bash
-git clone https://github.com/rbgoda/docaiq.git && cd docaiq
+git clone https://github.com/rbgoda/docaiquest.git && cd docaiquest
 cp .env.example .env
 # REQUIRED: set DOCAIQ_JWT_SECRET (any random string)
 # REQUIRED: at least one LLM provider key — DASHSCOPE_API_KEY (recommended)
@@ -197,7 +197,7 @@ make up
 make down   # stop
 ```
 
-**You bring your own LLM keys.** DocAIQ OSS does not include managed LLM access.
+**You bring your own LLM keys.** DocAIQuest OSS does not include managed LLM access.
 Set at least one of `DASHSCOPE_API_KEY`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`,
 `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, or `ANTHROPIC_API_KEY` in your `.env`.
 
@@ -261,9 +261,9 @@ Redis · Arq · MinIO (S3) · PyMuPDF · Docling · RapidOCR · BGE-M3 · senten
 
 ## License
 
-DocAIQ is [MIT](LICENSE) licensed. See [NOTICE](NOTICE) for third-party attributions,
+DocAIQuest is [MIT](LICENSE) licensed. See [NOTICE](NOTICE) for third-party attributions,
 including model weights and bundled libraries.
 
 ---
 
-Powered by DocAIQ — [docaiq.jicama.tech](https://docaiq.jicama.tech)
+Powered by DocAIQuest — [docaiq.jicama.tech](https://docaiq.jicama.tech)

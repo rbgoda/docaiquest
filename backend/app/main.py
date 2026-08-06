@@ -147,7 +147,7 @@ app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
     description=(
-        "**DocAIQ API** — build on your own documents.\n\n"
+        "**DocAIQuest API** — build on your own documents.\n\n"
         "Create an owner-scoped key in your account (**API keys**), then send it as "
         "`X-API-Key: dq_live_…` (or `Authorization: Bearer …`).\n\n"
         "- `POST /api/v1/ask` — grounded answer over *your* documents, with citations\n"

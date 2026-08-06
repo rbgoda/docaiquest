@@ -365,7 +365,7 @@ def llm_analytics(days: int = 30,
     if not is_cloud():
         raise HTTPException(status_code=403, detail={
             "code": "cloud_feature",
-            "message": "LLM cost analytics is a DocAIQ Cloud feature — not available on this OSS deployment.",
+            "message": "LLM cost analytics is a DocAIQuest Cloud feature — not available on this OSS deployment.",
         })
     from app.orm import LLMCall, Document
     tid = get_current_tenant()
@@ -570,7 +570,7 @@ def generate_schema(payload: SchemaGenPayload, db: Session = Depends(get_session
     if not is_cloud():
         raise HTTPException(status_code=403, detail={
             "code": "cloud_feature",
-            "message": "Schema Architect is a DocAIQ Cloud feature — not available on this OSS deployment.",
+            "message": "Schema Architect is a DocAIQuest Cloud feature — not available on this OSS deployment.",
         })
     import re as _re
     from app.agents import schema_architect
@@ -592,7 +592,7 @@ def run_schema_autopilot(background: BackgroundTasks, db: Session = Depends(get_
     if not is_cloud():
         raise HTTPException(status_code=403, detail={
             "code": "cloud_feature",
-            "message": "Schema Autopilot is a DocAIQ Cloud feature — not available on this OSS deployment.",
+            "message": "Schema Autopilot is a DocAIQuest Cloud feature — not available on this OSS deployment.",
         })
     """Adaptive Schema Loop — sweep the corpus for UNDERSERVED documents (no typed schema, or typed
     but poorly extracted) and auto-draft schemas for them (escalating to a stronger model). Drafts

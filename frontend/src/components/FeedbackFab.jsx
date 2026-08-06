@@ -117,7 +117,7 @@ export function FeedbackDialog({ onClose }) {
           <div style={{ textAlign: "center", padding: "22px 0" }}>
             <div style={{ fontSize: 34, marginBottom: 8 }}>🙏</div>
             <div style={{ color: "var(--ink)", fontWeight: 600, marginBottom: 4 }}>Thanks for the feedback!</div>
-            <div className="ink3" style={{ fontSize: 12, marginBottom: 14 }}>We read every note — it helps us improve DocAIQ.</div>
+            <div className="ink3" style={{ fontSize: 12, marginBottom: 14 }}>We read every note — it helps us improve DocAIQuest.</div>
             <button onClick={onClose} className="border bg2"
               style={{ padding: "8px 16px", borderRadius: 8, cursor: "pointer", fontSize: 13 }}>Close</button>
           </div>

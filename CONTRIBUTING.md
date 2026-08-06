@@ -1,6 +1,6 @@
-# Contributing to DocAIQ
+# Contributing to DocAIQuest
 
-Thanks for your interest in contributing! DocAIQ is an open-source document
+Thanks for your interest in contributing! DocAIQuest is an open-source document
 intelligence engine — ingest, parse, chunk, embed, retrieve, and extract from
 documents, with AI-powered chat.
 
@@ -9,7 +9,7 @@ documents, with AI-powered chat.
 This repository is the **engine** (`DOCAIQ_LICENSE_MODE=oss`): the complete
 document → data pipeline. Users bring their own LLM API keys. Premium features
 (agentic chat, multi-pass extraction, Schema Architect, watchlist) are part of
-DocAIQ Cloud and not in this repo.
+DocAIQuest Cloud and not in this repo.
 
 ## Getting started
 
@@ -75,6 +75,6 @@ Use GitHub Issues. Include:
 
 ## License
 
-DocAIQ is MIT licensed. By contributing, you agree that your contributions
+DocAIQuest is MIT licensed. By contributing, you agree that your contributions
 will be licensed under the same MIT license. See [LICENSE](LICENSE) and
 [NOTICE](NOTICE) for third-party attributions.

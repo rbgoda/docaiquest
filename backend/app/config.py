@@ -11,7 +11,7 @@ AuthProvider = Literal["dev", "google", "oidc"]
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="DOCAIQ_", env_file=".env", extra="ignore")
 
-    app_name: str = "DocAIQ API"
+    app_name: str = "DocAIQuest API"
     environment: str = "development"
     tenant_id: str = "default"
 
@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     # key is empty, the sender LOGS the link instead of sending (dev mode) so the
     # flow is testable with no provider configured.
     resend_api_key: str = ""
-    email_from: str = "DocAIQ <no-reply@docaiq.jicama.tech>"
+    email_from: str = "DocAIQuest <no-reply@docaiq.jicama.tech>"
     # Where "Contact us" form submissions are emailed. Empty → the message is only
     # logged (dev) / falls back to email_from's inbox. Set in prod .env.
     contact_email: str = ""
@@ -150,7 +150,7 @@ class Settings(BaseSettings):
     # marked answers "helpful" on (demote "unhelpful"), bounded by strength.
     retrieval_feedback_boost_enabled: bool = False
     retrieval_feedback_boost_strength: float = 0.15
-    # Auto-merging / neighbour context expansion (DocAIQ-native "parent-child"
+    # Auto-merging / neighbour context expansion (DocAIQuest-native "parent-child"
     # retrieval, no migration). Retrieval + rerank still operate on the precise
     # child chunk; we just hand the LLM that chunk PLUS its adjacent chunks in the
     # same document so an answer split across a chunk boundary isn't fragmented.
@@ -697,7 +697,7 @@ class Settings(BaseSettings):
     # OpenRouter required headers — the platform asks for these to identify
     # apps using free tiers. Defaults to our github / docaiq.io brand.
     openrouter_referer: str = "https://docaiq.io"
-    openrouter_app_title: str = "DocAIQ"
+    openrouter_app_title: str = "DocAIQuest"
 
     # Per-call timeout. LLMs occasionally hang; the cascade needs to fail
     # over to the next tier rather than dragging the whole request.

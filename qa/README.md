@@ -1,6 +1,6 @@
-# DocAIQ QA Suite
+# DocAIQuest QA Suite
 
-A living chat-quality test suite for DocAIQ — both AI and human keep testing against it.
+A living chat-quality test suite for DocAIQuest — both AI and human keep testing against it.
 
 - **doc_types.csv** — all 129 document types (domain, slug, label, schema fields, page support).
 - **qa_data.json** — seeded question bank (15 cross-doc + per-type; 1088 total).

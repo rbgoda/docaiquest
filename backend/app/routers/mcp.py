@@ -1,4 +1,4 @@
-"""DocAIQ MCP server — Model Context Protocol over Streamable HTTP.
+"""DocAIQuest MCP server — Model Context Protocol over Streamable HTTP.
 
 Lets a user query THEIR OWN documents from any MCP client (Claude, ChatGPT, Cursor, an agent, or the
 customer's own chatbot). Auth is an owner-scoped API key (created in the user's account → API keys),
@@ -21,7 +21,7 @@ log = logging.getLogger("docaiq.mcp")
 router = APIRouter()
 
 PROTOCOL_VERSION = "2024-11-05"
-SERVER_INFO = {"name": "docaiq", "version": "1.0.0", "title": "DocAIQ — your documents"}
+SERVER_INFO = {"name": "docaiq", "version": "1.0.0", "title": "DocAIQuest — your documents"}
 
 TOOLS = [
     {"name": "ask_documents",
