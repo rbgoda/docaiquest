@@ -133,15 +133,28 @@ DocAIQuest is a complete document intelligence platform covering the full chain:
 
 ### API & Developer Surface
 
+DocAIQuest exposes a single unified endpoint for everything — one API to learn,
+one key to manage:
+
+```bash
+# Everything goes through POST /api/v1 with an action field
+curl -H "X-API-Key: dq_live_..." -H "Content-Type: application/json" \
+  -d '{"action":"ask",        "question":"..."}'           POST /api/v1
+curl -H "X-API-Key: dq_live_..." -F 'action=extract' -F 'file=@inv.pdf' POST /api/v1
+curl -H "X-API-Key: dq_live_..." \
+  -d '{"action":"list_documents", "limit":50}'              POST /api/v1
+curl -H "X-API-Key: dq_live_..." \
+  -d '{"action":"get_document",   "document_id":"..."}'     POST /api/v1
+```
+
 | Surface | Detail |
 |--------|--------|
-| REST API | Full CRUD: documents, extraction, chat, entities, graph, schema library, groups, connectors |
+| **Unified API** | `POST /api/v1` — one endpoint for everything. Actions: `ask` (RAG chat with citations), `extract` (structured fields from a file), `list_documents`, `get_document`. Authenticate with `X-API-Key` header. |
 | MCP server | `POST /api/mcp` — Streamable-HTTP JSON-RPC. Tools: `ask_documents`, `list_documents`, `get_watchlist`. Works with ChatGPT + Claude. |
-| Python SDK | `sdks/python/` — typed client for extraction + chat + document management |
-| TypeScript SDK | `sdks/typescript/` — typed client for extraction + chat + document management |
+| Python SDK | `sdks/python/` — `client.ask()`, `client.extract()`, `client.documents()` — thin wrapper over the unified API |
+| TypeScript SDK | `sdks/typescript/` — same surface, zero dependencies, works in browsers + Node 18+ |
 | Self-serve API keys | `POST/GET/DELETE /api/keys` — owner-scoped keys (`dq_live_…`), mint/revoke in UI |
-| External extraction API | `POST /api/extraction/extract` (X-API-Key) — cross-app extraction reuse |
-| Swagger | `/api/docs` — interactive OpenAPI docs |
+| Swagger | `/api/docs` — interactive OpenAPI docs for every endpoint |
 | Partner keys | Cloud-only — cross-tenant API keys for partners |
 
 ### Privacy & Security
@@ -336,8 +349,8 @@ This repo is the open-source **engine** (`DOCAIQ_LICENSE_MODE=oss`):
 
 | Tier | What you get |
 |------|-------------|
-| **OSS** (free, this repo) | Full document pipeline with your own LLM keys · 11 file formats · layout-aware parsing + table extraction · block-aware chunking · dual embeddings (MiniLM + BGE-M3) · hybrid retrieval + cross-encoder rerank · schema-driven extraction (12 built-in schemas) · entity graph + cross-doc resolution · single-doc RAG chat with bbox citations · REST API + MCP server + Python/TS SDKs · PII redaction + encryption · multi-tenant + per-user isolation |
-| **Cloud** (from $49/mo) | Everything in OSS, plus: agentic chat (tool-using ReAct loop) · multi-pass extraction with row verification · cross-document workspace chat · AI Schema Architect · watchlist + assistant (renewals, reminders, .ics) · reflexion learning (improves from feedback) · Drive auto-sync · schema autopilot · LLM cost analytics · managed LLM access · priority support |
+| **OSS** (free, this repo) | Full document pipeline with your own LLM keys · 11 file formats · layout-aware parsing + table extraction · block-aware chunking · dual embeddings (MiniLM + BGE-M3) · hybrid retrieval + cross-encoder rerank · schema-driven extraction (12 built-in schemas) · entity graph + cross-doc resolution · RAG chat with bbox citations · unified API (`POST /api/v1`) + MCP server + Python/TS SDKs · PII redaction + encryption · multi-tenant + per-user isolation |
+| **Cloud** ($149/mo) | Everything in OSS, plus: managed LLM access (no BYO keys) · agentic chat (tool-using ReAct loop) · multi-pass extraction with row verification · cross-document workspace chat · AI Schema Architect · watchlist + assistant (renewals, reminders, .ics) · reflexion learning · Drive auto-sync · schema autopilot · LLM cost analytics · priority support. **3,000 calls/mo included** — overage at $0.05/call. |
 
 ## Stack
 
