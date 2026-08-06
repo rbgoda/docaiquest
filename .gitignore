@@ -25,3 +25,6 @@ eval/dashboard.html
 deploy.sh
 scripts/prod_postactivation_check.sh
 
+
+# Claude Code memory — never commit
+MEMORY.md
