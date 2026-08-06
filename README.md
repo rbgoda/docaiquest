@@ -195,27 +195,100 @@ Compare: most RAG stacks require MySQL + a separate vector DB (ChromaDB/Qdrant/W
 
 ## Quick start
 
-**Before you run:** open `.env` and set the two required values:
+### Prerequisites
 
-| Variable | What to set |
-|----------|-------------|
-| `DOCAIQ_JWT_SECRET` | Any random string (e.g. `openssl rand -hex 32`) |
-| LLM provider key | At least one of: `DASHSCOPE_API_KEY` (recommended), `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, or `OPENROUTER_API_KEY` |
+- **Docker** + Docker Compose v2
+- **4 GB RAM** minimum (MiniLM embeddings only) / **8 GB** recommended (BGE-M3 + full models)
+- **~10 GB** free disk space (Docker images + DB + MinIO)
+- **An LLM provider key** — you bring your own (see below)
 
-Without a provider key, parsing and chunking work — but extraction and chat won't.
+### 1. Deploy
 
 ```bash
 git clone https://github.com/rbgoda/docaiquest.git && cd docaiquest
 cp .env.example .env
-# NOW EDIT .env — set DOCAIQ_JWT_SECRET + at least one LLM provider key
-make up
-# → http://localhost:8085
-# → Sign up (dev login auto-verifies), upload a PDF, chat + extract
-make down   # stop
 ```
 
-**Optional:** set `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` to store originals in
-users' own Google Drive. Without it, file upload still works — files go to MinIO instead.
+Now edit `.env` — the two **required** settings:
+
+```ini
+DOCAIQ_JWT_SECRET=<any random string, e.g. output of `openssl rand -hex 32`>
+DASHSCOPE_API_KEY=<your DashScope API key>
+```
+
+DashScope (Alibaba Cloud) is recommended — it's the most tested provider and
+offers both LLM (qwen-max) and embedding (text-embedding-v4) from one key.
+But any of these work: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`,
+`DEEPSEEK_API_KEY`, `OPENROUTER_API_KEY`.
+
+```bash
+make up
+```
+
+This builds the Docker images and starts 6 services: PostgreSQL (+pgvector),
+Redis, MinIO, the FastAPI backend, the Arq background worker, and the Vite
+frontend. On first boot the backend runs `alembic upgrade head` automatically
+to create all database tables. Wait ~30 seconds for all services to settle.
+
+### 2. Verify
+
+```bash
+# All 6 services running:
+docker compose -p docaiquest ps
+
+# Backend health check:
+curl http://localhost:8085/api/health
+# → {"status":"ok","tenant":"default","environment":"local","license_mode":"oss"}
+```
+
+Open **http://localhost:8085** in your browser. You should see the landing page.
+
+### 3. Start using
+
+1. **Sign up** — click "Get Started" → create an account. In local dev mode,
+   email verification is skipped (accounts auto-verify).
+2. **Upload a document** — drag a PDF, DOCX, XLSX, or image onto the upload area.
+   The document appears in the left panel with a processing indicator.
+3. **Wait for processing** — the Arq worker picks up the document and runs the
+   pipeline: parse → chunk → embed → extract entities → build graph. This takes
+   10–60 seconds depending on document size and your LLM provider speed.
+4. **Chat with it** — click the document, open the chat pane, ask a question.
+   "What is this document about?" or "Summarize the key points."
+5. **View extracted fields** — switch to the **Fields** tab to see structured
+   data extracted from the document (dates, amounts, parties, line items).
+6. **Explore** — try the **Blocks** view (layout-aware IR), **Markdown** view
+   (editable with reprocess), **Linked** tab (related documents), or the
+   **Graph** tab (entity network).
+
+### Stop
+
+```bash
+make down          # stop containers, keep data
+make down-clean    # stop + delete all data (fresh start)
+```
+
+### Optional configuration
+
+| Variable | What it does |
+|----------|-------------|
+| `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` | Store originals in users' own Google Drive instead of MinIO |
+| `DOCAIQ_EMBED_BACKEND` | `local` (default, MiniLM CPU) or `dashscope` (API) or `hash` (offline/no-model) |
+| `DOCAIQ_EMBED_V2_ACTIVE` | Set to `true` for BGE-M3 1024d multilingual embeddings (needs ~2.2 GB disk) |
+| `DOCAIQ_RERANKER_ENABLED` | Set to `true` for cross-encoder reranking (improves retrieval quality, CPU-friendly) |
+| `DOCAIQ_ENVIRONMENT` | `local` (default) or `production` (enables stricter security) |
+
+See `.env.example` for every available setting.
+
+### Troubleshooting
+
+| Symptom | Likely fix |
+|---------|-----------|
+| **Chat returns nothing** | Check your LLM provider key is set and funded. Try `curl` to the provider directly. |
+| **Documents stuck "processing"** | Check worker logs: `docker compose -p docaiquest logs worker \| tail -30`. Usually a missing API key or rate limit. |
+| **502 Bad Gateway** | Backend still booting — wait 10s and refresh. If it persists: `docker compose -p docaiquest logs backend \| tail -20`. |
+| **Port 8085 already in use** | Change `FRONTEND_PORT` in `.env` to a different port. |
+| **Out of disk space** | `docker builder prune -f --keep-storage 30GB && docker image prune -f` to reclaim build cache. |
+| **Fresh start (wipe everything)** | `make down-clean && make up` — deletes all containers, volumes, and data. |
 
 ## Architecture
 
