@@ -16,7 +16,7 @@ plan:     enterprise (set locally)
 Create/promote it once (already done on this machine):
 ```bash
 # register via the app, then:
-docker exec docaiq-docmod-postgres-1 psql -U docaiq -d docaiq \
+docker exec docaiquest-postgres-1 psql -U docaiquest -d docaiquest \
   -c "UPDATE users SET plan='enterprise' WHERE email='evaltest@example.com';"
 ```
 

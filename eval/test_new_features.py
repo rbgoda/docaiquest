@@ -5,7 +5,7 @@ LLM NER entities + relations, the universal graph handler, and the crystallize j
 
   python -m eval.test_new_features --docs eval/fixtures/docs
 
-DB checks go through `docker exec docaiq-docmod-postgres-1 psql`. Prints a PASS/FAIL table.
+DB checks go through `docker exec docaiquest-postgres-1 psql`. Prints a PASS/FAIL table.
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from pathlib import Path
 
 import httpx
 
-PG = ["docker", "exec", "docaiq-docmod-postgres-1", "psql", "-U", "docaiq", "-d", "docaiq", "-tAc"]
+PG = ["docker", "exec", "docaiquest-postgres-1", "psql", "-U", "docaiquest", "-d", "docaiquest", "-tAc"]
 RESULTS: list[tuple[str, bool, str]] = []
 
 
@@ -99,7 +99,7 @@ def main(argv=None) -> int:
           sql(f"select count(*) from entities where document_pk={doc_pk}") + " total ents")
 
     print("\n4) Crystallization job")
-    job = subprocess.run(["docker", "exec", "docaiq-docmod-backend-1", "python", "-c",
+    job = subprocess.run(["docker", "exec", "docaiquest-backend-1", "python", "-c",
                           "import asyncio; from app.jobs.schema_crystallize import schema_crystallize_task; "
                           "print('JOB:', asyncio.run(schema_crystallize_task({})))"],
                          capture_output=True, text=True)

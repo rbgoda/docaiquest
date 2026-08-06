@@ -1,4 +1,4 @@
-// Type declarations for @docaiq/sdk.
+// Type declarations for @docaiquest/sdk.
 
 export interface DocaiquestClientOptions {
   /** Owner-scoped API key, e.g. `dq_live_...`. */
