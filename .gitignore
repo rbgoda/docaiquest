@@ -18,8 +18,8 @@ eval/fixtures/
 # generated local eval report
 eval/dashboard.html
 
-# Claude Code local settings — may contain personal paths/keys
-.claude/settings.local.json
+# Claude Code internal files — never commit
+.claude/
 
 # Prod deploy scripts — host-specific, not for OSS
 deploy.sh
