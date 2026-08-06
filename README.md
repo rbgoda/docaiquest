@@ -343,15 +343,6 @@ Complete pipeline map: [`docs/PIPELINE_MAP.md`](docs/PIPELINE_MAP.md).
 | [`docs/UNIVERSAL_PARSING_ARCHITECTURE.md`](docs/UNIVERSAL_PARSING_ARCHITECTURE.md) | Parsing architecture (Document Model IR) |
 | [`docs/COMMERCIAL_PACKAGING.md`](docs/COMMERCIAL_PACKAGING.md) | Commercial licensing + packaging |
 
-## OSS vs Cloud
-
-This repo is the open-source **engine** (`DOCAIQ_LICENSE_MODE=oss`):
-
-| Tier | What you get |
-|------|-------------|
-| **OSS** (free, this repo) | Full document pipeline with your own LLM keys · 11 file formats · layout-aware parsing + table extraction · block-aware chunking · dual embeddings (MiniLM + BGE-M3) · hybrid retrieval + cross-encoder rerank · schema-driven extraction (12 built-in schemas) · entity graph + cross-doc resolution · RAG chat with bbox citations · unified API (`POST /api/v1`) + MCP server + Python/TS SDKs · PII redaction + encryption · multi-tenant + per-user isolation |
-| **Cloud** ($149/mo) | Everything in OSS, plus: managed LLM access (no BYO keys) · agentic chat (tool-using ReAct loop) · multi-pass extraction with row verification · cross-document workspace chat · AI Schema Architect · watchlist + assistant (renewals, reminders, .ics) · reflexion learning · Drive auto-sync · schema autopilot · LLM cost analytics · priority support. **3,000 calls/mo included** — overage at $0.05/call. |
-
 ## Stack
 
 **Backend:** Python 3.12 · FastAPI · SQLAlchemy 2 + Alembic · PostgreSQL + pgvector ·
