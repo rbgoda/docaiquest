@@ -39,7 +39,7 @@ sent in the `X-API-Key` header. Pass it to the constructor:
 ```js
 const client = new DocaiquestClient({
   apiKey: "dq_live_…",
-  baseUrl: "https://github.com/rbgoda/docaiquest",
+  baseUrl: "http://localhost:8085",
 });
 ```
 

@@ -16,7 +16,7 @@ def test_legacy_key_may_access_any_group():
 
 
 def test_partner_key_only_granted_groups():
-    c = Caller(pk=5, name="AuditAIQ", scopes=["audit:match"], allowed_group_ids=[4, 7])
+    c = Caller(pk=5, name="PartnerApp", scopes=["audit:match"], allowed_group_ids=[4, 7])
     assert c.may_access_group(4) is True
     assert c.may_access_group(7) is True
     assert c.may_access_group(8) is False

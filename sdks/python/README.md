@@ -33,7 +33,7 @@ Every call is authenticated with an owner-scoped API key (looks like
 constructor:
 
 ```python
-client = Client("dq_live_…", base_url="https://github.com/rbgoda/docaiquest")
+client = Client("dq_live_…", base_url="http://localhost:8085")
 ```
 
 ## Errors
