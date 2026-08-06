@@ -7,9 +7,7 @@ documents, with AI-powered chat.
 ## Scope
 
 This repository is the **engine** (`DOCAIQ_LICENSE_MODE=oss`): the complete
-document → data pipeline. Users bring their own LLM API keys. Premium features
-(agentic chat, multi-pass extraction, Schema Architect, watchlist) are part of
-DocAIQuest Cloud and not in this repo.
+document → data pipeline. Users bring their own LLM API keys.
 
 ## Getting started
 

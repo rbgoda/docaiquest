@@ -42,6 +42,7 @@ from app.routers import (
     graph as graph_router,
     learning as learning_router,
     llm_calls,
+    llm_settings as llm_settings_router,
     retrieve as retrieve_router,
     superadmin as superadmin_router,
     usage as usage_router,
@@ -147,14 +148,12 @@ app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
     description=(
-        "**DocAIQuest API** — build on your own documents.\n\n"
-        "Create an owner-scoped key in your account (**API keys**), then send it as "
-        "`X-API-Key: dq_live_…` (or `Authorization: Bearer …`).\n\n"
+        "**DocAIQuest API** — open-source document intelligence.\n\n"
+        "Bring your own LLM keys, upload documents, and chat with them.\n\n"
         "- `POST /api/v1/ask` — grounded answer over *your* documents, with citations\n"
         "- `GET /api/v1/documents` — list your documents\n"
         "- `POST /api/extraction/extract` — structured fields from a file (stateless)\n"
-        "- `POST /api/mcp` — Model Context Protocol endpoint for AI assistants (Claude, ChatGPT, agents)\n\n"
-        "SDKs: `pip install docaiq` · `npm i @docaiq/sdk`."
+        "- `POST /api/mcp` — Model Context Protocol endpoint for AI assistants (Claude, ChatGPT, agents)"
     ),
     docs_url="/api/docs",
     openapi_url="/api/openapi.json",
@@ -229,6 +228,7 @@ app.include_router(documents_auth_router.router, prefix="/api", tags=["documents
 app.include_router(extraction_router.router, prefix="/api/extraction", tags=["extraction"])
 # v1 partner API — own (per-partner key) auth, not the cookie session.
 app.include_router(api_v1_router.router, prefix="/api/v1", tags=["api-v1"])
+app.include_router(llm_settings_router.router, prefix="/api", tags=["llm-settings"], dependencies=auth_dep)
 app.include_router(keys_router.router, prefix="/api", tags=["api-keys"], dependencies=auth_dep)
 app.include_router(mcp_router.router, prefix="/api/mcp", tags=["mcp"])
 

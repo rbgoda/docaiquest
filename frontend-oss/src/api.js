@@ -46,8 +46,8 @@ async function request(method, path, { body, signal, raw } = {}) {
 }
 
 // -- Auth --
-export const signup = (email, password, name) =>
-  request("POST", "/auth/register", { body: { email, password, name } });
+export const signup = (email, password, name, consent) =>
+  request("POST", "/auth/register", { body: { email, password, name, consent } });
 
 export const login = (email, password) =>
   request("POST", "/auth/login", { body: { email, password } });
@@ -68,6 +68,20 @@ export const uploadDocument = (file, { signal } = {}) => {
 export const deleteDocument = (id) => request("DELETE", `/documents/${id}`);
 
 export const documentFileUrl = (id) => `${BASE}/documents/${id}/file`;
+
+// -- Consent --
+export const getConsentStatus = () => request("GET", "/me/consent");
+
+export const setConsent = (kind) => request("POST", "/me/consent", { body: { kind } });
+
+// -- LLM Settings --
+export const getLlmSettings = () => request("GET", "/llm/settings");
+
+export const setLlmSettings = (provider, { apiKey, enabled, defaultModel, clearKey } = {}) =>
+  request("POST", "/llm/settings", { body: { provider, apiKey, enabled, defaultModel, clearKey } });
+
+export const probeProvider = (provider) =>
+  request("POST", `/llm/settings/${provider}/probe`);
 
 // -- Chat --
 export const fetchChat = (docId) => request("GET", `/documents/${docId}/chat`);

@@ -223,7 +223,7 @@ Worker likely crash-looped on a stale Redis connection. Admin: SSH to the host, 
 
 ### Q: I can't log in — keeps redirecting to login
 
-Cookie is being rejected. Try: (1) clear cookies for this domain, (2) check you're on HTTPS (Secure cookie won't send on HTTP), (3) check your tenant's URL is `<slug>.docaiq.jicama.tech` not the bare `docaiq.jicama.tech`.
+Cookie is being rejected. Try: (1) clear cookies for this domain, (2) check you're on HTTPS (Secure cookie won't send on HTTP), (3) check your tenant's URL is correct.
 
 ---
 

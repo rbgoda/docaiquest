@@ -6,7 +6,7 @@ trial. Gated to the emails in DOCAIQ_DOCUMENTS_SUPERADMIN_EMAILS — this is the
 ONLY surface that reads across owners (every other documents query is scoped to
 the calling owner), so the gate is strict.
 
-Surfaced at admin.docaiq.jicama.tech in prod; locally reachable via the in-app
+Surfaced at the admin subdomain in prod; locally reachable via the in-app
 Admin tab when the signed-in user is a superadmin.
 """
 from __future__ import annotations
@@ -784,8 +784,8 @@ class AdminPwPayload(BaseModel):
 @router.post("/admins/{email}/password")
 def admins_set_password(email: str, payload: AdminPwPayload, db: Session = Depends(get_session),
                         _su: CurrentUser = Depends(require_superadmin)) -> dict:
-    """Set/reset the password for an ADMIN account (e.g. the shared admin@docaiq.jicama.tech) — a
-    superadmin capability, so no current-password is required. Restricted to allowlisted admins."""
+    """Set/reset the password for an ADMIN account — a superadmin capability,
+    so no current-password is required. Restricted to allowlisted admins."""
     from app.orm import User
     from app.auth import hash_password
     email = email.strip().lower()

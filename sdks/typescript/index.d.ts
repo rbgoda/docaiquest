@@ -3,7 +3,7 @@
 export interface DocaiquestClientOptions {
   /** Owner-scoped API key, e.g. `dq_live_...`. */
   apiKey: string;
-  /** API base URL. Defaults to https://docaiq.jicama.tech */
+  /** API base URL. Defaults to http://localhost:8085 */
   baseUrl?: string;
 }
 

@@ -34,7 +34,7 @@ class Client:
         print(client.ask("Which invoices are due this month?")["answer"])
     """
 
-    def __init__(self, api_key: str, base_url: str = "https://docaiq.jicama.tech"):
+    def __init__(self, api_key: str, base_url: str = "http://localhost:8085"):
         if not api_key:
             raise ValueError("api_key is required")
         self.api_key = api_key

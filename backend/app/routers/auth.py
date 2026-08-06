@@ -100,7 +100,7 @@ class AuthConfigResponse(BaseModel):
     product: str = "auditing"
     # P2 · deployment license mode. "oss" = self-hosted open-source (default):
     # cloud-only premium features are disabled and the UI hides their chrome.
-    # "cloud" = managed DocAIQ Cloud build with full feature set.
+    # "cloud" = managed cloud build with full feature set.
     licenseMode: str = "oss"
     # Dev mode only: enumerate the password-login accounts that exist so the
     # login page can offer click-to-prefill chips. Empty when dev mode is off
@@ -129,15 +129,15 @@ class MeResponse(BaseModel):
 
 # ---- Cookie helpers --------------------------------------------------------
 def _cookie_domain_kw() -> dict:
-    """When session_cookie_domain is set (e.g. .docaiq.jicama.tech) the session is shared across
-    subdomains — a Google login on the main app authenticates the admin console too."""
+    """When session_cookie_domain is set (e.g. ".example.com") the session is shared across
+    subdomains — a login on the main app authenticates the admin console too."""
     d = get_settings().session_cookie_domain.strip()
     return {"domain": d} if d else {}
 
 
 def _safe_next(nxt: str | None, default: str = "/") -> str:
     """Validate an OAuth `next=` target to prevent open redirects: relative paths, or an absolute URL
-    whose host is the public app OR shares the configured cookie domain (…docaiq.jicama.tech)."""
+    whose host is the public app OR shares the configured cookie domain."""
     if not nxt:
         return default
     if nxt.startswith("/") and not nxt.startswith("//"):
@@ -324,7 +324,7 @@ def login_with_password(
                 status_code=status.HTTP_423_LOCKED,
                 detail={
                     "frozen": True,
-                    "message": "Your workspace is under review. Contact admin@jicama.tech.",
+                    "message": "Your workspace is under review. Contact your administrator.",
                     "requestUrl": None,
                 },
             )

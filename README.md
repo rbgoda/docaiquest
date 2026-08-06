@@ -91,12 +91,9 @@ curl http://localhost:8085/api/health
 # → {"status":"ok","tenant":"default","environment":"local","license_mode":"oss"}
 ```
 
-Open **http://localhost:8085** in your browser. You should see the landing page.
+Open **http://localhost:8085** in your browser.
 
 ### 3. Open the web app
-
-Go to **http://localhost:8085** in your browser. You'll see the full DocAIQuest
-interface — no terminal needed from here.
 
 1. **Sign up** — create an account. In local dev mode, email verification is
    skipped (accounts auto-verify).
@@ -145,7 +142,7 @@ See `.env.example` for every available setting.
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
 │   Frontend   │    │   Backend    │    │    Worker    │
 │  React       │───▶│   Python     │───▶│  Background  │
-│  web :8085   │    │   API :8093  │    │  processing  │
+│  web :8085   │    │   API :8001  │    │  processing  │
 └──────────────┘    └──────┬───────┘    └──────┬───────┘
                            │                   │
                     ┌──────┴───────┐    ┌──────┴───────┐
@@ -154,15 +151,114 @@ See `.env.example` for every available setting.
                     └──────────────┘    └──────────────┘
 ```
 
+**Pipeline:** Upload → Parse → Chunk → Embed → Store → Retrieve → Generate answer.
+
+### Retrieval
+
+Hybrid BM25 + cosine similarity (BGE-M3 multilingual embeddings when
+`DOCAIQ_EMBED_V2_ACTIVE=true`) → BGE-Reranker-v2-m3 cross-encoder for
+re-ranking when `DOCAIQ_RERANKER_ENABLED=true`.
+
+## Layout
+
 ```
-Upload → Parse → Chunk → Embed → Store
-                                    ↓
-Question → Search → Retrieve context → Generate answer
+├── backend/           FastAPI application (package: `app`)
+│   ├── app/
+│   │   ├── agents/    Extraction, OCR, chat agents
+│   │   ├── routers/   API endpoints
+│   │   ├── services/  Business logic (chat pipeline, workspace)
+│   │   ├── llm/       LLM gateway, prompts, routing
+│   │   ├── graph/     Entity resolution & knowledge graph
+│   │   └── jobs/      Background cron jobs
+│   └── migrations/    Alembic (auto-run on boot)
+├── frontend-oss/      OSS web console (Vite + React SPA)
+├── admin-ui/          Superadmin console (static HTML)
+├── sdks/              Python + TypeScript API clients
+└── docker-compose.yml
 ```
 
-## Stack
+## Development
 
-Python · PostgreSQL · Redis · Docker Compose.
+### Prerequisites
+
+- Python 3.11+
+- Node.js 22+
+- PostgreSQL with pgvector extension
+- Redis
+
+### Stack
+
+- **Backend:** FastAPI + SQLAlchemy + Alembic + PostgreSQL (pgvector)
+- **Worker:** Arq (Redis-backed async task queue)
+- **Frontend:** Vite + React (SPA)
+- **Storage:** MinIO (S3-compatible, local dev) / AWS S3
+
+### Conventions
+
+- **Schema = Alembic** (`backend/migrations/`). Adding a table or column
+  requires a new migration — never use `create_all()`.
+- **Per-user isolation:** `current_owner_user_pk` ContextVar (set by
+  `TenantMiddleware`) + repo-layer filtering. Never bypass it.
+- **PII / privacy:** Redaction happens at the LLM boundary in
+  `app/llm/gateway.py` — sensitive IDs and contacts are masked before
+  reaching external providers, then restored in the response. Person
+  names are NOT masked by default (`pii_redact_person_names=off`) —
+  they're the search key. See `docs/PII_AND_PRIVACY.md`.
+- **Email verification** (Resend) activates only when
+  `DOCAIQ_RESEND_API_KEY` is set; else signups auto-verify.
+- **Deep dives:** `docs/ARCHITECTURE_DEEP_DIVE.md` covers the full system
+  end-to-end. `docs/SDK_AND_API_DESIGN.md` covers the API and SDK design.
+  `docs/API_QUICKSTART.md` is a quickstart for API consumers.
+
+### Running locally (without Docker)
+
+```bash
+cd backend
+pip install -e .
+alembic upgrade head
+uvicorn app.main:app --reload --port 8001
+```
+
+```bash
+cd frontend-oss
+npm ci
+npm run dev          # Vite dev server on :5173
+```
+
+### Testing
+
+Tests use a throwaway PostgreSQL + pgvector instance — never point at a live
+database.
+
+```bash
+cd backend
+PGPASSWORD=postgres psql -h localhost -U postgres -c "CREATE DATABASE test_docaiquest;"
+pytest -q
+PGPASSWORD=postgres psql -h localhost -U postgres -c "DROP DATABASE test_docaiquest;"
+```
+
+Run `ruff check backend/app` before committing — should exit 0.
+
+## API
+
+When the stack is running, interactive docs are at
+**http://localhost:8085/api/docs**.
+
+Quick reference:
+
+| Endpoint | Description |
+|----------|------------|
+| `POST /api/v1/ask` | Grounded answer over your documents, with citations |
+| `GET /api/v1/documents` | List your documents |
+| `POST /api/extraction/extract` | Structured fields from a file (stateless) |
+| `POST /api/mcp` | MCP endpoint for AI assistants (Claude, ChatGPT, Cursor) |
+
+Auth: create an owner-scoped API key in the web app (Settings → API keys),
+send it as `X-API-Key: dq_live_…` or `Authorization: Bearer dq_live_…`.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

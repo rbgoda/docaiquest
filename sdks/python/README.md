@@ -1,6 +1,6 @@
 # docaiquest — Python SDK
 
-Official Python SDK for the [DocAIQuest](https://docaiq.jicama.tech) document-intelligence API.
+Official Python SDK for the [DocAIQuest](https://github.com/rbgoda/docaiquest) document-intelligence API.
 
 ## Install
 
@@ -33,7 +33,7 @@ Every call is authenticated with an owner-scoped API key (looks like
 constructor:
 
 ```python
-client = Client("dq_live_…", base_url="https://docaiq.jicama.tech")
+client = Client("dq_live_…", base_url="https://github.com/rbgoda/docaiquest")
 ```
 
 ## Errors

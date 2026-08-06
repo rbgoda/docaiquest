@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { listApiKeys, createApiKey, revokeApiKey } from "../api/documents";
 
-const BASE = typeof window !== "undefined" ? window.location.origin : "https://docaiq.jicama.tech";
+const BASE = typeof window !== "undefined" ? window.location.origin : "http://localhost:8085";
 
 // Ready-to-import OpenAPI schema for a ChatGPT Custom GPT Action (askDocuments +
 // listDocuments over /api/v1). Copied verbatim from

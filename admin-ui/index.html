@@ -96,7 +96,7 @@ function renderLogin(msg){
   card.appendChild($('<h1>Admin</h1>'));
   card.appendChild($('<div class="sub" style="margin-bottom:12px">DocAIQuest · superadmin console</div>'));
   // Google sign-in — routed through the MAIN app domain (its OAuth callback is whitelisted), which
-  // shares the session across *.docaiq.jicama.tech and returns here via next=.
+  // shares the session across the parent domain and returns here via next=.
   const gbtn=$('<button class="btn" style="width:100%;background:#fff;color:#1f2430;display:flex;align-items:center;justify-content:center;gap:9px;border:1px solid #dadce0"><svg width="17" height="17" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.5 13.3l7.9 6.1C12.3 13.2 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.1 5.3-4.6 7l7.1 5.5c4.1-3.8 6.5-9.4 6.5-16z"/><path fill="#FBBC05" d="M10.4 28.4c-.5-1.5-.8-3-.8-4.4s.3-3 .8-4.4l-7.9-6.1C.9 16.5 0 20.1 0 24s.9 7.5 2.5 10.6l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.1-5.5c-2 1.3-4.5 2.1-8.8 2.1-6.4 0-11.7-3.7-13.6-8.9l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg> Sign in with Google</button>');
   gbtn.onclick=()=>{ const main=location.hostname.replace(/^admin\./,''); const back=encodeURIComponent(location.origin+'/'); location.href=location.protocol+'//'+main+'/api/auth/google/login?next='+back; };
   card.appendChild(gbtn);

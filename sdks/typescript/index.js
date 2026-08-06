@@ -8,7 +8,7 @@ export class DocaiquestClient {
   /**
    * @param {{ apiKey: string, baseUrl?: string }} opts
    */
-  constructor({ apiKey, baseUrl = "https://docaiq.jicama.tech" }) {
+  constructor({ apiKey, baseUrl = "http://localhost:8085" }) {
     if (!apiKey) throw new Error("apiKey is required");
     this.apiKey = apiKey;
     // Strip trailing slash so path joins are predictable.

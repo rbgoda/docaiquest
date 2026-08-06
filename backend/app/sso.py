@@ -1,12 +1,12 @@
 """AIQ Suite SSO — shared-identity verifier (+ issuer).
 
-Lets docaiq accept the same login as every other `*.jicama.tech` app: a JWT
+Lets this app accept a shared login across same-domain apps: a JWT
 (`HS256`) signed with the shared `JICAMA_SSO_SECRET`, presented either as the
 `jicama_sso` cookie (browser login) or `Authorization: Bearer <jwt>` (API).
 
 Zero-dependency on purpose — verifies the signature over the RECEIVED
 `header.payload` bytes (never re-serialises the JSON, which would change the
-signature). Matches the chataiq reference verifier exactly (see SSO_VERIFIER.md).
+signature).
 """
 from __future__ import annotations
 

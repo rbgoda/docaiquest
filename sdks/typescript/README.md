@@ -1,6 +1,6 @@
 # @docaiquest/sdk — TypeScript / JavaScript SDK
 
-Official SDK for the [DocAIQuest](https://docaiq.jicama.tech) document-intelligence API.
+Official SDK for the [DocAIQuest](https://github.com/rbgoda/docaiquest) document-intelligence API.
 Zero runtime dependencies — uses the global `fetch` and `FormData` (Node 18+ and
 modern browsers).
 
@@ -39,7 +39,7 @@ sent in the `X-API-Key` header. Pass it to the constructor:
 ```js
 const client = new DocaiquestClient({
   apiKey: "dq_live_…",
-  baseUrl: "https://docaiq.jicama.tech",
+  baseUrl: "https://github.com/rbgoda/docaiquest",
 });
 ```
 

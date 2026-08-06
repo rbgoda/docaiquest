@@ -66,7 +66,7 @@ function PlanBadge({ sub, isCloud }) {
   }
   if (!sub) return null;
   const eff = sub.effectivePlan;
-  const upgrade = () => { window.location.href = "mailto:sales@docaiq.jicama.tech?subject=DocAIQuest%20Pro%20upgrade"; };
+  const upgrade = () => { window.location.href = "https://github.com/rbgoda/docaiquest"; };
   let label, tone = "var(--ink3)", showUpgrade = false;
   if (eff === "trial") {
     const d = sub.trialDaysLeft ?? 0;

@@ -150,10 +150,10 @@ def register(
 @router.post("/auth/sso/exchange", response_model=MeResponse)
 def sso_exchange(response: Response, jicama_sso: str | None = Cookie(default=None),
                  db: Session = Depends(get_session)) -> MeResponse:
-    """AIQ Suite SSO · exchange the shared `jicama_sso` cookie for a native docaiq
-    session — 'one login across the suite'. Find-or-create the user by the token's
-    email, then mint the docaiq session cookie. 401 when there's no valid suite token
-    (the SPA falls back to the normal login screen). See SSO_VERIFIER.md."""
+    """AIQ Suite SSO · exchange the shared `jicama_sso` cookie for a native session —
+    'one login across the suite'. Find-or-create the user by the token's
+    email, then mint the session cookie. 401 when there's no valid suite token
+    (the SPA falls back to the normal login screen)."""
     from app.sso import verify_sso
     settings = get_settings()
     claims = verify_sso(jicama_sso)

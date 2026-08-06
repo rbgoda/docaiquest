@@ -17,3 +17,13 @@ eval/fixtures/
 
 # generated local eval report
 eval/dashboard.html
+
+# Claude Code local settings — may contain personal paths/keys
+.claude/settings.local.json
+
+# Prod deploy scripts — host-specific, not for OSS
+deploy.sh
+scripts/prod_postactivation_check.sh
+
+# Internal handoff/docs — prod details, not for OSS
+docs/handoffs/

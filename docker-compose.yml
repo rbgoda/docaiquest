@@ -170,7 +170,7 @@ services:
       DOCAIQ_DOCUMENTS_USER_HOURLY_LLM_CAP: ${DOCAIQ_DOCUMENTS_USER_HOURLY_LLM_CAP:-0}
       # M43 · marketplace catalog URL. Empty disables the Frameworks
       # marketplace surface; the SPA renders empty state. In prod set to
-      # https://docaiq.jicama.tech (or wherever the control plane is).
+      # Control plane URL (shared-SaaS deployments only).
       DOCAIQ_CONTROL_PLANE_INTERNAL_URL: ${DOCAIQ_CONTROL_PLANE_INTERNAL_URL:-http://host.docker.internal:9001}
       DOCAIQ_EMBED_DIM: "384"
       DOCAIQ_OPENAI_API_KEY: ${DOCAIQ_OPENAI_API_KEY:-}
@@ -195,7 +195,7 @@ services:
       DOCAIQ_DOCUMENTS_SUPERADMIN_EMAILS: ${DOCAIQ_DOCUMENTS_SUPERADMIN_EMAILS:-}
       DOCAIQ_SESSION_COOKIE_DOMAIN: ${DOCAIQ_SESSION_COOKIE_DOMAIN:-}
       DOCAIQ_RESEND_API_KEY: ${DOCAIQ_RESEND_API_KEY:-}
-      DOCAIQ_EMAIL_FROM: ${DOCAIQ_EMAIL_FROM:-DocAIQuest <no-reply@docaiq.jicama.tech>}
+      DOCAIQ_EMAIL_FROM: ${DOCAIQ_EMAIL_FROM:-DocAIQuest <no-reply@docaiquest.dev>}
       DOCAIQ_CONTACT_EMAIL: ${DOCAIQ_CONTACT_EMAIL:-}
       # M44.P6 · Alibaba Dashscope (Qwen3-VL direct). When set, models
       # prefixed `dashscope/` (e.g. dashscope/qwen3-vl-235b-a22b) route
@@ -346,7 +346,7 @@ services:
       DOCAIQ_DOCUMENTS_USER_HOURLY_LLM_CAP: ${DOCAIQ_DOCUMENTS_USER_HOURLY_LLM_CAP:-0}
       # M43 · marketplace catalog URL. Empty disables the Frameworks
       # marketplace surface; the SPA renders empty state. In prod set to
-      # https://docaiq.jicama.tech (or wherever the control plane is).
+      # Control plane URL (shared-SaaS deployments only).
       DOCAIQ_CONTROL_PLANE_INTERNAL_URL: ${DOCAIQ_CONTROL_PLANE_INTERNAL_URL:-http://host.docker.internal:9001}
       DOCAIQ_EMBED_DIM: "384"
       DOCAIQ_OPENAI_API_KEY: ${DOCAIQ_OPENAI_API_KEY:-}
@@ -403,7 +403,7 @@ services:
       DOCAIQ_DOCUMENTS_SUPERADMIN_EMAILS: ${DOCAIQ_DOCUMENTS_SUPERADMIN_EMAILS:-}
       DOCAIQ_SESSION_COOKIE_DOMAIN: ${DOCAIQ_SESSION_COOKIE_DOMAIN:-}
       DOCAIQ_RESEND_API_KEY: ${DOCAIQ_RESEND_API_KEY:-}
-      DOCAIQ_EMAIL_FROM: ${DOCAIQ_EMAIL_FROM:-DocAIQuest <no-reply@docaiq.jicama.tech>}
+      DOCAIQ_EMAIL_FROM: ${DOCAIQ_EMAIL_FROM:-DocAIQuest <no-reply@docaiquest.dev>}
       DOCAIQ_CONTACT_EMAIL: ${DOCAIQ_CONTACT_EMAIL:-}
       # M44.P11 · PII redaction also applies to worker-side LLM calls
       # (KYC extraction, matcher validator, materializer). Same flag.

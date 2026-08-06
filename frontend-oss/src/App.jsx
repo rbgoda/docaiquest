@@ -3,6 +3,8 @@ import {
   whoami, login, signup,
   listDocuments, uploadDocument, deleteDocument, documentFileUrl,
   fetchChat, sendMessage,
+  setConsent,
+  getLlmSettings, setLlmSettings, probeProvider,
 } from "./api";
 
 // ---- Auth forms -----------------------------------------------------------
@@ -34,6 +36,10 @@ function LoginForm({ onLogin, onSwitch }) {
       {error && <div className="auth-error">{error}</div>}
       <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
       <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+      <button type="button" className="demo-quick"
+        onClick={() => { setEmail("demo@docaiquest.dev"); setPassword("docaiquest"); setError(""); }}>
+        🧪 Quick Demo Login
+      </button>
       <button type="submit" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button>
       <p className="auth-switch">
         No account?{" "}
@@ -47,6 +53,7 @@ function SignupForm({ onLogin, onSwitch }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [consent, setConsentChecked] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -55,7 +62,7 @@ function SignupForm({ onLogin, onSwitch }) {
     setError("");
     setBusy(true);
     try {
-      await signup(email, password, name);
+      await signup(email, password, name, consent);
       const user = await whoami();
       onLogin(user);
     } catch (err) {
@@ -72,7 +79,11 @@ function SignupForm({ onLogin, onSwitch }) {
       <input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
       <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
       <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-      <button type="submit" disabled={busy}>{busy ? "Creating…" : "Create account"}</button>
+      <label className="consent-row">
+        <input type="checkbox" checked={consent} onChange={(e) => setConsentChecked(e.target.checked)} />
+        <span>I consent to processing — documents are sent to third-party AI providers for extraction and chat. My data stays private to my account.</span>
+      </label>
+      <button type="submit" disabled={busy || !consent}>{busy ? "Creating…" : "Create account"}</button>
       <p className="auth-switch">
         Already have one?{" "}
         <button type="button" className="link" onClick={onSwitch}>Sign in</button>
@@ -143,7 +154,7 @@ function DocList({ docs, selectedId, onSelect, onUpload, onDelete, uploading }) 
             className={`doc-item${doc.id === selectedId ? " selected" : ""}`}
             onClick={() => onSelect(doc)}
           >
-            <span className="doc-icon">{doc.type === "application/pdf" ? "📄" : "📃"}</span>
+            <span className="doc-icon">{doc.mimeType === "application/pdf" ? "📄" : "📃"}</span>
             <span className="doc-name" title={doc.name}>{doc.name}</span>
             <button
               className="doc-delete"
@@ -161,7 +172,7 @@ function DocList({ docs, selectedId, onSelect, onUpload, onDelete, uploading }) 
 
 // ---- Chat panel ------------------------------------------------------------
 
-function ChatPanel({ doc, docId, onClose }) {
+function ChatPanel({ doc, docId, docs, onClose }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -195,17 +206,20 @@ function ChatPanel({ doc, docId, onClose }) {
 
     try {
       const data = await sendMessage(docId, text);
-      // Response comes back with the updated message list or the AI reply
-      if (data.messages) {
-        setMessages(data.messages);
-      } else if (data.message) {
-        setMessages((prev) => [...prev, { role: "ai", text: data.message, id: (Date.now() + 1).toString() }]);
-      }
+      // Response is the AI message object directly: {id, role:"ai", text, citations, ...}
+      setMessages((prev) => [...prev, { ...data, role: data.role || "ai" }]);
     } catch (err) {
       setMessages((prev) => [...prev, { role: "ai", text: `Error: ${err.message}`, id: (Date.now() + 2).toString(), error: true }]);
     }
     setLoading(false);
   };
+
+  // Compute aggregate workspace stats from docs array
+  const totalDocs = (docs || []).length;
+  const totalPages = (docs || []).reduce((sum, d) => sum + (d.pages || 0), 0);
+  const readyDocs = (docs || []).filter((d) => d.ingestionStatus === "ready").length;
+  const mimeTypes = new Set((docs || []).map((d) => d.mimeType).filter(Boolean));
+  const typeLabel = mimeTypes.size === 1 ? [...mimeTypes][0].replace("application/", "") : `${mimeTypes.size} types`;
 
   return (
     <div className="chat-panel">
@@ -223,6 +237,31 @@ function ChatPanel({ doc, docId, onClose }) {
 
       {/* Messages */}
       <div className="chat-messages">
+        {/* Aggregate stats bar */}
+        {totalDocs > 0 && (
+          <div className="stats-bar">
+            <div className="stat-capsule">
+              <span className="stat-icon">📄</span>
+              <span className="stat-value">{totalDocs}</span>
+              <span className="stat-label">{totalDocs === 1 ? "Doc" : "Docs"}</span>
+            </div>
+            <div className="stat-capsule">
+              <span className="stat-icon">📑</span>
+              <span className="stat-value">{totalPages}</span>
+              <span className="stat-label">{totalPages === 1 ? "Page" : "Pages"}</span>
+            </div>
+            <div className="stat-capsule">
+              <span className="stat-icon">✅</span>
+              <span className="stat-value">{readyDocs}</span>
+              <span className="stat-label">Ready</span>
+            </div>
+            <div className="stat-capsule">
+              <span className="stat-icon">📁</span>
+              <span className="stat-value">{typeLabel}</span>
+              <span className="stat-label">Format</span>
+            </div>
+          </div>
+        )}
         {messages.length === 0 && (
           <p className="empty-hint">Ask a question about this document.</p>
         )}
@@ -256,6 +295,143 @@ function ChatPanel({ doc, docId, onClose }) {
   );
 }
 
+// ---- LLM Settings modal ----------------------------------------------------
+
+const PROVIDER_OPTIONS = [
+  { slug: "dashscope", label: "DashScope (Alibaba)", model: "qwen-max", embeds: true },
+  { slug: "openai", label: "OpenAI", model: "gpt-4o", embeds: true },
+  { slug: "anthropic", label: "Anthropic", model: "claude-sonnet-4-20250514", embeds: false },
+  { slug: "google", label: "Google Gemini", model: "gemini-2.5-flash", embeds: true },
+  { slug: "deepseek", label: "DeepSeek", model: "deepseek-chat", embeds: false },
+  { slug: "openrouter", label: "OpenRouter", model: "openai/gpt-4o", embeds: true },
+];
+
+function SettingsModal({ onClose }) {
+  const [provider, setProvider] = useState("dashscope");
+  const [model, setModel] = useState("qwen-max");
+  const [apiKey, setApiKey] = useState("");
+  const [enabled, setEnabled] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [probing, setProbing] = useState(false);
+  const [probeResult, setProbeResult] = useState(null);
+  const [loadedKey, setLoadedKey] = useState(false);
+
+  // Load existing config on mount
+  useEffect(() => {
+    getLlmSettings().then((data) => {
+      const provs = data.providers || [];
+      const configured = provs.find((p) => p.configured);
+      if (configured) {
+        setProvider(configured.provider);
+        setModel(configured.defaultModel || configured.recommendedModel || "");
+        setEnabled(configured.enabled);
+        setLoadedKey(true);
+      }
+    }).catch(() => {});
+  }, []);
+
+  const handleProviderChange = (slug) => {
+    setProvider(slug);
+    const opt = PROVIDER_OPTIONS.find((o) => o.slug === slug);
+    if (opt) setModel(opt.model);
+    setProbeResult(null);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await setLlmSettings(provider, { apiKey: apiKey || undefined, enabled, defaultModel: model });
+      setLoadedKey(true);
+      setApiKey("");
+    } catch (err) {
+      alert(err.message);
+    }
+    setSaving(false);
+  };
+
+  const probe = async () => {
+    setProbing(true);
+    try {
+      const result = await probeProvider(provider);
+      setProbeResult(result);
+    } catch (err) {
+      setProbeResult({ ok: false, error: err.message });
+    }
+    setProbing(false);
+  };
+
+  const selected = PROVIDER_OPTIONS.find((o) => o.slug === provider);
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-panel settings-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>⚙️ LLM Settings</h2>
+          <button className="chat-close" onClick={onClose}>×</button>
+        </div>
+        <p className="modal-sub">
+          Add an API key for chat and extraction. Embeddings run locally — no key needed.
+        </p>
+
+        <div className="settings-form">
+          <label className="field-label">Provider</label>
+          <select className="field-select" value={provider} onChange={(e) => handleProviderChange(e.target.value)}>
+            {PROVIDER_OPTIONS.map((o) => (
+              <option key={o.slug} value={o.slug}>
+                {o.label}{o.embeds ? "" : " (chat only)"}
+              </option>
+            ))}
+          </select>
+
+          <label className="field-label">Model</label>
+          <input
+            type="text" className="field-input"
+            value={model} onChange={(e) => setModel(e.target.value)}
+            placeholder="e.g. qwen-max"
+          />
+
+          <label className="field-label">API Key</label>
+          <input
+            type="password" className="field-input"
+            value={apiKey} onChange={(e) => setApiKey(e.target.value)}
+            placeholder={loadedKey ? "Already set (enter new to replace)" : "sk-..."}
+          />
+
+          <label className="field-check">
+            <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
+            <span>Enabled</span>
+          </label>
+
+          <div className="settings-actions">
+            <button className="btn-sm btn-outline" onClick={probe} disabled={probing}>
+              {probing ? "Testing…" : "Test connection"}
+            </button>
+            <button className="btn-sm btn-primary" onClick={save} disabled={saving}>
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+
+          {probeResult && (
+            <div className={`probe-result ${probeResult.ok ? "ok" : "fail"}`}>
+              {probeResult.ok
+                ? `✓ Connected (${probeResult.latencyMs}ms)`
+                : `✗ ${probeResult.error || "Connection failed"}`}
+            </div>
+          )}
+        </div>
+
+        {selected && (
+          <p className="settings-footnote">
+            {selected.embeds
+              ? `${selected.label} supports both chat and API embeddings.`
+              : `${selected.label} is chat-only. Embeddings run locally on your machine.`}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ---- Main app --------------------------------------------------------------
 
 export default function App() {
@@ -265,6 +441,8 @@ export default function App() {
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [needConsent, setNeedConsent] = useState(false); // upload blocked on consent
+  const [showSettings, setShowSettings] = useState(false);
 
   // Check existing session on mount
   useEffect(() => {
@@ -283,7 +461,12 @@ export default function App() {
   const refreshDocs = async () => {
     try {
       const data = await listDocuments();
-      setDocs(data.documents || []);
+      // API returns a map keyed by doc ID; convert to sorted array.
+      const list = Object.values(data || {}).sort((a, b) => {
+        const da = a.uploadedAt || ""; const db = b.uploadedAt || "";
+        return db.localeCompare(da); // newest first
+      });
+      setDocs(list);
     } catch {}
   };
 
@@ -292,10 +475,24 @@ export default function App() {
     try {
       await uploadDocument(file);
       await refreshDocs();
+      setNeedConsent(false);
+    } catch (err) {
+      if (err.status === 400 && err.message?.includes?.("acknowledge")) {
+        setNeedConsent(true);
+      } else {
+        alert(err.message);
+      }
+    }
+    setUploading(false);
+  };
+
+  const handleConsent = async () => {
+    try {
+      await setConsent("personal_data");
+      setNeedConsent(false);
     } catch (err) {
       alert(err.message);
     }
-    setUploading(false);
   };
 
   const handleDelete = async (doc) => {
@@ -314,7 +511,6 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    // Clear session cookie and reset
     document.cookie = "session=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
     setUser(null);
     setDocs([]);
@@ -345,10 +541,17 @@ export default function App() {
       <header className="app-header">
         <span className="app-logo">DocAIQuest</span>
         <span className="app-user">
+          <button className="link settings-btn" onClick={() => setShowSettings(true)} title="LLM Settings">⚙️</button>
           {user.email}
           <button className="link logout" onClick={handleLogout}>Sign out</button>
         </span>
       </header>
+      {needConsent && (
+        <div className="consent-banner">
+          <span>Your documents may contain personal or health data. By uploading, you acknowledge that processing happens through third-party AI providers.</span>
+          <button className="consent-ack-btn" onClick={handleConsent}>Acknowledge &amp; Continue</button>
+        </div>
+      )}
       <div className="app-body">
         <DocList
           docs={docs}
@@ -361,9 +564,11 @@ export default function App() {
         <ChatPanel
           doc={selectedDoc}
           docId={selectedDoc?.id}
+          docs={docs}
           onClose={() => setSelectedDoc(null)}
         />
       </div>
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
     </div>
   );
 }

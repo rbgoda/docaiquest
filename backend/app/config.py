@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     # key is empty, the sender LOGS the link instead of sending (dev mode) so the
     # flow is testable with no provider configured.
     resend_api_key: str = ""
-    email_from: str = "DocAIQuest <no-reply@docaiq.jicama.tech>"
+    email_from: str = "DocAIQuest <no-reply@docaiquest.dev>"
     # Where "Contact us" form submissions are emailed. Empty → the message is only
     # logged (dev) / falls back to email_from's inbox. Set in prod .env.
     contact_email: str = ""
@@ -79,8 +79,8 @@ class Settings(BaseSettings):
     # This is the public platform-UI signup form (paid plans) — submitting it
     # creates a pending SignupRequest the operator approves to provision a
     # dedicated container. Only meaningful on the shared free container; set
-    # via env (prod: https://docaiq.jicama.tech/signup.html?plan=starter).
-    upgrade_url: str = "http://localhost:9000/signup.html?plan=starter"
+    # via env (OSS default: localhost signup page).
+    upgrade_url: str = "http://localhost:8085"
 
     # M43 · control-plane internal URL · used by the marketplace install
     # endpoint to fetch the framework catalog + record the install. In
@@ -238,13 +238,13 @@ class Settings(BaseSettings):
 
     # Session cookie name. Same across providers.
     session_cookie_name: str = "docaiq_session"
-    # Set to ".docaiq.jicama.tech" to SHARE the session across subdomains (so a Google login on the
-    # main app also authenticates admin.docaiq.jicama.tech). Empty = host-scoped (default). The
-    # OAuth callback then honours a validated `next=` to land the user back on the admin console.
+    # Set to a shared parent domain to share the session across subdomains
+    # (e.g. ".example.com" so a login on the main app also authenticates
+    # admin.example.com). Empty = host-scoped (default).
     session_cookie_domain: str = ""
-    # AIQ Suite SSO — shared secret across every *.jicama.tech app. Trust anchor
-    # for the `jicama_sso` JWT (browser cookie login + API Bearer). Set from the
-    # suite secret in prod .env; empty = SSO off. Never commit the value.
+    # AIQ Suite SSO — shared secret for cross-app single-sign-on across
+    # same-domain apps. Set from the suite secret in prod .env; empty = SSO off.
+    # Never commit the value.
     jicama_sso_secret: str = ""
 
     # ---- Shared SaaS mode (M37 · free tier) -----------------------------
@@ -695,8 +695,8 @@ class Settings(BaseSettings):
     chat_multihop_max_subqs: int = 4
 
     # OpenRouter required headers — the platform asks for these to identify
-    # apps using free tiers. Defaults to our github / docaiq.io brand.
-    openrouter_referer: str = "https://docaiq.io"
+    # apps using free tiers.
+    openrouter_referer: str = "https://github.com/rbgoda/docaiquest"
     openrouter_app_title: str = "DocAIQuest"
 
     # Per-call timeout. LLMs occasionally hang; the cascade needs to fail
