@@ -160,13 +160,9 @@ Upload → Parse → Chunk → Embed → Store
 Question → Search → Retrieve context → Generate answer
 ```
 
-Deeper dive: [`docs/ARCHITECTURE_DEEP_DIVE.md`](docs/ARCHITECTURE_DEEP_DIVE.md)
-· [`docs/PIPELINE_MAP.md`](docs/PIPELINE_MAP.md)
-
 ## Stack
 
-Python · PostgreSQL · Redis · Docker Compose. One command to start everything.
-[`docs/API_QUICKSTART.md`](docs/API_QUICKSTART.md) for the API.
+Python · PostgreSQL · Redis · Docker Compose.
 
 ## License
 
