@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "docaiq"
+version = "0.1.0"
+description = "Official Python SDK for the DocAIQ document-intelligence API"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "DocAIQ" }]
+dependencies = ["requests>=2.28"]
+
+[project.urls]
+Homepage = "https://docaiq.jicama.tech"
+
+[tool.setuptools.packages.find]
+include = ["docaiq*"]

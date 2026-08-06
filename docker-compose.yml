@@ -1,0 +1,456 @@
+# ─────────────────────────────────────────────────────────────────────────
+# DocAIQ · per-tenant compose stack
+# ─────────────────────────────────────────────────────────────────────────
+# CRITICAL CONTRACT (TODO #33):
+#   Tenant isolation is enforced by the COMPOSE PROJECT NAME, not by the
+#   compose file. Each tenant runs as a separate compose project so its
+#   named volumes (postgres-data, minio-data) are namespaced as
+#   `<project>_postgres-data`, `<project>_minio-data` — guaranteeing zero
+#   data crossover.
+#
+# ALWAYS launch via the Makefile:
+#   make up                     → project `docaiq-docmod`, port 8085
+#   make tenant-up T=acme       → project `docaiq-acme`,    port 8081 (or PORT=…)
+#
+# DO NOT run `docker compose up` directly from this file without -p. The
+# default project name (`docaiq-docmod`) would NOT match the prod namespace
+# (`docaiq`, set via deploy.sh). The Makefile and deploy.sh each handle this
+# correctly; bypass at your own risk.
+#
+# Each tenant ALSO has its own .tenants/<slug>.env with a cryptographically
+# random DOCAIQ_JWT_SECRET (TODO #1). Restarts reuse the existing secret so
+# sessions survive; deleting the file regenerates the secret and logs
+# everyone out of that tenant once.
+#
+# Compose v2 syntax. No top-level `version:` key needed.
+
+name: docaiq-docmod
+
+services:
+  postgres:
+    # pgvector/pgvector:pg16 is the upstream Postgres 16 + pgvector ext, used
+    # as a drop-in. The migration enables the extension on first boot.
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: docaiq
+      POSTGRES_PASSWORD: ${DOCAIQ_DB_PASSWORD:-docaiq-dev}
+      POSTGRES_DB: docaiq
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - docaiq-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docaiq -d docaiq"]
+      interval: 5s
+      timeout: 3s
+      start_period: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save "" --appendonly no
+    networks:
+      - docaiq-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      start_period: 3s
+      retries: 10
+    restart: unless-stopped
+
+  minio:
+    # Pinned tag — never use `:latest` for a compliance product. The audit
+    # platform must reproduce yesterday's behavior exactly; a surprise MinIO
+    # bump could change object-listing semantics, ACL defaults, or
+    # presigned-URL formats mid-flight. Override via env when bumping;
+    # pair with a SHA digest in production:
+    #   docker pull quay.io/minio/minio:<tag>          # get digest
+    #   set DOCAIQ_MINIO_IMAGE=quay.io/minio/minio@sha256:<digest>
+    image: ${DOCAIQ_MINIO_IMAGE:-quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z}
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${DOCAIQ_S3_ACCESS_KEY:-docaiq}
+      MINIO_ROOT_PASSWORD: ${DOCAIQ_S3_SECRET_KEY:-docaiq-dev-secret-please-rotate}
+    volumes:
+      - minio-data:/data
+    networks:
+      - docaiq-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 3s
+      start_period: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: ${COMPOSE_PROJECT_NAME:-docaiq-docmod}-backend:dev
+    # No container_name: lets compose auto-name (<project>-backend-1) so a second
+    # tenant under a different project name doesn't collide on the Docker daemon.
+    # M44.P13 · tenant stacks are separate compose projects, so they reach the
+    # control plane (and the shared free backend) over the HOST via
+    # host.docker.internal:9001/9090. On Docker Desktop that name resolves
+    # automatically; on Linux (prod) it does NOT without this mapping. Without
+    # it DOCAIQ_CONTROL_PLANE_INTERNAL_URL never resolves and the marketplace
+    # install + federated-learning contrib/sync all fail with NXDOMAIN.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      DOCAIQ_TENANT_ID: ${DOCAIQ_TENANT_ID:-default}
+      DOCAIQ_ENVIRONMENT: ${DOCAIQ_ENVIRONMENT:-development}
+      DOCAIQ_AUTH_PROVIDER: ${DOCAIQ_AUTH_PROVIDER:-dev}
+      # M46 · product this stack serves — "auditing" (full app) or "documents"
+      # (standalone Documents System: doc processing + chat, no audit). The SPA
+      # reads it from /api/auth/config to pick its shell.
+      DOCAIQ_PRODUCT: ${DOCAIQ_PRODUCT:-auditing}
+      # nginx and the SPA share an origin, so technically only the host port
+      # matters here. Listed for clarity / direct-access debugging.
+      DOCAIQ_CORS_ORIGINS: '["http://localhost:8080","http://127.0.0.1:8080"]'
+      DOCAIQ_DATABASE_URL: postgresql+psycopg://docaiq:${DOCAIQ_DB_PASSWORD:-docaiq-dev}@postgres:5432/docaiq
+      # Per-tenant JWT secret. Required — compose refuses to boot without it.
+      # `make up` / `make tenant-up` generate a cryptographically random
+      # secret per tenant at .tenants/<slug>.env on first run and reuse it
+      # on subsequent boots. A cookie signed by one tenant's container will
+      # never decode in another's. In Helm/prod the secret comes from
+      # External Secrets (Vault / AWS SM / GCP SM).
+      DOCAIQ_JWT_SECRET: ${DOCAIQ_JWT_SECRET:?DOCAIQ_JWT_SECRET must be set — use `make up` or `make tenant-up T=...` which generates a random per-tenant secret automatically}
+      # MinIO / S3. Bucket name is per-tenant. MinIO stays internal to the
+      # compose network — uploads and downloads stream through the backend
+      # (no CORS, no presign rewriting, works identically per-tenant). In
+      # production swap the endpoint to AWS S3 / Azure Blob / GCS via env.
+      DOCAIQ_S3_ENDPOINT: http://minio:9000
+      DOCAIQ_S3_ACCESS_KEY: ${DOCAIQ_S3_ACCESS_KEY:-docaiq}
+      DOCAIQ_S3_SECRET_KEY: ${DOCAIQ_S3_SECRET_KEY:-docaiq-dev-secret-please-rotate}
+      DOCAIQ_S3_BUCKET: docaiq-${DOCAIQ_TENANT_ID:-default}
+      DOCAIQ_S3_REGION: us-east-1
+      DOCAIQ_REDIS_URL: redis://redis:6379/0
+      # `local` = sentence-transformers all-MiniLM-L6-v2 (384d native, CPU, no API
+      # key, no per-call cost) → real semantic vectors for the cosine half of hybrid
+      # retrieval. `hash` (the old default) is a non-semantic feature-hash and makes
+      # dense retrieval near-noise. Switching backends requires a re-embed
+      # (`python -m app.jobs.reembed --tenant <id>`) since vectors aren't comparable.
+      DOCAIQ_EMBED_BACKEND: ${DOCAIQ_EMBED_BACKEND:-local}
+      # Stage-2 cross-encoder rerank (BGE-Reranker-v2-m3) over the hybrid BM25+vector pool.
+      # High-ROI over a weak first-stage embedder (MiniLM). OFF by default; set true in prod .env.
+      DOCAIQ_RERANKER_ENABLED: ${DOCAIQ_RERANKER_ENABLED:-false}
+      # #3 · assemble answer RULES from base+shape fragments (validated: format 90→95%, fewer tokens). Set false in .env to revert.
+      DOCAIQ_ANSWER_FRAGMENTS_ENABLED: ${DOCAIQ_ANSWER_FRAGMENTS_ENABLED:-true}
+      # #4 HYBRID typed-answer (table→free-text, else→typed answer_found gate). Validated: format 100%/grounded 100%/clean 100%. Set false in .env to revert.
+      DOCAIQ_TYPED_ANSWER_ENABLED: ${DOCAIQ_TYPED_ANSWER_ENABLED:-true}
+      # RAG-roadmap #1 · concurrent ingestion jobs per worker (default 4). Raise to scale throughput.
+      DOCAIQ_WORKER_MAX_JOBS: ${DOCAIQ_WORKER_MAX_JOBS:-4}
+      # RAG-roadmap #3 · GraphRAG in the retriever (entity-anchored recall). OFF; A/B then enable.
+      DOCAIQ_GRAPH_RETRIEVAL_ENABLED: ${DOCAIQ_GRAPH_RETRIEVAL_ENABLED:-true}
+      # RAG-roadmap #4 · sentence-aware chunking of oversized blocks (new ingests). OFF; A/B then enable.
+      DOCAIQ_SEMANTIC_CHUNKING: ${DOCAIQ_SEMANTIC_CHUNKING:-false}
+      DOCAIQ_TYPE_CANONICALIZE: ${DOCAIQ_TYPE_CANONICALIZE:-false}
+      DOCAIQ_SESSION_REVOCATION: ${DOCAIQ_SESSION_REVOCATION:-false}
+      DOCAIQ_ENTITY_TYPE_RESOLVER: ${DOCAIQ_ENTITY_TYPE_RESOLVER:-false}
+      # CPU default ms-marco-MiniLM-L-6-v2 (~1.3s/query). GPU/multilingual: BAAI/bge-reranker-v2-m3.
+      DOCAIQ_RERANKER_MODEL: ${DOCAIQ_RERANKER_MODEL:-cross-encoder/ms-marco-MiniLM-L-6-v2}
+      # Retrieval Step 2 · flip cosine search to the BGE-M3 embedding_v2 column (multilingual).
+      # Requires the backfill to have populated embedding_v2 first. See EMBEDDER_LATECHUNK_SCOPE.md.
+      DOCAIQ_EMBED_V2_ACTIVE: ${DOCAIQ_EMBED_V2_ACTIVE:-false}
+      DOCAIQ_EMBED_V2_BACKEND: ${DOCAIQ_EMBED_V2_BACKEND:-local}
+      # Foundation-Fix-B · general-purpose NER at ingest. regex (default) |
+      # llm | both. LLM modes add one cheap call/doc → people/orgs/locations/
+      # products/clauses entities for arbitrary docs. OFF by default (cost).
+      DOCAIQ_NER_BACKEND: ${DOCAIQ_NER_BACKEND:-regex}
+      DOCAIQ_NER_MODEL: ${DOCAIQ_NER_MODEL:-}
+      # Move-1 PR3 · nightly schema crystallization (recurring doc types →
+      # first-class typed fields). OFF by default (ships dormant).
+      DOCAIQ_SCHEMA_CRYSTALLIZE_ENABLED: ${DOCAIQ_SCHEMA_CRYSTALLIZE_ENABLED:-false}
+      # M53 · LLM spend guards (0 = off). Set for public/testing waves.
+      DOCAIQ_DOCUMENTS_DAILY_LLM_CAP: ${DOCAIQ_DOCUMENTS_DAILY_LLM_CAP:-0}
+      DOCAIQ_DOCUMENTS_USER_HOURLY_LLM_CAP: ${DOCAIQ_DOCUMENTS_USER_HOURLY_LLM_CAP:-0}
+      # M43 · marketplace catalog URL. Empty disables the Frameworks
+      # marketplace surface; the SPA renders empty state. In prod set to
+      # https://docaiq.jicama.tech (or wherever the control plane is).
+      DOCAIQ_CONTROL_PLANE_INTERNAL_URL: ${DOCAIQ_CONTROL_PLANE_INTERNAL_URL:-http://host.docker.internal:9001}
+      DOCAIQ_EMBED_DIM: "384"
+      DOCAIQ_OPENAI_API_KEY: ${DOCAIQ_OPENAI_API_KEY:-}
+      # M9: LLM provider keys. Any/all may be empty — gateway falls back to a
+      # stub that returns canned answers. OpenRouter is the recommended path
+      # (unified API for Gemini/DeepSeek/Qwen/Llama including free tiers).
+      DOCAIQ_OPENROUTER_API_KEY: ${DOCAIQ_OPENROUTER_API_KEY:-}
+      DOCAIQ_EXTRACTION_API_KEY: ${DOCAIQ_EXTRACTION_API_KEY:-}
+      DOCAIQ_ANTHROPIC_API_KEY: ${DOCAIQ_ANTHROPIC_API_KEY:-}
+      DOCAIQ_GOOGLE_GENAI_API_KEY: ${DOCAIQ_GOOGLE_GENAI_API_KEY:-}
+      DOCAIQ_DEEPSEEK_API_KEY: ${DOCAIQ_DEEPSEEK_API_KEY:-}
+      # M46 · Google OIDC sign-in + Drive connector (documents product). Empty
+      # defaults → feature stays off for other tenants; set in the per-tenant
+      # env to enable. PUBLIC_URL drives the OAuth redirect URIs.
+      DOCAIQ_GOOGLE_CLIENT_ID: ${DOCAIQ_GOOGLE_CLIENT_ID:-}
+      DOCAIQ_GOOGLE_PICKER_API_KEY: ${DOCAIQ_GOOGLE_PICKER_API_KEY:-}
+      DOCAIQ_GOOGLE_CLIENT_SECRET: ${DOCAIQ_GOOGLE_CLIENT_SECRET:-}
+      DOCAIQ_PUBLIC_URL: ${DOCAIQ_PUBLIC_URL:-http://localhost:8080}
+      DOCAIQ_DRIVE_BACKEND: ${DOCAIQ_DRIVE_BACKEND:-stub}
+      DOCAIQ_DOCUMENTS_DRIVE_AUTOBACKUP: ${DOCAIQ_DOCUMENTS_DRIVE_AUTOBACKUP:-true}
+      DOCAIQ_DOCUMENTS_DRIVE_ENCRYPTION: ${DOCAIQ_DOCUMENTS_DRIVE_ENCRYPTION:-false}
+      DOCAIQ_DOCUMENTS_SUPERADMIN_EMAILS: ${DOCAIQ_DOCUMENTS_SUPERADMIN_EMAILS:-}
+      DOCAIQ_SESSION_COOKIE_DOMAIN: ${DOCAIQ_SESSION_COOKIE_DOMAIN:-}
+      DOCAIQ_RESEND_API_KEY: ${DOCAIQ_RESEND_API_KEY:-}
+      DOCAIQ_EMAIL_FROM: ${DOCAIQ_EMAIL_FROM:-DocAIQ <no-reply@docaiq.jicama.tech>}
+      DOCAIQ_CONTACT_EMAIL: ${DOCAIQ_CONTACT_EMAIL:-}
+      # M44.P6 · Alibaba Dashscope (Qwen3-VL direct). When set, models
+      # prefixed `dashscope/` (e.g. dashscope/qwen3-vl-235b-a22b) route
+      # to dashscope-intl.aliyuncs.com instead of OpenRouter.
+      DOCAIQ_DASHSCOPE_API_KEY: ${DOCAIQ_DASHSCOPE_API_KEY:-}
+      DOCAIQ_VISION_QWEN_MODEL: ${DOCAIQ_VISION_QWEN_MODEL:-qwen-vl-max}
+      DOCAIQ_VISION_PRIMARY: ${DOCAIQ_VISION_PRIMARY:-gemini}
+      DOCAIQ_DOCUMENTS_FIGURE_EXTRACTION: ${DOCAIQ_DOCUMENTS_FIGURE_EXTRACTION:-false}
+      DOCAIQ_DOCUMENTS_FIGURE_MAX_PAGES: ${DOCAIQ_DOCUMENTS_FIGURE_MAX_PAGES:-8}
+      DOCAIQ_DOCUMENTS_FIGURE_MAX_EDGE: ${DOCAIQ_DOCUMENTS_FIGURE_MAX_EDGE:-1280}
+      DOCAIQ_DOCUMENTS_MULTIPASS_OCR: ${DOCAIQ_DOCUMENTS_MULTIPASS_OCR:-false}
+      DOCAIQ_DOCUMENTS_OFFICE_IMAGE_OCR: ${DOCAIQ_DOCUMENTS_OFFICE_IMAGE_OCR:-false}
+      DOCAIQ_DOCUMENTS_OFFICE_IMAGE_MAX: ${DOCAIQ_DOCUMENTS_OFFICE_IMAGE_MAX:-12}
+      DOCAIQ_DOC_MODEL: ${DOCAIQ_DOC_MODEL:-false}
+      DOCAIQ_DOCUMENTS_DOCLING_ENABLED: ${DOCAIQ_DOCUMENTS_DOCLING_ENABLED:-false}
+      DOCAIQ_DOCUMENTS_LLM_BBOX_FALLBACK: ${DOCAIQ_DOCUMENTS_LLM_BBOX_FALLBACK:-false}
+      DOCAIQ_DOCUMENTS_AGENT_FALLBACK: ${DOCAIQ_DOCUMENTS_AGENT_FALLBACK:-true}
+      DOCAIQ_RETRIEVAL_RECENCY_ENABLED: ${DOCAIQ_RETRIEVAL_RECENCY_ENABLED:-false}
+      DOCAIQ_RETRIEVAL_RECENCY_HALF_LIFE_DAYS: ${DOCAIQ_RETRIEVAL_RECENCY_HALF_LIFE_DAYS:-180}
+      DOCAIQ_RETRIEVAL_RECENCY_FLOOR: ${DOCAIQ_RETRIEVAL_RECENCY_FLOOR:-0.5}
+      DOCAIQ_CHAT_ABSTAIN_ON_UNGROUNDED: ${DOCAIQ_CHAT_ABSTAIN_ON_UNGROUNDED:-true}
+      DOCAIQ_RETRIEVAL_FEEDBACK_BOOST_ENABLED: ${DOCAIQ_RETRIEVAL_FEEDBACK_BOOST_ENABLED:-false}
+      DOCAIQ_RETRIEVAL_FEEDBACK_BOOST_STRENGTH: ${DOCAIQ_RETRIEVAL_FEEDBACK_BOOST_STRENGTH:-0.15}
+      DOCAIQ_RETRIEVAL_CONTEXT_EXPANSION: ${DOCAIQ_RETRIEVAL_CONTEXT_EXPANSION:-false}
+      DOCAIQ_RETRIEVAL_CONTEXT_WINDOW: ${DOCAIQ_RETRIEVAL_CONTEXT_WINDOW:-1}
+      DOCAIQ_RETRIEVAL_CONTEXT_MAX_CHARS: ${DOCAIQ_RETRIEVAL_CONTEXT_MAX_CHARS:-2400}
+      DOCAIQ_JICAMA_SSO_SECRET: ${DOCAIQ_JICAMA_SSO_SECRET:-}
+      DOCAIQ_CLASSIFIER_MODEL: ${DOCAIQ_CLASSIFIER_MODEL:-anthropic/claude-haiku-4.5}
+      DOCAIQ_EXTRACTION_MODEL: ${DOCAIQ_EXTRACTION_MODEL:-dashscope/qwen-max}
+      DOCAIQ_STRONG_EXTRACT_MODEL: ${DOCAIQ_STRONG_EXTRACT_MODEL:-dashscope/qwen-max}
+      DOCAIQ_INTELLIGENCE_MODEL: ${DOCAIQ_INTELLIGENCE_MODEL:-dashscope/qwen-max}
+      DOCAIQ_DOCUMENTS_CATEGORIZE_MODEL: ${DOCAIQ_DOCUMENTS_CATEGORIZE_MODEL:-dashscope/qwen-max}
+      DOCAIQ_CONTEXTUAL_MODEL: ${DOCAIQ_CONTEXTUAL_MODEL:-dashscope/qwen-turbo}
+      DOCAIQ_EXTRACTION_TIMEOUT: ${DOCAIQ_EXTRACTION_TIMEOUT:-150}
+      DOCAIQ_EXTRACTION_RETRIES: ${DOCAIQ_EXTRACTION_RETRIES:-1}
+      # R5 · query routing + multi-hop decomposition + CRAG (opt-in, default off)
+      DOCAIQ_CHAT_QUERY_ROUTING: ${DOCAIQ_CHAT_QUERY_ROUTING:-false}
+      # LLM ledger retention (days). 0 = off (no purge); set e.g. 90 to enable.
+      DOCAIQ_LLM_CALLS_RETENTION_DAYS: ${DOCAIQ_LLM_CALLS_RETENTION_DAYS:-0}
+      # Bootstrap owner — injected by the control plane when this stack is
+      # provisioned via a signup approval. If set, the seed step creates
+      # exactly this user as the tenant's sole owner; if empty (default +
+      # acme dev stacks), the default elena/james/marcus trio is seeded.
+      DOCAIQ_BOOTSTRAP_OWNER_EMAIL: ${DOCAIQ_BOOTSTRAP_OWNER_EMAIL:-}
+      DOCAIQ_BOOTSTRAP_OWNER_NAME: ${DOCAIQ_BOOTSTRAP_OWNER_NAME:-}
+      DOCAIQ_BOOTSTRAP_OWNER_PASSWORD: ${DOCAIQ_BOOTSTRAP_OWNER_PASSWORD:-}
+      # Demo data — true (default) seeds the full Atlas/Helios/etc fixture
+      # so dev tenants have rich data out of the box. Control plane sets
+      # this to "false" for every customer-provisioned tenant so they get
+      # an empty workspace (owner + routing config only).
+      DOCAIQ_SEED_DEMO_DATA: ${DOCAIQ_SEED_DEMO_DATA:-true}
+      # M44.P2 · Document Agent ReAct loop. Default false; flip via
+      # .tenants/<T>.env when ready to test the agent path.
+      DOCAIQ_AGENT_MODE_ENABLED: ${DOCAIQ_AGENT_MODE_ENABLED:-false}
+      # M44.P2.5/P3 · cache layer (on by default; safe to leave on)
+      DOCAIQ_REFLEXION_CACHE_ENABLED: ${DOCAIQ_REFLEXION_CACHE_ENABLED:-true}
+      DOCAIQ_REFLEXION_CACHE_THRESHOLD: ${DOCAIQ_REFLEXION_CACHE_THRESHOLD:-0.92}
+      # M44.P11 · GDPR/PDPA PII safety. Redact cards/IBAN/SSN/Aadhaar/etc to
+      # placeholders before any external LLM call. Off by default (safe
+      # rollout); flip via .tenants/<T>.env. Audit ledger is always on.
+      DOCAIQ_PII_REDACT_BEFORE_LLM: ${DOCAIQ_PII_REDACT_BEFORE_LLM:-false}
+      DOCAIQ_LLM_AUDIT_ENABLED: ${DOCAIQ_LLM_AUDIT_ENABLED:-true}
+      # M44.P11.2 · tokenize PII inside our own stored text (chunks + downstream
+      # artifacts); real values encrypted in pii_vault, revealed per-doc.
+      DOCAIQ_PII_PROTECT_AT_REST: ${DOCAIQ_PII_PROTECT_AT_REST:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - docaiq-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8001/api/health').status==200 else 1)"]
+      interval: 10s
+      timeout: 3s
+      start_period: 15s
+      retries: 5
+    restart: unless-stopped
+
+  worker:
+    # Same image as backend; just runs arq instead of uvicorn. One container
+    # per tenant — the worker reads the tenant from DOCAIQ_TENANT_ID so jobs
+    # always have a tenant context, identical to the API path.
+    image: ${COMPOSE_PROJECT_NAME:-docaiq-docmod}-backend:dev
+    command: ["arq", "app.worker.WorkerSettings"]
+    # M44.P13 · the nightly knowledge promoter + sync crons (and the startup
+    # seed) run HERE in the worker and call the control plane over the host.
+    # Needs the same host-gateway mapping as backend or they NXDOMAIN on Linux.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      DOCAIQ_TENANT_ID: ${DOCAIQ_TENANT_ID:-default}
+      DOCAIQ_ENVIRONMENT: ${DOCAIQ_ENVIRONMENT:-development}
+      DOCAIQ_AUTH_PROVIDER: ${DOCAIQ_AUTH_PROVIDER:-dev}
+      DOCAIQ_PRODUCT: ${DOCAIQ_PRODUCT:-auditing}
+      DOCAIQ_DATABASE_URL: postgresql+psycopg://docaiq:${DOCAIQ_DB_PASSWORD:-docaiq-dev}@postgres:5432/docaiq
+      # Worker shares the tenant's JWT secret (so it can decode cookies the
+      # API issued — used when worker emits authenticated callbacks). Same
+      # required-or-fail behavior as backend.
+      DOCAIQ_JWT_SECRET: ${DOCAIQ_JWT_SECRET:?DOCAIQ_JWT_SECRET must be set — use `make up` or `make tenant-up T=...`}
+      DOCAIQ_S3_ENDPOINT: http://minio:9000
+      DOCAIQ_S3_ACCESS_KEY: ${DOCAIQ_S3_ACCESS_KEY:-docaiq}
+      DOCAIQ_S3_SECRET_KEY: ${DOCAIQ_S3_SECRET_KEY:-docaiq-dev-secret-please-rotate}
+      DOCAIQ_S3_BUCKET: docaiq-${DOCAIQ_TENANT_ID:-default}
+      DOCAIQ_S3_REGION: us-east-1
+      DOCAIQ_REDIS_URL: redis://redis:6379/0
+      # `local` = sentence-transformers all-MiniLM-L6-v2 (384d native, CPU, no API
+      # key, no per-call cost) → real semantic vectors for the cosine half of hybrid
+      # retrieval. `hash` (the old default) is a non-semantic feature-hash and makes
+      # dense retrieval near-noise. Switching backends requires a re-embed
+      # (`python -m app.jobs.reembed --tenant <id>`) since vectors aren't comparable.
+      DOCAIQ_EMBED_BACKEND: ${DOCAIQ_EMBED_BACKEND:-local}
+      # Stage-2 cross-encoder rerank (BGE-Reranker-v2-m3) over the hybrid BM25+vector pool.
+      # High-ROI over a weak first-stage embedder (MiniLM). OFF by default; set true in prod .env.
+      DOCAIQ_RERANKER_ENABLED: ${DOCAIQ_RERANKER_ENABLED:-false}
+      # #3 · assemble answer RULES from base+shape fragments (validated: format 90→95%, fewer tokens). Set false in .env to revert.
+      DOCAIQ_ANSWER_FRAGMENTS_ENABLED: ${DOCAIQ_ANSWER_FRAGMENTS_ENABLED:-true}
+      # #4 HYBRID typed-answer (table→free-text, else→typed answer_found gate). Validated: format 100%/grounded 100%/clean 100%. Set false in .env to revert.
+      DOCAIQ_TYPED_ANSWER_ENABLED: ${DOCAIQ_TYPED_ANSWER_ENABLED:-true}
+      # RAG-roadmap #1 · concurrent ingestion jobs per worker (default 4). Raise to scale throughput.
+      DOCAIQ_WORKER_MAX_JOBS: ${DOCAIQ_WORKER_MAX_JOBS:-4}
+      # RAG-roadmap #3 · GraphRAG in the retriever (entity-anchored recall). OFF; A/B then enable.
+      DOCAIQ_GRAPH_RETRIEVAL_ENABLED: ${DOCAIQ_GRAPH_RETRIEVAL_ENABLED:-true}
+      # RAG-roadmap #4 · sentence-aware chunking of oversized blocks (new ingests). OFF; A/B then enable.
+      DOCAIQ_SEMANTIC_CHUNKING: ${DOCAIQ_SEMANTIC_CHUNKING:-false}
+      DOCAIQ_TYPE_CANONICALIZE: ${DOCAIQ_TYPE_CANONICALIZE:-false}
+      DOCAIQ_SESSION_REVOCATION: ${DOCAIQ_SESSION_REVOCATION:-false}
+      DOCAIQ_ENTITY_TYPE_RESOLVER: ${DOCAIQ_ENTITY_TYPE_RESOLVER:-false}
+      # CPU default ms-marco-MiniLM-L-6-v2 (~1.3s/query). GPU/multilingual: BAAI/bge-reranker-v2-m3.
+      DOCAIQ_RERANKER_MODEL: ${DOCAIQ_RERANKER_MODEL:-cross-encoder/ms-marco-MiniLM-L-6-v2}
+      # Retrieval Step 2 · flip cosine search to the BGE-M3 embedding_v2 column (multilingual).
+      # Requires the backfill to have populated embedding_v2 first. See EMBEDDER_LATECHUNK_SCOPE.md.
+      DOCAIQ_EMBED_V2_ACTIVE: ${DOCAIQ_EMBED_V2_ACTIVE:-false}
+      DOCAIQ_EMBED_V2_BACKEND: ${DOCAIQ_EMBED_V2_BACKEND:-local}
+      # Foundation-Fix-B · general-purpose NER at ingest. regex (default) |
+      # llm | both. LLM modes add one cheap call/doc → people/orgs/locations/
+      # products/clauses entities for arbitrary docs. OFF by default (cost).
+      DOCAIQ_NER_BACKEND: ${DOCAIQ_NER_BACKEND:-regex}
+      DOCAIQ_NER_MODEL: ${DOCAIQ_NER_MODEL:-}
+      # Move-1 PR3 · nightly schema crystallization (recurring doc types →
+      # first-class typed fields). OFF by default (ships dormant).
+      DOCAIQ_SCHEMA_CRYSTALLIZE_ENABLED: ${DOCAIQ_SCHEMA_CRYSTALLIZE_ENABLED:-false}
+      # M53 · LLM spend guards (0 = off). Set for public/testing waves.
+      DOCAIQ_DOCUMENTS_DAILY_LLM_CAP: ${DOCAIQ_DOCUMENTS_DAILY_LLM_CAP:-0}
+      DOCAIQ_DOCUMENTS_USER_HOURLY_LLM_CAP: ${DOCAIQ_DOCUMENTS_USER_HOURLY_LLM_CAP:-0}
+      # M43 · marketplace catalog URL. Empty disables the Frameworks
+      # marketplace surface; the SPA renders empty state. In prod set to
+      # https://docaiq.jicama.tech (or wherever the control plane is).
+      DOCAIQ_CONTROL_PLANE_INTERNAL_URL: ${DOCAIQ_CONTROL_PLANE_INTERNAL_URL:-http://host.docker.internal:9001}
+      DOCAIQ_EMBED_DIM: "384"
+      DOCAIQ_OPENAI_API_KEY: ${DOCAIQ_OPENAI_API_KEY:-}
+      # LLM gateway keys — required by the M11 matcher agent, which runs
+      # the validator inside the worker (not the API). Without these the
+      # cascade falls through to the stub backend and every match decision
+      # comes back at stub-confidence 0.83.
+      DOCAIQ_OPENROUTER_API_KEY: ${DOCAIQ_OPENROUTER_API_KEY:-}
+      DOCAIQ_EXTRACTION_API_KEY: ${DOCAIQ_EXTRACTION_API_KEY:-}
+      DOCAIQ_ANTHROPIC_API_KEY: ${DOCAIQ_ANTHROPIC_API_KEY:-}
+      DOCAIQ_GOOGLE_GENAI_API_KEY: ${DOCAIQ_GOOGLE_GENAI_API_KEY:-}
+      DOCAIQ_DASHSCOPE_API_KEY: ${DOCAIQ_DASHSCOPE_API_KEY:-}
+      DOCAIQ_VISION_QWEN_MODEL: ${DOCAIQ_VISION_QWEN_MODEL:-qwen-vl-max}
+      DOCAIQ_VISION_PRIMARY: ${DOCAIQ_VISION_PRIMARY:-gemini}
+      DOCAIQ_DOCUMENTS_FIGURE_EXTRACTION: ${DOCAIQ_DOCUMENTS_FIGURE_EXTRACTION:-false}
+      DOCAIQ_DOCUMENTS_FIGURE_MAX_PAGES: ${DOCAIQ_DOCUMENTS_FIGURE_MAX_PAGES:-8}
+      DOCAIQ_DOCUMENTS_FIGURE_MAX_EDGE: ${DOCAIQ_DOCUMENTS_FIGURE_MAX_EDGE:-1280}
+      DOCAIQ_DOCUMENTS_MULTIPASS_OCR: ${DOCAIQ_DOCUMENTS_MULTIPASS_OCR:-false}
+      DOCAIQ_DOCUMENTS_OFFICE_IMAGE_OCR: ${DOCAIQ_DOCUMENTS_OFFICE_IMAGE_OCR:-false}
+      DOCAIQ_DOCUMENTS_OFFICE_IMAGE_MAX: ${DOCAIQ_DOCUMENTS_OFFICE_IMAGE_MAX:-12}
+      DOCAIQ_DOC_MODEL: ${DOCAIQ_DOC_MODEL:-false}
+      DOCAIQ_DOCUMENTS_DOCLING_ENABLED: ${DOCAIQ_DOCUMENTS_DOCLING_ENABLED:-false}
+      DOCAIQ_DOCUMENTS_LLM_BBOX_FALLBACK: ${DOCAIQ_DOCUMENTS_LLM_BBOX_FALLBACK:-false}
+      DOCAIQ_DOCUMENTS_AGENT_FALLBACK: ${DOCAIQ_DOCUMENTS_AGENT_FALLBACK:-true}
+      DOCAIQ_RETRIEVAL_RECENCY_ENABLED: ${DOCAIQ_RETRIEVAL_RECENCY_ENABLED:-false}
+      DOCAIQ_RETRIEVAL_RECENCY_HALF_LIFE_DAYS: ${DOCAIQ_RETRIEVAL_RECENCY_HALF_LIFE_DAYS:-180}
+      DOCAIQ_RETRIEVAL_RECENCY_FLOOR: ${DOCAIQ_RETRIEVAL_RECENCY_FLOOR:-0.5}
+      DOCAIQ_CHAT_ABSTAIN_ON_UNGROUNDED: ${DOCAIQ_CHAT_ABSTAIN_ON_UNGROUNDED:-true}
+      DOCAIQ_RETRIEVAL_FEEDBACK_BOOST_ENABLED: ${DOCAIQ_RETRIEVAL_FEEDBACK_BOOST_ENABLED:-false}
+      DOCAIQ_RETRIEVAL_FEEDBACK_BOOST_STRENGTH: ${DOCAIQ_RETRIEVAL_FEEDBACK_BOOST_STRENGTH:-0.15}
+      DOCAIQ_RETRIEVAL_CONTEXT_EXPANSION: ${DOCAIQ_RETRIEVAL_CONTEXT_EXPANSION:-false}
+      DOCAIQ_RETRIEVAL_CONTEXT_WINDOW: ${DOCAIQ_RETRIEVAL_CONTEXT_WINDOW:-1}
+      DOCAIQ_RETRIEVAL_CONTEXT_MAX_CHARS: ${DOCAIQ_RETRIEVAL_CONTEXT_MAX_CHARS:-2400}
+      DOCAIQ_JICAMA_SSO_SECRET: ${DOCAIQ_JICAMA_SSO_SECRET:-}
+      DOCAIQ_CLASSIFIER_MODEL: ${DOCAIQ_CLASSIFIER_MODEL:-anthropic/claude-haiku-4.5}
+      DOCAIQ_EXTRACTION_MODEL: ${DOCAIQ_EXTRACTION_MODEL:-dashscope/qwen-max}
+      DOCAIQ_STRONG_EXTRACT_MODEL: ${DOCAIQ_STRONG_EXTRACT_MODEL:-dashscope/qwen-max}
+      DOCAIQ_INTELLIGENCE_MODEL: ${DOCAIQ_INTELLIGENCE_MODEL:-dashscope/qwen-max}
+      DOCAIQ_DOCUMENTS_CATEGORIZE_MODEL: ${DOCAIQ_DOCUMENTS_CATEGORIZE_MODEL:-dashscope/qwen-max}
+      DOCAIQ_CONTEXTUAL_MODEL: ${DOCAIQ_CONTEXTUAL_MODEL:-dashscope/qwen-turbo}
+      DOCAIQ_EXTRACTION_TIMEOUT: ${DOCAIQ_EXTRACTION_TIMEOUT:-150}
+      DOCAIQ_EXTRACTION_RETRIES: ${DOCAIQ_EXTRACTION_RETRIES:-1}
+      # LLM ledger retention — the purge job runs in THIS worker's cron, so the
+      # var must be in the worker block (default 0 = off).
+      DOCAIQ_LLM_CALLS_RETENTION_DAYS: ${DOCAIQ_LLM_CALLS_RETENTION_DAYS:-0}
+      # M46 · the worker does Google Drive writes (auto-backup of uploads), so it
+      # needs the Drive backend + OAuth client creds for token refresh.
+      DOCAIQ_GOOGLE_CLIENT_ID: ${DOCAIQ_GOOGLE_CLIENT_ID:-}
+      DOCAIQ_GOOGLE_PICKER_API_KEY: ${DOCAIQ_GOOGLE_PICKER_API_KEY:-}
+      DOCAIQ_GOOGLE_CLIENT_SECRET: ${DOCAIQ_GOOGLE_CLIENT_SECRET:-}
+      DOCAIQ_DRIVE_BACKEND: ${DOCAIQ_DRIVE_BACKEND:-stub}
+      DOCAIQ_DOCUMENTS_DRIVE_AUTOBACKUP: ${DOCAIQ_DOCUMENTS_DRIVE_AUTOBACKUP:-true}
+      DOCAIQ_DOCUMENTS_DRIVE_ENCRYPTION: ${DOCAIQ_DOCUMENTS_DRIVE_ENCRYPTION:-false}
+      DOCAIQ_DOCUMENTS_SUPERADMIN_EMAILS: ${DOCAIQ_DOCUMENTS_SUPERADMIN_EMAILS:-}
+      DOCAIQ_SESSION_COOKIE_DOMAIN: ${DOCAIQ_SESSION_COOKIE_DOMAIN:-}
+      DOCAIQ_RESEND_API_KEY: ${DOCAIQ_RESEND_API_KEY:-}
+      DOCAIQ_EMAIL_FROM: ${DOCAIQ_EMAIL_FROM:-DocAIQ <no-reply@docaiq.jicama.tech>}
+      DOCAIQ_CONTACT_EMAIL: ${DOCAIQ_CONTACT_EMAIL:-}
+      # M44.P11 · PII redaction also applies to worker-side LLM calls
+      # (KYC extraction, matcher validator, materializer). Same flag.
+      DOCAIQ_PII_REDACT_BEFORE_LLM: ${DOCAIQ_PII_REDACT_BEFORE_LLM:-false}
+      DOCAIQ_LLM_AUDIT_ENABLED: ${DOCAIQ_LLM_AUDIT_ENABLED:-true}
+      # M44.P11.2 · ingestion (worker) tokenizes PII at rest. Same flag.
+      DOCAIQ_PII_PROTECT_AT_REST: ${DOCAIQ_PII_PROTECT_AT_REST:-false}
+      # P9.4 · vision-aware extraction runs in the worker's classify task.
+      DOCAIQ_VISION_EXTRACT_ENABLED: ${DOCAIQ_VISION_EXTRACT_ENABLED:-true}
+    # Override the image-level healthcheck — the Dockerfile's curl hits
+    # port 8001, which is uvicorn's port. Arq doesn't serve HTTP. Instead
+    # we check two things: (1) the arq process is alive (scan /proc since
+    # pgrep isn't in slim images), and (2) we can ping redis (the job
+    # queue). Either failing means the worker is useless to the API.
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import os,redis; assert any('arq' in open(f'/proc/{p}/cmdline').read() for p in os.listdir('/proc') if p.isdigit() and os.path.exists(f'/proc/{p}/cmdline')); redis.Redis.from_url(os.environ['DOCAIQ_REDIS_URL']).ping()"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    depends_on:
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - docaiq-net
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: ${COMPOSE_PROJECT_NAME:-docaiq-docmod}-frontend:dev
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${DOCAIQ_HOST_PORT:-8085}:80"
+    networks:
+      - docaiq-net
+    restart: unless-stopped
+
+networks:
+  docaiq-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  minio-data:

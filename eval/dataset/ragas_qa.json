@@ -1,0 +1,50 @@
+{
+  "_note": "Seed golden set for the DocAIQ eval harness. Hand-authored cases exercise both harnesses (R4 stdlib + Ragas judge). Grow it from real usage via `python -m eval.build_dataset_from_corpus` (the faithfulness-corpus export). See docs/EVAL_RAGAS.md.",
+  "cases": [
+    {
+      "question": "What is the total amount due on the invoice?",
+      "answer": "The total due is USD 13,516.00.",
+      "contexts": [
+        "Subtotal: USD 12,400.00\nTax (9%): USD 1,116.00\nTotal due: USD 13,516.00",
+        "Payment terms: Net 30 from the issue date."
+      ],
+      "ground_truth": "USD 13,516.00",
+      "expected": ["13,516.00", "USD"],
+      "citations": ["E1"],
+      "must_cite": ["E1"],
+      "should_abstain": false
+    },
+    {
+      "question": "When is the invoice due?",
+      "answer": "It is due on 12 Jul 2026.",
+      "contexts": ["Issue date: 12 Jun 2026. Due date: 12 Jul 2026. Terms: Net 30."],
+      "ground_truth": "12 Jul 2026",
+      "expected": ["12 Jul 2026"],
+      "citations": ["E1"],
+      "must_cite": ["E1"],
+      "should_abstain": false
+    },
+    {
+      "question": "Who signed the master service agreement?",
+      "answer": "The agreement was signed by Jane A. Doe on behalf of Acme Pte Ltd.",
+      "contexts": [
+        "Signed for and on behalf of Acme Pte Ltd\nName: Jane A. Doe\nTitle: Authorised Signatory\nDate: 2026-01-14"
+      ],
+      "ground_truth": "Jane A. Doe (Authorised Signatory, Acme Pte Ltd)",
+      "expected": ["Jane A. Doe", "Acme Pte Ltd"],
+      "citations": ["E1"],
+      "must_cite": ["E1"],
+      "should_abstain": false
+    },
+    {
+      "question": "What is the patient's blood glucose level in this lab report?",
+      "answer": "INSUFFICIENT_EVIDENCE — the retrieved evidence does not report a blood glucose value.",
+      "contexts": ["Full Blood Count: Haemoglobin 13.5 g/dL; White cell count 6.2; Platelets 250."],
+      "ground_truth": "Not stated in the document.",
+      "expected": [],
+      "citations": [],
+      "must_cite": [],
+      "should_abstain": true
+    }
+  ]
+}

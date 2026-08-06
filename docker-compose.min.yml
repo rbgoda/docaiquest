@@ -1,0 +1,22 @@
+# Slim DEV override — builds the backend/worker from Dockerfile.min (no torch/
+# sentence-transformers/rapidocr ≈ 2 GB smaller) and forces API embeddings +
+# reranker off so the dropped ML stack is never needed.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.min.yml up -d --build
+#
+# (or `make up-min`). Needs DOCAIQ_DASHSCOPE_API_KEY in .env for embeddings;
+# set DOCAIQ_EMBED_BACKEND=hash below instead for a fully-offline, no-key run.
+services:
+  backend:
+    build:
+      dockerfile: Dockerfile.min
+    image: docaiq-docmod-backend:slim
+    environment:
+      DOCAIQ_EMBED_BACKEND: dashscope
+      DOCAIQ_RERANKER_ENABLED: "false"
+
+  worker:
+    image: docaiq-docmod-backend:slim
+    environment:
+      DOCAIQ_EMBED_BACKEND: dashscope
+      DOCAIQ_RERANKER_ENABLED: "false"

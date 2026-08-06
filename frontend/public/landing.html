@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DocAIQ Documents — Your docs, your Drive. We keep nothing.</title>
+<meta name="description" content="Universal, privacy-native document intelligence. Drop in any document; AI agents classify, extract, and let you chat across your whole library with cited answers — and your files never leave your own Google Drive. PII-safe, GDPR & PDPA by design." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0E1014; --bg1:#13161C; --bg2:#181C24; --bg3:#1F242E;
+    --line:#262C38; --line2:#2E3542;
+    --ink:#E7E9EE; --ink2:#A8AEBC; --ink3:#6B7283; --ink4:#454B59;
+    --gold:#C8A04C; --gold2:#E2BC68;
+    --emerald:#3FA47A; --amber:#E0A23B; --rose:#D8625E; --violet:#8B7FD6;
+    --serif:"Fraunces",Georgia,serif;
+    --sans:"IBM Plex Sans",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --maxw:1080px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%; scroll-behavior:smooth;}
+  body{
+    font-family:var(--sans); background:var(--bg); color:var(--ink);
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(1200px 700px at 80% -10%, rgba(200,160,76,.10), transparent 60%),
+      radial-gradient(900px 600px at -10% 30%, rgba(139,127,214,.07), transparent 60%);
+    background-attachment:fixed;
+  }
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px;}
+  .mono{font-family:var(--mono);} .serif{font-family:var(--serif);}
+  .gold{color:var(--gold2);}
+  .eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold2);}
+  .kicker{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold2); margin-bottom:14px;}
+  .muted{color:var(--ink2);} .dim{color:var(--ink3);}
+  h1,h2,h3{font-family:var(--serif); font-weight:600; letter-spacing:.005em; line-height:1.12;}
+  section{padding:78px 0; border-top:1px solid var(--line);}
+  section h2{font-size:30px; margin-bottom:14px;}
+  section h2 .gl{color:var(--gold2);}
+  .lead{color:var(--ink2); font-size:16px; max-width:64ch;}
+
+  /* nav */
+  nav{position:sticky; top:0; z-index:50; background:rgba(14,16,20,.82); backdrop-filter:blur(10px); border-bottom:1px solid var(--line);}
+  nav .wrap{display:flex; align-items:center; gap:22px; height:62px;}
+  .brand{display:flex; align-items:center; gap:11px;}
+  .mark{width:32px;height:32px;border-radius:9px; background:linear-gradient(150deg,var(--gold2),var(--gold));
+    display:grid;place-items:center; color:#1a1407; font-family:var(--serif); font-weight:700; font-size:18px; box-shadow:0 4px 14px rgba(200,160,76,.35);}
+  .wordmark{font-family:var(--serif); font-weight:600; font-size:18px;}
+  .wordmark span{color:var(--gold2);} .wordmark small{font-family:var(--sans); font-size:11px; color:var(--ink3); margin-left:6px; letter-spacing:.04em;}
+  nav .links{display:flex; gap:22px; margin-left:auto;}
+  nav .links a{font-size:13.5px; color:var(--ink2);}
+  nav .links a:hover{color:var(--ink);}
+  .btn{display:inline-flex; align-items:center; gap:9px; font-family:var(--sans); font-weight:600; font-size:14px; padding:11px 20px; border-radius:10px; cursor:pointer; transition:transform .08s ease;}
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:linear-gradient(150deg,var(--gold2),var(--gold)); color:#1a1407; box-shadow:0 6px 20px rgba(200,160,76,.30);}
+  .btn-ghost{border:1px solid var(--line2); color:var(--ink);}
+  .gicon{width:16px;height:16px;display:inline-block;background:#fff;border-radius:3px;padding:1px;}
+  nav .btn{padding:9px 16px; font-size:13px;}
+
+  /* hero */
+  .hero{padding:90px 0 70px; border-top:none; text-align:center;}
+  .hero .eyebrow{margin-bottom:18px;}
+  .hero h1{font-size:54px; line-height:1.05; margin-bottom:22px;}
+  .hero p.lede{color:var(--ink2); font-size:18px; max-width:62ch; margin:0 auto 30px;}
+  .hero .cta-row{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+  .tagstrip{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:34px;}
+  .fw{font-family:var(--mono); font-size:11px; color:var(--ink2); background:var(--bg2); border:1px solid var(--line); border-radius:999px; padding:5px 11px;}
+
+  /* card grids */
+  .grid{display:grid; gap:16px; margin-top:30px;}
+  .g3{grid-template-columns:repeat(3,1fr);} .g4{grid-template-columns:repeat(4,1fr);} .g2{grid-template-columns:repeat(2,1fr);}
+  .card{background:var(--bg1); border:1px solid var(--line); border-radius:14px; padding:22px;}
+  .card .ic{font-size:20px; margin-bottom:12px; display:block;}
+  .card h3{font-size:15.5px; color:var(--ink); margin-bottom:7px;}
+  .card p{font-size:13.5px; color:var(--ink2);}
+
+  /* steps */
+  ol.steps{counter-reset:s; list-style:none; display:grid; gap:14px; margin-top:26px;}
+  ol.steps li{counter-increment:s; position:relative; background:var(--bg1); border:1px solid var(--line); border-radius:13px; padding:20px 22px 20px 64px;}
+  ol.steps li::before{content:counter(s); position:absolute; left:18px; top:18px; width:30px;height:30px; border-radius:8px;
+    background:var(--bg3); border:1px solid var(--line2); color:var(--gold2); font-family:var(--mono); font-weight:600; display:grid; place-items:center; font-size:14px;}
+  ol.steps b{color:var(--ink);} ol.steps span{color:var(--ink2); font-size:13.5px;}
+
+  /* flow */
+  .flow{display:flex; flex-wrap:wrap; align-items:center; gap:9px; margin-top:24px;}
+  .node{font-family:var(--mono); font-size:12px; background:var(--bg2); border:1px solid var(--line); border-radius:9px; padding:9px 13px; color:var(--ink2);}
+  .node.g{background:linear-gradient(150deg,rgba(226,188,104,.16),rgba(200,160,76,.08)); border-color:var(--gold); color:var(--gold2);}
+  .arr{color:var(--ink3);}
+
+  /* compliance shields */
+  .shield{width:7px;height:7px;border-radius:50%;background:var(--emerald); display:inline-block;}
+  .trust .card h3{display:flex; align-items:center; gap:8px;}
+
+  /* compare table */
+  .cmp{width:100%; border-collapse:collapse; margin-top:26px; font-size:13px; background:var(--bg1); border:1px solid var(--line); border-radius:14px; overflow:hidden;}
+  .cmp th,.cmp td{padding:12px 14px; text-align:left; border-bottom:1px solid var(--line);}
+  .cmp thead th{background:var(--bg2); color:var(--ink2); font-weight:600; font-size:12px;}
+  .cmp .col-us{background:rgba(200,160,76,.07);}
+  .cmp th.col-us{color:var(--gold2);}
+  .cmp td:first-child{color:var(--ink2);}
+  .cmp .us{color:var(--ink); font-weight:600;}
+  .cmp .yes{color:var(--emerald);} .cmp .no{color:var(--rose);}
+
+  /* kpis */
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:28px;}
+  .kpi{background:var(--bg1); border:1px solid var(--line); border-radius:13px; padding:22px 14px; text-align:center;}
+  .kpi .n{font-family:var(--mono); font-size:24px; font-weight:600; color:var(--gold2); letter-spacing:-.02em;}
+  .kpi .l{font-size:11.5px; color:var(--ink3); margin-top:9px; line-height:1.4;}
+
+  /* CTA band */
+  .ctaband{background:linear-gradient(160deg,#181C24,#0E1014); text-align:center;}
+  .ctaband h2{font-size:32px; margin-bottom:12px;}
+  .ctaband p{color:var(--ink2); max-width:58ch; margin:0 auto 26px;}
+  .ctmeta{margin-top:20px; font-family:var(--mono); font-size:11px; color:var(--ink3); letter-spacing:.04em;}
+
+  footer{padding:30px 0 50px; border-top:1px solid var(--line);}
+  footer .wrap{display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;}
+  footer span{font-family:var(--mono); font-size:11px; color:var(--ink4); letter-spacing:.04em;}
+
+  @media (max-width:860px){
+    .g3,.g4{grid-template-columns:1fr 1fr;} .kpis{grid-template-columns:1fr 1fr;}
+    .hero h1{font-size:38px;} section{padding:56px 0;} .cmp{font-size:11.5px;} .cmp th,.cmp td{padding:9px 8px;}
+    nav .links{display:none;}
+  }
+  @media (max-width:560px){ .g3,.g4,.g2{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <div class="mark">D</div>
+      <div class="wordmark">Doc<span>AIQ</span><small>Documents</small></div>
+    </a>
+    <div class="links">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#compare">Compare</a>
+    </div>
+    <a class="btn btn-primary" href="/api/auth/google/login">
+      <img class="gicon" alt="" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"/> Sign in with Google
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="eyebrow">Universal document intelligence · privacy-native</div>
+    <h1>Your files, your docs —<br><span class="gold">in your own Drive.</span></h1>
+    <p class="lede">Drop in any document. AI agents classify it, extract the facts, and let you <b style="color:var(--ink)">chat across your whole library with cited answers</b> — and your files never leave your own Google Drive. We bring the intelligence on demand, and keep nothing.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/api/auth/google/login">
+        <img class="gicon" alt="" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"/> Sign in with Google
+      </a>
+      <a class="btn btn-ghost" href="#how">See how it works ↓</a>
+    </div>
+    <div class="tagstrip">
+      <span class="fw">PII-safe</span><span class="fw">GDPR</span><span class="fw">PDPA</span>
+      <span class="fw">Your Google Drive</span><span class="fw">Cited answers</span>
+      <span class="fw">Any document type</span><span class="fw">We keep nothing</span>
+    </div>
+  </div>
+</header>
+
+<!-- PRIVACY-FIRST BENEFITS -->
+<section id="privacy">
+  <div class="wrap">
+    <div class="kicker">Privacy-native · three commitments</div>
+    <h2>Your data. Our AI. <span class="gl">On demand.</span></h2>
+    <p class="lead">Every other document-AI product asks you to upload your private files to its servers — and keep them there. DocAIQ inverts that.</p>
+    <div class="grid g3">
+      <div class="card"><span class="ic">🔐</span><h3>Your files stay yours</h3><p>Documents, the searchable index, and the extractions live in your own Google Drive — encrypted with your key. We never hold a copy.</p></div>
+      <div class="card"><span class="ic">🤖</span><h3>Agentic AI, on demand</h3><p>When you ask, ephemeral AI workers spin up, work on your data in memory only, answer, and disappear. No standing copy of your documents.</p></div>
+      <div class="card"><span class="ic">🧹</span><h3>Keep nothing</h3><p>No vendor-side document store. Delete your Drive folder and the data is gone — nothing for us to leak, lose, or be subpoenaed for.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="wrap">
+    <div class="kicker">What it does</div>
+    <h2>One place that actually <span class="gl">understands</span> your documents.</h2>
+    <div class="grid g4">
+      <div class="card"><span class="ic">📥</span><h3>Universal extraction</h3><p>Invoices, IDs, certificates, statements, contracts — any type. Structured fields + a confidence score on each.</p></div>
+      <div class="card"><span class="ic">🏷️</span><h3>Auto-classify &amp; tag</h3><p>Every upload is typed on arrival and organized; self-learning schemas mean new document shapes just work.</p></div>
+      <div class="card"><span class="ic">💬</span><h3>Cited cross-doc chat</h3><p>Ask across your whole library — "where do I send payment?", "which IDs expire this year?" — with sources you can click.</p></div>
+      <div class="card"><span class="ic">📊</span><h3>Extract to table / CSV / Excel</h3><p>Turn a folder of documents into a spreadsheet in one ask, with a real download.</p></div>
+      <div class="card"><span class="ic">🔀</span><h3>Compare &amp; summarize</h3><p>Side-by-side comparisons and in-depth, role-aware summaries — understand a doc without opening it.</p></div>
+      <div class="card"><span class="ic">📂</span><h3>Drive-native</h3><p>Connect your Google Drive folder; new files sync and index automatically. Your originals never leave your Drive.</p></div>
+      <div class="card"><span class="ic">🤝</span><h3>Share &amp; review</h3><p>Share a folder with teammates or external reviewers by email — they review and chat the shared docs.</p></div>
+      <div class="card"><span class="ic">🛡️</span><h3>PII-safe by default</h3><p>Sensitive identifiers are masked before any AI model sees them; you still get the real values back.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="wrap">
+    <div class="kicker">How it works · a coordinated team of agents, not a black box</div>
+    <h2>From a dropped file to a <span class="gl">cited answer.</span></h2>
+    <div class="flow">
+      <span class="node">Ingest</span><span class="arr">→</span>
+      <span class="node">Classify</span><span class="arr">→</span>
+      <span class="node">Extract · fields + summary</span><span class="arr">→</span>
+      <span class="node">Validate / critique</span><span class="arr">→</span>
+      <span class="node">Index</span><span class="arr">→</span>
+      <span class="node g">Ask · cited cross-doc chat</span>
+    </div>
+    <ol class="steps">
+      <li><div><b>Sign in with Google &amp; add your documents.</b> <span>Upload directly, or connect your Drive folder so new files sync automatically.</span></div></li>
+      <li><div><b>The AI reads everything.</b> <span>Each document is classified and its facts extracted — with a confidence score and clickable citations.</span></div></li>
+      <li><div><b>Ask anything, across all of it.</b> <span>A guardrail screens every question and a critic checks every answer is grounded in your documents.</span></div></li>
+      <li><div><b>Export, compare, organize, share.</b> <span>Tables to CSV/Excel, side-by-side compares, groups, and shared folders for reviewers.</span></div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- COMPLIANCE -->
+<section id="compliance">
+  <div class="wrap">
+    <div class="kicker">Compliance by design</div>
+    <h2>Privacy isn't a policy. <span class="gl">It's the architecture.</span></h2>
+    <div class="grid g3 trust">
+      <div class="card"><h3><span class="shield"></span>PII-safe AI</h3><p>Personal identifiers (passport, NRIC, account #, DOB, email, phone) are redacted before any data reaches a language model, and every AI call is written to an audit ledger.</p></div>
+      <div class="card"><h3><span class="shield"></span>GDPR (EU)</h3><p>You are both controller and custodian. Data minimization and the right to erasure are structural — delete your Drive folder and it's gone. No vendor copy, no cross-border transfer.</p></div>
+      <div class="card"><h3><span class="shield"></span>PDPA (SEA)</h3><p>Consent, purpose limitation, and protection are met by on-demand, in-memory processing where the data of record never resides with the vendor.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARE -->
+<section id="compare">
+  <div class="wrap">
+    <div class="kicker">Competitive landscape</div>
+    <h2>They ground AI on your data — <span class="gl">but keep it on their cloud.</span></h2>
+    <table class="cmp">
+      <thead><tr><th>Capability</th><th>MS 365 Copilot</th><th>Gemini / Drive</th><th>ChatGPT</th><th class="col-us">DocAIQ Documents</th></tr></thead>
+      <tbody>
+        <tr><td>Where your data lives</td><td>Microsoft cloud</td><td>Google cloud</td><td>OpenAI cloud</td><td class="col-us us">Your own Drive</td></tr>
+        <tr><td>Vendor retains a copy / index</td><td class="no">Yes</td><td class="no">Yes</td><td class="no">Yes</td><td class="col-us us">No — keeps nothing</td></tr>
+        <tr><td>You hold the encryption key</td><td class="no">No</td><td class="no">No</td><td class="no">No</td><td class="col-us yes">Yes</td></tr>
+        <tr><td>Any document type</td><td>Office-centric</td><td>Workspace-centric</td><td>Uploads</td><td class="col-us us">Universal + self-learning</td></tr>
+        <tr><td>Cross-doc cited chat</td><td class="yes">Yes</td><td class="yes">Yes</td><td>Partial</td><td class="col-us yes">Yes, cited</td></tr>
+        <tr><td>Delete = truly gone</td><td>Tenant policy</td><td>Account policy</td><td>Retention policy</td><td class="col-us us">Delete folder → gone</td></tr>
+        <tr><td>Cost model</td><td>Per-seat</td><td>Per-seat add-on</td><td>Subscription</td><td class="col-us us">Pay-per-use, ~$0 idle</td></tr>
+      </tbody>
+    </table>
+    <div class="kpis">
+      <div class="kpi"><div class="n">~$0</div><div class="l">storage at idle — it's your own Drive</div></div>
+      <div class="kpi"><div class="n">7-day</div><div class="l">free trial, full access</div></div>
+      <div class="kpi"><div class="n">0</div><div class="l">documents the vendor retains</div></div>
+      <div class="kpi"><div class="n">Any</div><div class="l">document type, self-learning</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BAND -->
+<section class="ctaband">
+  <div class="wrap">
+    <h2>Most document AI keeps your documents.<br><span class="gold">DocAIQ keeps nothing.</span></h2>
+    <p>Universal — any document. Private — your files, your keys, your Drive. On demand — near-zero cost when idle. Start free in seconds.</p>
+    <div class="cta-row" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a class="btn btn-primary" href="/api/auth/google/login">
+        <img class="gicon" alt="" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"/> Sign in with Google
+      </a>
+      <a class="btn btn-ghost" href="/">Open the app</a>
+    </div>
+    <div class="ctmeta">documents.docaiq.jicama.tech · your docs · your Drive · we keep nothing</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>DocAIQ Documents — universal, privacy-native document intelligence</span>
+    <span>PII-safe · GDPR · PDPA · your data stays yours</span>
+  </div>
+</footer>
+
+</body>
+</html>

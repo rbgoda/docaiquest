@@ -1,0 +1,38 @@
+# Slim DEV requirements — the full app MINUS the heavy ML stack.
+#
+# Dropped vs requirements.txt (≈2 GB): torch, sentence-transformers (the BGE
+# reranker — OFF by default), rapidocr-onnxruntime (local OCR — lazy/optional).
+# All three are lazy-imported, so the app boots + runs without them as long as:
+#   · DOCAIQ_RERANKER_ENABLED=false   (the default)
+#   · DOCAIQ_EMBED_BACKEND=dashscope  (or openai/gemini — API embeddings, no torch)
+#       (or =hash for a fully-offline, no-key dev run — retrieval is BM25-only)
+# Vision OCR still works (it's an API call, qwen-vl); only LOCAL onnx OCR is gone.
+#
+# Use: docker compose -f docker-compose.yml -f docker-compose.min.yml up -d --build
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pydantic[email]>=2.9
+pydantic-settings>=2.6
+sqlalchemy>=2.0,<3
+psycopg[binary]>=3.2
+alembic>=1.14
+pyjwt[crypto]>=2.9
+argon2-cffi>=23.1
+httpx>=0.27
+boto3>=1.35
+python-multipart>=0.0.9
+arq>=0.26
+redis>=5.0
+pymupdf>=1.24
+pdfplumber>=0.11
+cryptography>=42
+pgvector>=0.3
+Pillow>=10.4
+pillow-heif>=0.18
+json-repair>=0.30
+python-docx>=1.1
+python-pptx>=1.0  # .pptx (MIT, pure-Python) — safe, tiny
+openpyxl>=3.1
+chardet>=5.2
+pytesseract>=0.3.13
+numpy>=1.26

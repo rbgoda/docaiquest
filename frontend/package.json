@@ -1,0 +1,36 @@
+{
+  "name": "docaiq",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Multi-Agentic Graph RAG Self-Learning Auto-Audit Platform",
+  "scripts": {
+    "sync-faq": "mkdir -p public/help && (test -f docs/FAQ.md && cp docs/FAQ.md public/help/FAQ.md) || true",
+    "predev": "npm run sync-faq",
+    "prebuild": "npm run sync-faq",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .js,.jsx",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report tests/report"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.100.13",
+    "d3-drag": "^3.0.0",
+    "d3-force": "^3.0.0",
+    "d3-selection": "^3.0.0",
+    "d3-zoom": "^3.0.0",
+    "pdfjs-dist": "^5.6.205",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.15.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.10"
+  }
+}

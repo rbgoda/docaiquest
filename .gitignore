@@ -1,0 +1,19 @@
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.env
+.venv/
+
+.DS_Store
+
+# Generated eval datasets may contain real document PII — never commit.
+# The hand-authored seed (eval/dataset/ragas_qa.json) is safe + tracked.
+eval/dataset/testdata_qa.json
+eval/dataset/live_qa.json
+
+# POC test fixtures — real docs + extracted metadata (PII). Local-only.
+eval/fixtures/
+
+# generated local eval report
+eval/dashboard.html

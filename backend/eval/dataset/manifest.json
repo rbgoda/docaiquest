@@ -1,0 +1,29 @@
+{
+  "description": "DocAIQ parsing/extraction eval set. Each case scores any subset of {fields, reference_text, table_cells, retrieval}. Offline cases pair an expected + predicted JSON. To grow the set: drop a labeled doc's expected.json here and (for now) a hand/checked predicted.json; live mode (running the real pipeline to produce predicted) is a G2 follow-up. Add scanned/JPG, table-heavy, and multi-language cases to exercise OCR (G3/G6/G11), tables (G8), and chunking (G5).",
+  "cases": [
+    {
+      "id": "invoice_001",
+      "doc_type": "invoice",
+      "expected": "cases/invoice_001.expected.json",
+      "predicted": "cases/invoice_001.predicted.json"
+    },
+    {
+      "id": "qa_answerable",
+      "doc_type": "invoice",
+      "expected": {"qa": {"question": "What is the total due?", "expected": ["12420"], "must_cite": ["c2"], "should_abstain": false}},
+      "predicted": {"qa": {"answer": "The total due is 12420 USD.", "citations": ["c2", "c9"], "evidence": "Invoice EA07 — Total Due 12420 USD"}}
+    },
+    {
+      "id": "qa_should_abstain_ok",
+      "doc_type": "invoice",
+      "expected": {"qa": {"question": "What is the CEO's home address?", "should_abstain": true}},
+      "predicted": {"qa": {"answer": "INSUFFICIENT_EVIDENCE — I couldn't find that in your documents."}}
+    },
+    {
+      "id": "qa_should_abstain_hallucinated",
+      "doc_type": "invoice",
+      "expected": {"qa": {"question": "What is the CEO's home address?", "should_abstain": true}},
+      "predicted": {"qa": {"answer": "The CEO lives at 5th Avenue, New York."}}
+    }
+  ]
+}

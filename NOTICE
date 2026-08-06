@@ -1,0 +1,234 @@
+DocAIQ Documents — Open Source Notices
+
+This product includes software developed by the following open-source projects.
+We are grateful to their maintainers and contributors.
+
+---
+
+## Python Dependencies
+
+### PyMuPDF (fitz)
+  - License: AGPL 3.0 (Dual — also available under Artifex Commercial License)
+  - URL: https://github.com/pymupdf/PyMuPDF
+  - Used for: PDF parsing, text extraction, block-level layout analysis
+
+### psycopg / psycopg-binary
+  - License: LGPL 3.0
+  - URL: https://github.com/psycopg/psycopg
+  - Used for: PostgreSQL database connectivity
+
+### FastAPI
+  - License: MIT
+  - URL: https://github.com/fastapi/fastapi
+  - Used for: HTTP API framework
+
+### SQLAlchemy
+  - License: MIT
+  - URL: https://github.com/sqlalchemy/sqlalchemy
+  - Used for: ORM and database abstraction
+
+### Alembic
+  - License: MIT
+  - URL: https://github.com/sqlalchemy/alembic
+  - Used for: Database migrations
+
+### pgvector
+  - License: MIT
+  - URL: https://github.com/pgvector/pgvector-python
+  - Used for: Vector storage and similarity search
+
+### PyJWT
+  - License: MIT
+  - URL: https://github.com/jpadilla/pyjwt
+  - Used for: JWT token signing and verification
+
+### argon2-cffi
+  - License: MIT
+  - URL: https://github.com/hynek/argon2-cffi
+  - Used for: Password hashing
+
+### cryptography
+  - License: Apache 2.0 / BSD
+  - URL: https://github.com/pyca/cryptography
+  - Used for: PII encryption at rest (Fernet vault)
+
+### boto3
+  - License: Apache 2.0
+  - URL: https://github.com/boto/boto3
+  - Used for: S3-compatible object storage (MinIO / AWS)
+
+### Pillow
+  - License: HPND (Historical Permission Notice and Disclaimer)
+  - URL: https://github.com/python-pillow/Pillow
+  - Used for: Image processing, HEIC/HEIF/AVIF → JPEG conversion
+
+### pdfplumber
+  - License: MIT
+  - URL: https://github.com/jsvine/pdfplumber
+  - Used for: Table extraction from PDFs
+
+### camelot-py
+  - License: MIT
+  - URL: https://github.com/camelot-dev/camelot
+  - Used for: ML-enhanced table extraction
+
+### opencv-python / opencv-python-headless
+  - License: Apache 2.0
+  - URL: https://github.com/opencv/opencv
+  - Used for: Image preprocessing (via camelot-py and rapidocr)
+
+### Docling (docling, docling-core, docling-ibm-models, docling-parse)
+  - License: MIT
+  - URL: https://github.com/docling-project/docling
+  - Used for: Layout-aware PDF parsing, multi-column reading order
+
+### RapidOCR
+  - License: MIT
+  - URL: https://github.com/RapidAI/RapidOCR
+  - Used for: Primary OCR engine (ONNX runtime, PP-OCRv6 models)
+
+### pytesseract
+  - License: MIT
+  - URL: https://github.com/madmaze/pytesseract
+  - Used for: OCR cascade fallback
+
+### sentence-transformers
+  - License: Apache 2.0
+  - URL: https://github.com/UKPLab/sentence-transformers
+  - Used for: Embedding model loading and cross-encoder reranking
+
+### Hugging Face transformers
+  - License: Apache 2.0
+  - URL: https://github.com/huggingface/transformers
+  - Used for: Transformer model loading, tokenization
+
+### PyTorch (torch, torchvision)
+  - License: BSD
+  - URL: https://github.com/pytorch/pytorch
+  - Used for: Deep learning model execution
+
+### onnxruntime
+  - License: MIT
+  - URL: https://github.com/microsoft/onnxruntime
+  - Used for: ONNX model inference (RapidOCR)
+
+### scikit-learn
+  - License: BSD 3-Clause
+  - URL: https://github.com/scikit-learn/scikit-learn
+  - Used for: Classification, text similarity (TF-IDF, cosine)
+
+### numpy
+  - License: BSD
+  - URL: https://github.com/numpy/numpy
+  - Used for: Numerical computation
+
+### scipy
+  - License: BSD
+  - URL: https://github.com/scipy/scipy
+  - Used for: Scientific computing utilities
+
+### redis / hiredis
+  - License: MIT / BSD
+  - URL: https://github.com/redis/redis-py
+  - Used for: Task queue backend, caching
+
+### arq
+  - License: MIT
+  - URL: https://github.com/python-arq/arq
+  - Used for: Background job processing (OCR, extraction, ingestion)
+
+### uvicorn / starlette / httptools / uvloop / watchfiles
+  - License: BSD / MIT
+  - URL: https://github.com/encode/uvicorn
+  - Used for: ASGI server
+
+### httpx / httpcore
+  - License: BSD
+  - URL: https://github.com/encode/httpx
+  - Used for: HTTP client (LLM provider calls, OAuth flows)
+
+### openai
+  - License: Apache 2.0
+  - URL: https://github.com/openai/openai-python
+  - Used for: OpenAI-compatible API client
+
+### pydantic / pydantic-settings
+  - License: MIT
+  - URL: https://github.com/pydantic/pydantic
+  - Used for: Data validation, settings management
+
+### openpyxl
+  - License: MIT
+  - URL: https://foss.heptapod.net/openpyxl/openpyxl
+  - Used for: Excel (.xlsx) parsing
+
+### python-docx
+  - License: MIT
+  - URL: https://github.com/python-openxml/python-docx
+  - Used for: Word (.docx) parsing
+
+### python-pptx
+  - License: MIT
+  - URL: https://github.com/scanny/python-pptx
+  - Used for: PowerPoint (.pptx) parsing
+
+### json-repair
+  - License: MIT
+  - URL: https://github.com/mangiucugna/json_repair
+  - Used for: Tolerant JSON parsing of LLM tool-call output
+
+### rich
+  - License: MIT
+  - URL: https://github.com/Textualize/rich
+  - Used for: Terminal formatting, logging
+
+### chardet
+  - License: LGPL 2.1
+  - URL: https://github.com/chardet/chardet
+  - Used for: Character encoding detection (CSV imports)
+
+### tabulate
+  - License: MIT
+  - URL: https://github.com/astanin/python-tabulate
+  - Used for: Table formatting in data exports
+
+### Faker
+  - License: MIT
+  - URL: https://github.com/joke2k/faker
+  - Used for: Test data generation
+
+---
+
+## Model Weights
+
+### BGE-M3 (BAAI/bge-m3)
+  - License: MIT
+  - URL: https://huggingface.co/BAAI/bge-m3
+  - Used for: Multilingual text embeddings (1024d). Embedding backend v2.
+
+### all-MiniLM-L6-v2 (sentence-transformers/all-MiniLM-L6-v2)
+  - License: Apache 2.0
+  - URL: https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
+  - Used for: English text embeddings (384d). Default local embedding backend.
+
+### ms-marco-MiniLM-L-6-v2 (cross-encoder/ms-marco-MiniLM-L-6-v2)
+  - License: MIT
+  - URL: https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-6-v2
+  - Used for: Cross-encoder retrieval re-ranking.
+
+### RapidOCR PP-OCRv6 ONNX models
+  - License: MIT
+  - URL: https://github.com/RapidAI/RapidOCR
+  - Used for: Optical character recognition (detection + recognition).
+
+---
+
+## Frontend Dependencies
+
+The frontend (Vite SPA, React) uses ~350 npm packages. Key runtime libraries
+and their licenses are recorded in `frontend/package.json`. All runtime
+dependencies are MIT, BSD, or Apache 2.0 licensed.
+
+---
+
+DocAIQ itself is MIT licensed. See the LICENSE file in this repository.

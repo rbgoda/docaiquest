@@ -1,0 +1,50 @@
+# DocAIQ Documents — standalone superadmin console.
+#   admin.docaiq.jicama.tech  →  static admin-ui  +  /api proxied to the
+#   documents stack (127.0.0.1:8093). Same-origin: the session cookie is set on
+#   the admin subdomain only (NOT shared across tenant subdomains → isolation
+#   preserved). Wildcard cert (*.docaiq.jicama.tech) already covers this host.
+#
+# Install on the prod host:
+#   cp /opt/docaiq/deploy/nginx/admin.docaiq.jicama.tech.conf \
+#      /etc/nginx/sites-available/docaiq-admin
+#   ln -sf /etc/nginx/sites-available/docaiq-admin /etc/nginx/sites-enabled/docaiq-admin
+#   nginx -t && systemctl reload nginx
+#
+# NOTE: an exact server_name beats the *.docaiq.jicama.tech tenant-wildcard
+# regex, so this block — not the tenant router — handles admin.docaiq.jicama.tech.
+
+server {
+    listen 443 ssl http2;
+    server_name admin.docaiq.jicama.tech;
+
+    ssl_certificate     /etc/letsencrypt/live/docaiq-wildcard/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/docaiq-wildcard/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    client_max_body_size 5M;
+
+    # Static admin console (served straight from the repo checkout).
+    root /opt/docaiq/admin-ui;
+    index index.html;
+    location / {
+        try_files $uri /index.html;
+    }
+
+    # API → the documents stack (its nginx proxies /api to the backend).
+    location /api/ {
+        proxy_pass http://127.0.0.1:8093;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+    }
+}
+
+server {
+    listen 80;
+    server_name admin.docaiq.jicama.tech;
+    return 301 https://$host$request_uri;
+}

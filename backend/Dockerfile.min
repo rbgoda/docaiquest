@@ -1,0 +1,38 @@
+# syntax=docker/dockerfile:1.7
+# Slim DEV image — no torch / sentence-transformers / rapidocr / baked BGE model.
+# ~2 GB smaller than Dockerfile. For local testing with API embeddings
+# (DOCAIQ_EMBED_BACKEND=dashscope) + reranker off. NOT for prod (prod uses the
+# full Dockerfile so the reranker/local-embed options are available).
+
+FROM python:3.12-slim AS builder
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_NO_CACHE_DIR=1 PYTHONDONTWRITEBYTECODE=1
+WORKDIR /build
+RUN apt-get update && apt-get install -y --no-install-recommends gcc && rm -rf /var/lib/apt/lists/*
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+# NO torch pre-install — nothing in the slim deps needs it.
+COPY requirements-min.txt .
+RUN pip install -r requirements-min.txt
+
+FROM python:3.12-slim AS runtime
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng \
+ && rm -rf /var/lib/apt/lists/*
+RUN groupadd --system --gid 1001 docaiq \
+ && useradd --system --uid 1001 --gid docaiq --create-home docaiq
+WORKDIR /app
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+COPY --chown=docaiq:docaiq app          ./app
+COPY --chown=docaiq:docaiq migrations   ./migrations
+COPY --chown=docaiq:docaiq scripts      ./scripts
+COPY --chown=docaiq:docaiq alembic.ini  ./
+COPY --chown=docaiq:docaiq entrypoint.sh ./
+RUN chmod +x ./entrypoint.sh
+# NO BGE reranker pre-download (sentence-transformers absent; reranker off by default).
+USER docaiq
+EXPOSE 8001
+HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 \
+  CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8001/api/health').status==200 else 1)"
+CMD ["./entrypoint.sh"]
