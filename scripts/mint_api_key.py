@@ -1,10 +1,10 @@
 """Mint / list / revoke third-party API client keys. Run in the backend container.
 
   # create — prints the raw key ONCE (store it securely):
-  python scripts/mint_api_key.py create "AuditAIQ (prod)" --scopes extract,classify,audit:match --rpm 120
+  python scripts/mint_api_key.py create "My App" --scopes extract,classify --rpm 120
   python scripts/mint_api_key.py list
   python scripts/mint_api_key.py revoke <pk>
-  python scripts/mint_api_key.py grant-scope <pk> audit:ingest
+  python scripts/mint_api_key.py grant-scope <pk> extract
   python scripts/mint_api_key.py grant-group <pk> <group_id>
 
 Only the SHA-256 hash is stored; the raw key cannot be recovered later.

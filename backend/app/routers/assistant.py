@@ -209,7 +209,7 @@ def event_ics(
     kind, title, suggestion = cls
     summary = f"{title} — {doc.name}"
     ymd = dt.strftime("%Y%m%d")
-    uid = f"{doc.id_external}-{field}@docaiq"
+    uid = f"{doc.id_external}-{field}@docaiquest"
     lines = [
         "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//DocAIQuest//Assistant//EN",
         "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
