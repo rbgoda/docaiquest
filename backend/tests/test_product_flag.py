@@ -5,11 +5,11 @@ import pytest
 from pydantic import ValidationError
 
 
-def test_product_defaults_to_auditing(monkeypatch):
+def test_product_defaults_to_documents(monkeypatch):
     # the default only holds with no DOCAIQ_PRODUCT in the environment
     monkeypatch.delenv("DOCAIQ_PRODUCT", raising=False)
     from app.config import Settings
-    assert Settings().product == "auditing"
+    assert Settings().product == "documents"
 
 
 def test_product_documents_via_env(monkeypatch):

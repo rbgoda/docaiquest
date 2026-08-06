@@ -107,7 +107,7 @@ services:
       # M46 · product this stack serves — "auditing" (full app) or "documents"
       # (standalone Documents System: doc processing + chat, no audit). The SPA
       # reads it from /api/auth/config to pick its shell.
-      DOCAIQ_PRODUCT: ${DOCAIQ_PRODUCT:-auditing}
+      DOCAIQ_PRODUCT: ${DOCAIQ_PRODUCT:-documents}
       # nginx and the SPA share an origin, so technically only the host port
       # matters here. Listed for clarity / direct-access debugging.
       DOCAIQ_CORS_ORIGINS: '["http://localhost:8080","http://127.0.0.1:8080"]'
@@ -292,7 +292,7 @@ services:
       DOCAIQ_TENANT_ID: ${DOCAIQ_TENANT_ID:-default}
       DOCAIQ_ENVIRONMENT: ${DOCAIQ_ENVIRONMENT:-development}
       DOCAIQ_AUTH_PROVIDER: ${DOCAIQ_AUTH_PROVIDER:-dev}
-      DOCAIQ_PRODUCT: ${DOCAIQ_PRODUCT:-auditing}
+      DOCAIQ_PRODUCT: ${DOCAIQ_PRODUCT:-documents}
       DOCAIQ_DATABASE_URL: postgresql+psycopg://docaiquest:${DOCAIQ_DB_PASSWORD:-docaiquest-dev}@postgres:5432/docaiquest
       # Worker shares the tenant's JWT secret (so it can decode cookies the
       # API issued — used when worker emits authenticated callbacks). Same

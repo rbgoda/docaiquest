@@ -97,7 +97,7 @@ class AuthConfigResponse(BaseModel):
     sharedMode: bool = False
     # M46 · "auditing" | "documents" — which product this stack serves, so the
     # frontend renders the right shell (full audit app vs documents-only).
-    product: str = "auditing"
+    product: str = "documents"
     # P2 · deployment license mode. "oss" = self-hosted open-source (default):
     # cloud-only premium features are disabled and the UI hides their chrome.
     # "cloud" = managed cloud build with full feature set.
