@@ -37,7 +37,7 @@ See the [README](README.md) for detailed setup instructions.
   + repo-layer filtering. Never bypass it.
 - **PII / privacy:** Redaction happens at the LLM boundary in
   `app/llm/gateway.py`. Product is privacy-first by default. If you change
-  redaction, update `docs/PII_AND_PRIVACY.md`.
+  redaction, update the Privacy section in `README.md`.
 - Match surrounding code style: Python follows PEP 8, JSX uses the existing
   component patterns.
 

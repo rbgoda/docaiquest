@@ -4,7 +4,7 @@
 // surface what needs attention across the user's library — expiries, overdue
 // payments, low-confidence classifications, failed ingests — computed server-
 // side with zero LLM (app/intelligence/alerts.py). View-engine + AI-proposed
-// views land in Phases B/C. See docs/architecture/INTELLIGENCE_DASHBOARD.md.
+// views land in Phases B/C.
 import React, { useState } from "react";
 import Icon from "../components/Icon.jsx";
 import { LoadingState, ErrorState } from "../components/Shell.jsx";

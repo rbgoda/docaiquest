@@ -5,9 +5,6 @@
   "type": "module",
   "description": "Open-source document intelligence engine — parse, extract, graph, chat.",
   "scripts": {
-    "sync-faq": "mkdir -p public/help && (test -f docs/FAQ.md && cp docs/FAQ.md public/help/FAQ.md) || true",
-    "predev": "npm run sync-faq",
-    "prebuild": "npm run sync-faq",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",

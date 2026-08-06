@@ -25,7 +25,7 @@ with them. Your own LLM keys, your own server, your data never leaves.
 | **Extract fields** | Pull out dates, amounts, parties, and line items from invoices, receipts, contracts, and more |
 | **Search** | Full-text search across all your documents |
 | **Multi-user** | Create accounts for your team — each user sees only their own documents |
-| **API access** | One unified endpoint (`POST /api/v1`) + SDKs for Python and TypeScript |
+| **API access** | REST API + SDKs for Python and TypeScript |
 | **AI assistant integration** | MCP server — connect ChatGPT, Claude, or Cursor directly to your documents |
 | **Privacy built-in** | Sensitive info redacted before it reaches external AI providers |
 
@@ -157,7 +157,56 @@ See `.env.example` for every available setting.
 
 Hybrid BM25 + cosine similarity (BGE-M3 multilingual embeddings when
 `DOCAIQ_EMBED_V2_ACTIVE=true`) → BGE-Reranker-v2-m3 cross-encoder for
-re-ranking when `DOCAIQ_RERANKER_ENABLED=true`.
+re-ranking when `DOCAIQ_RERANKER_ENABLED=true`. Results are fused with
+Reciprocal Rank Fusion (RRF).
+
+### Parsing
+
+Each format dispatches to the best available parser:
+
+| Format | Primary parser | Notes |
+|--------|---------------|-------|
+| PDF (text) | PyMuPDF + pdfplumber | Word-level bbox extraction; tables via pdfplumber |
+| PDF (scanned) | OCR cascade | RapidOCR → external vision model if configured |
+| DOCX / PPTX | python-docx / python-pptx | Embedded images OCR'd when `DOCAIQ_DOCUMENTS_OFFICE_IMAGE_OCR=true` |
+| XLSX | openpyxl | Sheets → structured Markdown tables |
+| CSV / TSV | stdlib csv | Delimiter-sniffing, quote-aware |
+| EML | Python email | MIME-aware, attachments extracted |
+| Images | OCR cascade | PNG, JPG, HEIC, AVIF supported |
+| HTML | BeautifulSoup | Text extraction + table preservation |
+| Legacy Office | LibreOffice (headless) | DOC, XLS, ODT, RTF → converted to modern format first |
+
+All formats normalize into a single structured Document Model IR before
+chunking and embedding, so retrieval quality is consistent regardless of
+source format.
+
+## Privacy
+
+DocAIQuest is **privacy-native by default**. Sensitive data is redacted at
+the LLM boundary — before any text leaves your server for an external AI
+provider. After the LLM responds, the original values are restored in the
+answer shown to you.
+
+### What is redacted
+
+| Category | Examples | Redacted by default? |
+|----------|----------|:--:|
+| Account numbers, IBANs | `288-900557`, `DE89 3704 0044 …` | ✅ |
+| Government IDs | NRIC, SSN, passport numbers | ✅ |
+| Phone numbers, emails | `+65 1234 5678`, `a@b.com` | ✅ |
+| Street addresses | `123 Main St, #05-01` | ✅ |
+| Person names | `John Smith` | ❌ (they're the search key) |
+
+### Settings
+
+| Flag | Default | Effect |
+|------|---------|--------|
+| `DOCAIQ_PII_REDACT_BEFORE_LLM` | `true` | Enable the redaction round-trip |
+| `DOCAIQ_PII_PROTECT_AT_REST` | `true` | Encrypt stored PII in the DB |
+| `DOCAIQ_PII_REDACT_PERSON_NAMES` | `false` | Also mask person names (costs search quality) |
+
+When redaction is on, the LLM sees placeholders like `[ACCOUNT_1]`, `[EMAIL_1]`.
+The owner sees the real values — only in their own session.
 
 ## Layout
 
@@ -199,16 +248,8 @@ re-ranking when `DOCAIQ_RERANKER_ENABLED=true`.
   requires a new migration — never use `create_all()`.
 - **Per-user isolation:** `current_owner_user_pk` ContextVar (set by
   `TenantMiddleware`) + repo-layer filtering. Never bypass it.
-- **PII / privacy:** Redaction happens at the LLM boundary in
-  `app/llm/gateway.py` — sensitive IDs and contacts are masked before
-  reaching external providers, then restored in the response. Person
-  names are NOT masked by default (`pii_redact_person_names=off`) —
-  they're the search key. See `docs/PII_AND_PRIVACY.md`.
 - **Email verification** (Resend) activates only when
   `DOCAIQ_RESEND_API_KEY` is set; else signups auto-verify.
-- **Deep dives:** `docs/ARCHITECTURE_DEEP_DIVE.md` covers the full system
-  end-to-end. `docs/SDK_AND_API_DESIGN.md` covers the API and SDK design.
-  `docs/API_QUICKSTART.md` is a quickstart for API consumers.
 
 ### Running locally (without Docker)
 
@@ -255,6 +296,17 @@ Quick reference:
 
 Auth: create an owner-scoped API key in the web app (Settings → API keys),
 send it as `X-API-Key: dq_live_…` or `Authorization: Bearer dq_live_…`.
+
+### Connect to ChatGPT
+
+You can expose your DocAIQuest instance to a ChatGPT Custom GPT via the
+OpenAPI schema at `/api/mcp/openapi.json`:
+
+1. In the web app, go to **Settings → API keys** and create a key.
+2. In ChatGPT, create a new Custom GPT.
+3. Under **Actions**, import `http://your-instance:8085/api/mcp/openapi.json`.
+4. Set authentication to **API Key** → `X-API-Key` with your `dq_live_…` key.
+5. The GPT can now call `ask_documents` and `list_documents` against your instance.
 
 ## Contributing
 

@@ -25,5 +25,3 @@ eval/dashboard.html
 deploy.sh
 scripts/prod_postactivation_check.sh
 
-# Internal handoff/docs — prod details, not for OSS
-docs/handoffs/

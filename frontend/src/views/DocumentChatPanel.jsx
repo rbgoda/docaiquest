@@ -2084,7 +2084,7 @@ function FactRow({ label, value, hasBbox, onCite, isActive, editing, onStartEdit
 
 
 // Category enums must match backend canonical vocab in app/agents/categorizer.py.
-// See docs/CATEGORIES.md — the shared spec across docaiq, xpenseaiq, xauditaiq.
+// See CATEGORIES.md for the master spec.
 const EXPENSE_CATEGORIES = [
   "Meals", "Travel", "Transport", "Utilities", "Subscriptions", "Healthcare",
   "Fitness", "Shopping", "Office", "Entertainment", "Government Fees",

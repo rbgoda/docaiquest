@@ -7,7 +7,7 @@ const BASE = typeof window !== "undefined" ? window.location.origin : "http://lo
 
 // Ready-to-import OpenAPI schema for a ChatGPT Custom GPT Action (askDocuments +
 // listDocuments over /api/v1). Copied verbatim from
-// docs/integrations/chatgpt-custom-gpt.openapi.yaml — keep the two in sync.
+// Keep in sync with the MCP OpenAPI schema at /api/mcp/openapi.json.
 const CGPT_SCHEMA = `openapi: 3.1.0
 info:
   title: DocAIQuest — Your Documents
