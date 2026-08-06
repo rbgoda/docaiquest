@@ -152,10 +152,6 @@ export const fetchMe = (opts) => get("/me", opts);
 export const updateMe = (body, opts) => patch("/me", body, opts);
 export const loginWithPassword = (body, opts) => post("/auth/login", body, opts);
 export const logout = (opts) => post("/auth/logout", {}, opts);
-// AIQ Suite SSO — exchange the shared `jicama_sso` cookie for a native docaiq
-// session ("one login across the suite"). 401 when there's no suite session →
-// the SPA falls back to the normal login screen. See SSO_VERIFIER.md.
-export const ssoExchange = (opts) => post("/auth/sso/exchange", {}, opts);
 // Public "Contact us" form → emails the inquiry to the team.
 export const submitContact = (body, opts) => post("/contact", body, opts);
 // ---------- Doc-chat (M11.7) ---------------------------------------------

@@ -1,6 +1,6 @@
 """Cross-tenant cookie / JWT isolation property tests.
 
-The defense-in-depth contract from CLAUDE.md is:
+The defense-in-depth contract is:
   1. Crypto:   each tenant container has its own DOCAIQ_JWT_SECRET.
   2. Identity: get_current_user 401s when JWT.org_id != container tenant_id.
   3. Data:     repositories filter by get_current_tenant().

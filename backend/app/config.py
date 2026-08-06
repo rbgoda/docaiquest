@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     # right shell. Backend routers are unchanged; the product flag only
     # selects the UI surface (the document pipeline is shared, audit/framework
     # endpoints simply go unused in documents mode).
-    product: Literal["auditing", "documents"] = "auditing"
+    product: Literal["auditing", "documents"] = "documents"
 
     # Deployment license mode: oss (open-source, self-hosted, BYO keys) |
     # cloud (DocAIQ-hosted premium with proxy). Gated by DOCAIQ_LICENSE_MODE.
@@ -241,10 +241,6 @@ class Settings(BaseSettings):
     # (e.g. ".example.com" so a login on the main app also authenticates
     # admin.example.com). Empty = host-scoped (default).
     session_cookie_domain: str = ""
-    # AIQ Suite SSO — shared secret for cross-app single-sign-on across
-    # same-domain apps. Set from the suite secret in prod .env; empty = SSO off.
-    # Never commit the value.
-    jicama_sso_secret: str = ""
 
     # ---- Shared SaaS mode (M37 · free tier) -----------------------------
     # When True, this backend serves MULTIPLE tenants from one container

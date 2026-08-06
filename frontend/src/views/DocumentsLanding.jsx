@@ -107,22 +107,15 @@ function ContactModal({ open, onClose }) {
 }
 
 export default function DocumentsLanding({ onSignIn }) {
-  const { config, ssoLogin } = useAuth();
+  const { config } = useAuth();
   const googleEnabled = config?.googleLoginEnabled;
   const [signingIn, setSigningIn] = React.useState(false);
   const [contactOpen, setContactOpen] = React.useState(false);
 
-  // Click-to-sign-in: try the AIQ-suite session first (instant, no round-trip if
-  // you're already signed into another suite app → straight to the
-  // dashboard); otherwise fall back to the Google OAuth flow.
   const handlePrimaryLogin = async () => {
     if (signingIn) return;
     setSigningIn(true);
     try {
-      const me = await ssoLogin?.();
-      if (me) return;                       // suite session → app renders (status=ready)
-      window.location.href = "/api/auth/google/login";   // else Google OAuth
-    } catch {
       window.location.href = "/api/auth/google/login";
     } finally {
       setSigningIn(false);

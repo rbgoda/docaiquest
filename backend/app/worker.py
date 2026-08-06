@@ -523,7 +523,7 @@ async def match_document_task(ctx, document_pk: int, tenant_id: str) -> dict:
         # documents product has none, so skip the per-doc walk entirely. Cheap + self-adjusting
         # (re-activates if a tenant ever adds requirements). The matcher/kyc_extractor/
         # structured_match + kyc_records/kyc_subjects subsystem is left intact on purpose — it's
-        # woven into user endpoints + audit ORM tables that CLAUDE.md warns against dropping — it
+        # woven into user endpoints + audit ORM tables — it
         # just does no work here.
         from sqlalchemy import func as _func, select as _select
         from app.orm import Requirement

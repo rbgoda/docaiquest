@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 
@@ -145,36 +145,6 @@ def register(
     return MeResponse(id=user.pk, email=user.email, name=user.name,
                       orgId=settings.tenant_id, roles=roles,
                       emailVerified=bool(getattr(user, "email_verified", True)))
-
-
-@router.post("/auth/sso/exchange", response_model=MeResponse)
-def sso_exchange(response: Response, jicama_sso: str | None = Cookie(default=None),
-                 db: Session = Depends(get_session)) -> MeResponse:
-    """AIQ Suite SSO · exchange the shared `jicama_sso` cookie for a native session —
-    'one login across the suite'. Find-or-create the user by the token's
-    email, then mint the session cookie. 401 when there's no valid suite token
-    (the SPA falls back to the normal login screen)."""
-    from app.sso import verify_sso
-    settings = get_settings()
-    claims = verify_sso(jicama_sso)
-    if not claims:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="no valid suite session")
-    email = (claims.get("sub") or "").strip().lower()
-    if not email:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="suite token missing subject")
-    set_current_tenant(settings.tenant_id)
-    user = user_repo.get_by_email(db, email)
-    if user is None:
-        user = user_repo.create(db, email=email, name=claims.get("name", ""), roles=["owner"])
-        user.email_verified = True  # a verified suite identity
-        db.flush()
-    roles = sorted(r.role for r in user.roles)
-    token = issue_session_token(user_id=user.pk, email=user.email, name=user.name,
-                                org_id=settings.tenant_id, roles=roles, vendor_pk=None,
-                                token_version=getattr(user, "token_version", 0))
-    _set_session_cookie(response, token)
-    return MeResponse(id=user.pk, email=user.email, name=user.name, orgId=settings.tenant_id,
-                      roles=roles, emailVerified=True)
 
 
 @router.get("/auth/verify")

@@ -290,40 +290,6 @@ async def group_answer(
     }
 
 
-# ── Suite SSO identity (jicama_sso Bearer) → /api/v1/me/… ─────────────────────
-# A suite app calls these AS the logged-in user, passing the
-# shared suite token as `Authorization: Bearer <jicama_sso>`. No partner key, no
-# group id — the token's `sub` (email) resolves to the docaiq user and we operate
-# on THEIR (owner-scoped) documents. See DOCAIQ_FOR_CHATAIQ.md + SSO_VERIFIER.md.
-def _sso_user(db: Session, authorization: str | None):
-    """Verify the suite Bearer token, resolve (find-or-create) the docaiq user by
-    email, and set tenant + owner context. Raises 401 on an invalid token."""
-    from app.config import get_settings
-    from app.db import set_current_tenant
-    from app.documents_scope import set_current_owner_user_pk
-    from app.repositories import users as urepo
-    from app.sso import verify_sso
-    token = authorization.removeprefix("Bearer ").strip() if authorization else ""
-    claims = verify_sso(token)
-    if not claims:
-        raise HTTPException(status_code=401, detail="invalid suite SSO token")
-    email = (claims.get("sub") or "").strip().lower()
-    if not email:
-        raise HTTPException(status_code=401, detail="suite token missing subject")
-    set_current_tenant(get_settings().tenant_id)
-    user = urepo.get_by_email(db, email)
-    if user is None:
-        user = urepo.create(db, email=email, name=claims.get("name", ""), roles=["owner"])
-        try:
-            user.email_verified = True          # a verified suite identity
-            user.plan = user.plan or "trial"
-        except Exception:  # noqa: BLE001
-            pass
-        db.commit()
-    set_current_owner_user_pk(user.pk)
-    return user
-
-
 def _user_ready_doc_pks(db: Session, owner_pk: int) -> list[int]:
     from app.orm import Document
     return [d.pk for d in db.query(Document).filter(
@@ -419,14 +385,6 @@ def _rag_answer_for_owner(db: Session, owner_pk: int, question: str,
             "citations": _build_citations(answer, ev, s.chat_sentence_support_min)}
 
 
-@router.post("/me/answer")
-async def me_answer(payload: MeAnswerPayload, authorization: str | None = Header(None),
-                    db: Session = Depends(get_session)) -> dict:
-    """RAG over the SSO user's OWN documents (chataiq). Suite Bearer token auth."""
-    user = _sso_user(db, authorization)
-    return _rag_answer_for_owner(db, user.pk, payload.question, payload.topK, payload.history)
-
-
 @router.post("/ask")
 async def v1_ask(payload: MeAnswerPayload,
                  caller: Caller = Depends(require_client("ask")),
@@ -454,94 +412,3 @@ def v1_documents(limit: int = 100,
     return {"documents": [{"id": d.id_external, "name": d.name, "type": d.doc_type,
                            "createdAt": d.created_at.isoformat() if d.created_at else None} for d in rows],
             "count": len(rows)}
-
-
-@router.get("/me/documents")
-def me_documents(limit: int = 100, authorization: str | None = Header(None),
-                 db: Session = Depends(get_session)) -> dict:
-    """List the SSO user's documents (for the docaiq 'Space' in chataiq)."""
-    user = _sso_user(db, authorization)
-    from app.orm import Document
-    rows = (db.query(Document).filter(Document.owner_user_id == user.pk)
-            .order_by(Document.pk.desc()).limit(max(1, min(limit, 500))).all())
-    out = []
-    for d in rows:
-        ef = d.extracted_fields or {}
-        summary = ef.get("notes") or (ef.get("fields") or {}).get("summary") or ""
-        ts = getattr(d, "updated_at", None) or d.created_at
-        out.append({"id": d.id_external, "name": d.name, "docType": d.doc_type,
-                    "updatedAt": ts.isoformat() if ts else None,
-                    "summary": (str(summary)[:200] or None)})
-    return {"documents": out}
-
-
-class MeNotePayload(BaseModel):
-    externalId: str
-    title: str = ""
-    text: str = ""
-    source: str = "chataiq"
-
-
-@router.post("/me/documents", status_code=201)
-async def me_push_note(payload: MeNotePayload, authorization: str | None = Header(None),
-                       db: Session = Depends(get_session)) -> dict:
-    """Push a chataiq note into the user's docaiq space. Idempotent on externalId —
-    re-sending updates rather than duplicates. Only ever touches source='chataiq' docs."""
-    import hashlib
-    import io
-    import secrets
-
-    from app import storage
-    from app.db import get_current_tenant
-    from app.orm import Document
-    from app.queue import enqueue_ingest
-    from app.repositories import documents as repo
-    user = _sso_user(db, authorization)
-    ext = (payload.externalId or "").strip()
-    if not ext:
-        raise HTTPException(status_code=400, detail="externalId is required")
-    body = (f"# {payload.title}\n\n" if payload.title else "") + (payload.text or "")
-    if not body.strip():
-        raise HTTPException(status_code=400, detail="text is required")
-    tenant = get_current_tenant()
-    # Idempotent: replace our own prior note with the same externalId (never dupes,
-    # and never our own user-uploaded docs — filter pins source='chataiq').
-    status = "ingested"
-    existing = (db.query(Document).filter(
-        Document.owner_user_id == user.pk, Document.source == "chataiq",
-        Document.source_ref == ext).first())
-    if existing is not None:
-        repo.delete_row(db, existing.id_external)
-        db.commit()
-        status = "exists"
-    raw = body.encode("utf-8")
-    sha = hashlib.sha256((ext + "\n" + body).encode("utf-8")).hexdigest()  # per-note unique
-    s3_key = f"{tenant}/documents/{sha[:2]}/{sha}-{secrets.token_hex(8)}"
-    storage.put_object(s3_key, io.BytesIO(raw), content_type="text/markdown")
-    row = repo.create_upload(
-        db, id_external=f"doc-note-{sha[:10]}-{secrets.token_hex(3)}",
-        name=((payload.title or ext) + ".md")[:256], path="chataiq notes",
-        size=f"{len(raw)} B", pages=1, mime_type="text/markdown", sha256=sha,
-        s3_key=s3_key, uploaded_by=user.email, source="chataiq", source_ref=ext)
-    row.ingestion_status = "pending"
-    db.commit()
-    await enqueue_ingest(row.pk, tenant)
-    return {"docId": row.id_external, "status": status}
-
-
-@router.delete("/me/documents/{external_id}")
-def me_delete_note(external_id: str, authorization: str | None = Header(None),
-                   db: Session = Depends(get_session)) -> dict:
-    """Delete a chataiq-synced note by its externalId. Only source='chataiq' docs —
-    never user-uploaded documents."""
-    from app.orm import Document
-    from app.repositories import documents as repo
-    user = _sso_user(db, authorization)
-    d = (db.query(Document).filter(
-        Document.owner_user_id == user.pk, Document.source == "chataiq",
-        Document.source_ref == external_id).first())
-    if d is None:
-        raise HTTPException(status_code=404, detail="note not found")
-    repo.delete_row(db, d.id_external)
-    db.commit()
-    return {"deleted": True}

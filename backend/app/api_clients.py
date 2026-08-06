@@ -9,7 +9,7 @@
   · stamps `last_used_at` and sets the tenant ContextVar.
 
 It is ASYNC on purpose: a sync `def` dependency runs in a threadpool, where
-ContextVar writes don't propagate to the route (see CLAUDE.md). Async keeps the
+ContextVar writes don't propagate to the route. Async keeps the
 tenant context on the same task as the handler.
 """
 from __future__ import annotations

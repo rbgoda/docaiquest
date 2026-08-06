@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
-  fetchAuthConfig, fetchMe, ssoExchange, loginWithPassword, logout as apiLogout, updateMe,
+  fetchAuthConfig, fetchMe, loginWithPassword, logout as apiLogout, updateMe,
 } from "../api";
 import { setUnauthorizedHandler } from "../api/client";
 
@@ -77,7 +77,7 @@ export function AuthProvider({ children }) {
       setConfig(cfg);
       // Anon visitors must SEE the landing (hero, demo, CTA) and click to sign in —
       // do NOT silently exchange the suite cookie here (that auto-skipped the
-      // landing). Suite SSO is click-initiated via ssoLogin() instead.
+      // landing).
       if (me) { setUser(me); setStatus("ready"); }
       else setStatus("anon");
     }).catch(err => {
@@ -113,19 +113,6 @@ export function AuthProvider({ children }) {
     try { await apiLogout(); } catch { /* ignore — clearing state regardless */ }
     setUser(null);
     setStatus("anon");
-  }, []);
-
-  // AIQ Suite SSO — click-initiated. If the visitor already has a suite session
-  // (jicama_sso cookie from another suite app), exchange it for a native
-  // session instantly → into the app. Returns the user, or null when there's no
-  // suite session (caller then falls back to Google OAuth). NOT run on boot, so
-  // the landing stays visible until the visitor chooses to sign in.
-  const ssoLogin = useCallback(async () => {
-    try {
-      const me = await ssoExchange();
-      if (me) { setUser(me); setStatus("ready"); return me; }
-    } catch { /* no suite session */ }
-    return null;
   }, []);
 
   // Self-service profile edit (display name today). Persists via PATCH /me and
@@ -199,10 +186,10 @@ export function AuthProvider({ children }) {
   // because AuthProvider re-rendered for an unrelated reason.
   const ctxValue = useMemo(
     () => ({
-      status, user, config, login, logout, ssoLogin, updateProfile, hasRole, isViewing,
+      status, user, config, login, logout, updateProfile, hasRole, isViewing,
       viewAs, setViewAs, availablePersonas, effectiveRoles, isCloud,
     }),
-    [status, user, config, login, logout, ssoLogin, updateProfile, hasRole, isViewing,
+    [status, user, config, login, logout, updateProfile, hasRole, isViewing,
      viewAs, setViewAs, availablePersonas, effectiveRoles, isCloud],
   );
 
