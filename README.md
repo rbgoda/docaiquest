@@ -1,8 +1,8 @@
 # DocAIQuest
 
-**Open-source document intelligence engine.** Ingest, parse, chunk, embed,
-retrieve, and extract structured data from your documents — with AI-powered
-chat. Self-hosted. You bring your own LLM keys. Privacy-native by default.
+**Open-source document intelligence engine.** A complete web app you self-host —
+upload documents, chat with them, extract structured data, explore entity graphs.
+All through a browser. You bring your own LLM keys. Privacy-native by default.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -256,7 +256,10 @@ curl http://localhost:8085/api/health
 
 Open **http://localhost:8085** in your browser. You should see the landing page.
 
-### 3. Start using
+### 3. Open the web app
+
+Go to **http://localhost:8085** in your browser. You'll see the full DocAIQuest
+interface — no terminal needed from here.
 
 1. **Sign up** — click "Get Started" → create an account. In local dev mode,
    email verification is skipped (accounts auto-verify).
