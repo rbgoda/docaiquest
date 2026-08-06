@@ -38,15 +38,15 @@ client = Client("dq_live_…", base_url="https://docaiq.jicama.tech")
 
 ## Errors
 
-Non-2xx responses raise `DocaiqError`, which carries `status_code` and the
+Non-2xx responses raise `DocaiquestError`, which carries `status_code` and the
 API's `detail` message:
 
 ```python
-from docaiquest import Client, DocaiqError
+from docaiquest import Client, DocaiquestError
 
 try:
     client.ask("…")
-except DocaiqError as e:
+except DocaiquestError as e:
     print(e.status_code, str(e))
 ```
 

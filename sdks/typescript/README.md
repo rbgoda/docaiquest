@@ -13,9 +13,9 @@ npm i @docaiquest/sdk
 ## Usage
 
 ```js
-import { DocaiqClient } from "@docaiquest/sdk";
+import { DocaiquestClient } from "@docaiquest/sdk";
 
-const client = new DocaiqClient({ apiKey: "dq_live_…" });
+const client = new DocaiquestClient({ apiKey: "dq_live_…" });
 
 // Grounded question-answering over your documents
 const res = await client.ask("Which invoices are due this month?");
@@ -37,7 +37,7 @@ Every call is authenticated with an owner-scoped API key (looks like `dq_live_�
 sent in the `X-API-Key` header. Pass it to the constructor:
 
 ```js
-const client = new DocaiqClient({
+const client = new DocaiquestClient({
   apiKey: "dq_live_…",
   baseUrl: "https://docaiq.jicama.tech",
 });
