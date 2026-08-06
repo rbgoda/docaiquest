@@ -5,7 +5,7 @@ Every format parser (PDF, scanned PDF, DOCX, XLSX, PPTX, CSV, image, EML, …)
 normalises into ONE ordered list of typed **blocks** with provenance, instead
 of each format inventing its own lossy flat `(page_number, text)` linearisation.
 Chunking, embeddings, extraction, bbox and PII then all consume the same faithful
-model. See `docs/UNIVERSAL_PARSING_ARCHITECTURE.md` for the full design + rollout.
+model. The full design and phased rollout are described in the architecture overview.
 
 PHASE 0 (this module): the dataclasses + a serialiser that reproduces today's flat
 `[(page, text)]` contract byte-for-byte (the parity gate). Nothing consumes the IR

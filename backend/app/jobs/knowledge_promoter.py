@@ -23,6 +23,9 @@ log = logging.getLogger("docaiq.jobs.knowledge_promoter")
 
 async def knowledge_promote_task(ctx: dict) -> dict:
     """Arq entry. Returns per-run contribution stats. NEVER raises."""
+    from app.license import is_cloud
+    if not is_cloud():
+        return {"status": "skipped", "reason": "oss"}
     stats: dict = {"tenants": 0, "contributed": 0, "rejected": 0, "errors": []}
     db = SessionLocal()
     try:

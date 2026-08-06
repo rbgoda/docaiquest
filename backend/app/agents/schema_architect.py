@@ -134,7 +134,7 @@ def draft_schema(db: Session, *, type_slug: str, label: str | None = None,
             "confidence": conf, "model": mdl}
 
 
-# The v1 seed taxonomy (~123 types across 15 domains; see docs/SCHEMA_LIBRARY_PLAN.md).
+# The v1 seed taxonomy (~123 types across 15 domains).
 # VALIDATION_BATCH is the first 10 (already reviewed); the full set is generated for HITL review.
 VALIDATION_BATCH: list[tuple[str, str]] = [
     ("passport", "Passport"), ("national_id", "National ID card"),

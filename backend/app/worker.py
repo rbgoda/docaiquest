@@ -524,7 +524,7 @@ async def match_document_task(ctx, document_pk: int, tenant_id: str) -> dict:
         # (re-activates if a tenant ever adds requirements). The matcher/kyc_extractor/
         # structured_match + kyc_records/kyc_subjects subsystem is left intact on purpose — it's
         # woven into user endpoints + audit ORM tables that CLAUDE.md warns against dropping — it
-        # just does no work here. See docs/AGENT_RESTRUCTURING_SCOPE.md.
+        # just does no work here.
         from sqlalchemy import func as _func, select as _select
         from app.orm import Requirement
         if session.scalar(_select(_func.count(Requirement.pk)).where(

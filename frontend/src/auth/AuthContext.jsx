@@ -116,7 +116,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   // AIQ Suite SSO — click-initiated. If the visitor already has a suite session
-  // (jicama_sso cookie from another *.jicama.tech app), exchange it for a native
+  // (jicama_sso cookie from another suite app), exchange it for a native
   // session instantly → into the app. Returns the user, or null when there's no
   // suite session (caller then falls back to Google OAuth). NOT run on boot, so
   // the landing stays visible until the visitor chooses to sign in.

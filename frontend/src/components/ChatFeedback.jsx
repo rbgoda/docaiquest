@@ -1,6 +1,6 @@
 // M46 · ChatFeedback — 👍/👎 on a chat answer. 👍 records a quick positive
 // signal; 👎 opens the ChatFeedbackModal (the "box style" form modelled on
-// xpenseaiq's FeedbackForm) to capture WHY. Both post to /api/chat-feedback →
+// standard FeedbackForm) to capture WHY. Both post to /api/chat-feedback →
 // improvement queue + reflexion-cache demotion.
 import React, { useState } from "react";
 import { submitChatFeedback } from "../api/documents";

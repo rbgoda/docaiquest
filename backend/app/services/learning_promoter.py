@@ -1,7 +1,6 @@
 """M44.P10 PR2 · Promotion engine for delete-with-learning preservation.
 
-Phase 1 of the two-phase delete documented in
-``docs/architecture/DELETE_WITH_LEARNING.md``. When a document is about to be
+Phase 1 of the two-phase delete. When a document is about to be
 deleted, this engine walks its EVIDENCE rows (reflexion pairs, field edits,
 agent traces, entities) and promotes the *generalizable* patterns up into the
 tenant-level UNDERSTANDING tables so the knowledge survives the cascade that

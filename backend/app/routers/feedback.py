@@ -3,8 +3,8 @@
 POST /api/feedback        — submit product feedback (rating + category + comments
                             + suggestion). GET /api/feedback/mine — the user's own
 submissions. Reviewed + resolved in the superadmin console (routers/superadmin.py).
-Documents-product only, tenant + owner scoped. Mirrors the XpenseAIQ app-level
-feedback model (distinct from chat-answer ratings in documents_feedback.py).
+Documents-product only, tenant + owner scoped. Distinct from chat-answer
+ratings (handled in documents_feedback.py).
 """
 from __future__ import annotations
 

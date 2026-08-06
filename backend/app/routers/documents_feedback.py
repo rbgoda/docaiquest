@@ -30,7 +30,7 @@ class FeedbackPayload(BaseModel):
     messagePk: int
     direction: str            # "up" | "down"
     feedback: str | None = None
-    # M46 · rich feedback box fields (the xpenseaiq-style modal on 👎).
+    # M46 · rich feedback box fields (the feedback modal on 👎).
     category: str | None = None      # "wrong" | "incomplete" | "offtopic" | "other"
     suggestion: str | None = None    # "what would the right answer be?"
     rating: int | None = None        # optional 1–5 stars

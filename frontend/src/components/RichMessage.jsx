@@ -1,6 +1,6 @@
 // M46 · RichMessage — renders a chat answer's lightweight Markdown so the model's
 // tables / lists / bold show as real tables, bullets, and emphasis instead of raw
-// pipes and asterisks. (Benchmarked against xpenseaiq-v5's chat output.)
+// pipes and asterisks. (Benchmarked against a production chat output.)
 //
 // Inline Markdown is HTML-escaped FIRST, then **bold** / `code` are applied, so
 // dangerouslySetInnerHTML is safe for untrusted LLM text.

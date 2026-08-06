@@ -191,14 +191,13 @@ class Settings(BaseSettings):
     # generalizable knowledge into the tenant UNDERSTANDING tables before
     # the cascade (Phase 2) purges the document's evidence. PR3 (2026-06-02)
     # wired the endpoint + flipped this ON by default; the open design
-    # questions in docs/architecture/DELETE_WITH_LEARNING.md were settled with
-    # the product owner (helpful>=2, type-patterns tenant-wide / names local,
+    # design questions were settled with the product owner
+    # (helpful>=2, type-patterns tenant-wide / names local,
     # telemetry on). Kept as a flag for one-line rollback until P10 PR4 drops
     # it. Set DOCAIQ_DELETE_WITH_LEARNING=false to revert to plain cascade.
     delete_with_learning: bool = True
 
-    # M44.P13 · federated agentic learning governance (see
-    # docs/architecture/FEDERATED_LEARNING.md). Two independent consent flags:
+    # M44.P13 · federated agentic learning governance. Two independent consent flags:
     #   contribute_learning   — may this tenant's ANONYMIZED skeletons (no
     #     values / PII / identities — see app/services/skeletonizer.py) feed
     #     the global knowledge pool? Opt-out model: default on; enterprise /
@@ -443,8 +442,6 @@ class Settings(BaseSettings):
     documents_general_fallback_model: str = ""
 
     # M44.P11 · GDPR / PDPA / PII safety on LLM calls.
-    # See docs/architecture/PII_LLM_SAFETY.md for full design.
-    #
     # pii_redact_before_llm · OFF by default until smoke-tested per tenant.
     # When ON, the gateway redacts PII (emails, phones, IDs, names from
     # the entities table) BEFORE sending to the LLM, then detokenizes
@@ -508,7 +505,7 @@ class Settings(BaseSettings):
     documents_office_image_max: int = 12
     # Universal parsing architecture — the structured Document Model (IR). OFF by
     # default; no runtime effect until a format's parser is switched to build the
-    # IR (phased, eval-gated). See docs/UNIVERSAL_PARSING_ARCHITECTURE.md.
+    # IR (phased, eval-gated). See the architecture overview in README.
     doc_model: bool = False
     # G11 · multi-pass OCR voting. OFF by default — runs a 2nd vision pass on
     # low-confidence (G3) scanned pages and keeps the higher-quality transcript

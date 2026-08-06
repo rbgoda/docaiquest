@@ -3,7 +3,7 @@
 `require_client(*scopes)` is a FastAPI dependency that:
   · reads the key from `Authorization: Bearer <key>` or `X-API-Key`,
   · accepts the legacy `DOCAIQ_EXTRACTION_API_KEY` as an implicit all-scope
-    client (back-compat for AuditAIQ during migration),
+    client (back-compat for legacy integrations),
   · else hashes the key, looks it up in `api_clients`, rejects revoked keys,
   · enforces required scopes + a per-key RPM rate limit (Redis, best-effort),
   · stamps `last_used_at` and sets the tenant ContextVar.
@@ -97,7 +97,7 @@ def require_client(*required_scopes: str):
 
         # Back-compat: the single legacy extraction key = implicit all-scope client. Bound it with a
         # rate limit too (it previously skipped the limiter entirely) — full de-scoping is a partner
-        # migration (move AuditAIQ to a revocable DB key), tracked separately.
+        # migration to revocable DB keys, tracked separately.
         legacy = settings.extraction_api_key
         if legacy and secrets.compare_digest(raw, legacy):
             _rate_limit("legacy", 300)

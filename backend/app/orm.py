@@ -626,7 +626,7 @@ class ChatFeedback(Base):
     message_pk: Mapped[int] = mapped_column(Integer, nullable=False)
     direction: Mapped[str] = mapped_column(String(8), nullable=False)  # "up" | "down"
     feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
-    # M46 · rich feedback modal (xpenseaiq-style box): the 👎 form captures a
+    # M46 · rich feedback modal: the 👎 form captures a
     # category ("wrong"/"incomplete"/"offtopic"/"other"), a separate suggestion
     # ("what would the right answer be?"), and an optional 1–5 star rating.
     category: Mapped[str | None] = mapped_column(String(16), nullable=True)
@@ -646,9 +646,9 @@ class ChatFeedback(Base):
 
 class ProductFeedback(Base):
     """App-level product feedback (the 'Send feedback' screen) — distinct from
-    ChatFeedback, which rates one chat answer. Mirrors the XpenseAIQ model: a
-    rating + category + comments + suggestion submitted from anywhere in the app,
-    reviewed + resolved in the superadmin console (status new→reviewed→resolved).
+    ChatFeedback, which rates one chat answer. Captures a rating + category +
+    comments + suggestion submitted from anywhere in the app, reviewed + resolved
+    in the superadmin console (status new→reviewed→resolved).
     Tenant + per-user scoped."""
 
     __tablename__ = "product_feedback"
@@ -1962,7 +1962,7 @@ class CustomCategory(Base):
 
 # ---- Third-party API clients (v1 API/SDK) -------------------------------
 class ApiClient(Base):
-    """A third-party integration (e.g. AuditAIQ) authorized to call the public
+    """A third-party integration authorized to call the public
     API. Generalizes the single DOCAIQ_EXTRACTION_API_KEY into per-partner keys.
 
     The raw key is shown ONCE at creation and never stored — only `key_hash`
@@ -1979,7 +1979,7 @@ class ApiClient(Base):
     # Enterprise self-serve keys are scoped to ONE user's documents (set to the creating user's pk);
     # partner/admin keys leave this NULL (tenant/group-scoped). require_client sets the owner ContextVar.
     owner_user_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
-    name: Mapped[str] = mapped_column(String(128), nullable=False)         # "AuditAIQ (prod)"
+    name: Mapped[str] = mapped_column(String(128), nullable=False)         # e.g. "My Integration (prod)"
     key_prefix: Mapped[str] = mapped_column(String(24), index=True, nullable=False)  # shown in UI
     key_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)  # sha256
     env: Mapped[str] = mapped_column(String(8), nullable=False, default="live")     # live | test
@@ -1988,7 +1988,7 @@ class ApiClient(Base):
     rate_limit_rpm: Mapped[int] = mapped_column(Integer, nullable=False, default=120)
     monthly_token_budget: Mapped[int | None] = mapped_column(Integer, nullable=True)
     # Groups (shared folders) this key may query for audit evidence. NULL/[] =
-    # none. A partner key (e.g. AuditAIQ) is granted a customer's group so it can
+    # none. A partner key is granted a customer's group so it can
     # match requirements against exactly that shared folder — and no other.
     allowed_group_ids: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     created_by: Mapped[str | None] = mapped_column(String(256), nullable=True)

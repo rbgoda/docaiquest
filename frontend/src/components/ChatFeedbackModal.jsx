@@ -1,5 +1,5 @@
 // M46 · ChatFeedbackModal — the "box style" feedback form, modelled on
-// xpenseaiq-v5's FeedbackForm (category chips → comments → suggestion → rating
+// Standard FeedbackForm pattern (category chips → comments → suggestion → rating
 // → submit), adapted to a chat *answer* and DocAIQ's editorial theme tokens.
 //
 // Opened from ChatFeedback when the reviewer clicks 👎. Submits the structured
@@ -12,7 +12,7 @@ const MAX_IMAGES = 3;
 
 // Downscale + JPEG-compress in the browser so a 4MB screenshot becomes a
 // ~100KB data URL before it ever hits the network. (Same approach as
-// xpenseaiq's FeedbackForm.)
+// the standard FeedbackForm.)
 function fileToCompressedDataUrl(file, maxDim = 1280, quality = 0.7) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -35,7 +35,7 @@ function fileToCompressedDataUrl(file, maxDim = 1280, quality = 0.7) {
   });
 }
 
-// Chat-tailored categories (vs xpenseaiq's Bug/Idea/Praise/Other) — what was
+// Chat-tailored categories (vs the standard Bug/Idea/Praise/Other) — what was
 // wrong with *this answer*.
 const CATEGORIES = [
   { id: "wrong",      icon: "⚠️", label: "Wrong" },

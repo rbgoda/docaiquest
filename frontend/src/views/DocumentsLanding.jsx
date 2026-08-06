@@ -113,7 +113,7 @@ export default function DocumentsLanding({ onSignIn }) {
   const [contactOpen, setContactOpen] = React.useState(false);
 
   // Click-to-sign-in: try the AIQ-suite session first (instant, no round-trip if
-  // you're already signed into another *.jicama.tech app → straight to the
+  // you're already signed into another suite app → straight to the
   // dashboard); otherwise fall back to the Google OAuth flow.
   const handlePrimaryLogin = async () => {
     if (signingIn) return;

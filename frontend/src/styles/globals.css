@@ -29,7 +29,7 @@ input,textarea{font-family:inherit}
   --emerald:#3FA47A; --amber:#E0A23B; --rose:#D8625E; --violet:#8B7FD6;
   --slate:#6B8BA4; --terracotta:#C08060;
   --paper:#F4EFE6;
-  /* xpenseaiq-pattern tokens (soft elevation, messenger bubbles, floating nav) in DocAIQ's dark-gold palette */
+  /* pattern tokens (soft elevation, messenger bubbles, floating nav) in DocAIQ's dark-gold palette */
   --shadow-soft:0 8px 24px rgba(0,0,0,0.35); --shadow-nav:0 -6px 20px rgba(0,0,0,0.35);
   --shadow-gold:0 8px 22px rgba(200,160,76,0.22);
   --bubble-you-bg:rgba(226,188,104,0.15); --bubble-you-line:rgba(226,188,104,0.35);
@@ -50,7 +50,7 @@ input,textarea{font-family:inherit}
 }
 body{background:var(--bg);color:var(--ink)}
 
-/* xpenseaiq-pattern helpers ---------------------------------------------------
+/* pattern helpers ---------------------------------------------------
    card-soft: a rounded card with subtle elevation (used for KPI/stat + panels).
    bubble:    asymmetric messenger chat bubbles — AI tucks its bottom-left, the
               user tucks its bottom-right — in gold-tinted (you) / card (ai) fills. */

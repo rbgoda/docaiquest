@@ -4,7 +4,7 @@ The shared container hosts many free-tier tenants. Each one is capped on
 documents per month, audits, and LLM calls per hour. This module centralizes
 the cap-check + counter-increment logic so routers stay readable.
 
-Caps for plan_type='free' (matches docs/SAAS_VS_CONTAINER_PLAN.md):
+Caps for plan_type='free':
   * 50 documents per calendar month
   * 1 audit ever (free is for evaluation · upgrade to subscribe)
   * 5 requirements per audit

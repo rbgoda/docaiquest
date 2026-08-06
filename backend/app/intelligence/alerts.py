@@ -3,7 +3,7 @@
 Evaluates built-in attention rules over a user's documents using only data we
 already have: `documents.extracted_fields` (shape `{doc_type, fields, ...}`),
 `doc_type` / `doc_type_confidence`, and `ingestion_status`. Pure compute — no
-LLM, nothing leaves the box. See docs/architecture/INTELLIGENCE_DASHBOARD.md.
+LLM, nothing leaves the box.
 
 Date-field detection mirrors the curated field names used by
 app/services/doc_chat._find_expiry_date (kept independent here so the alert

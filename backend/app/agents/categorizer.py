@@ -35,8 +35,7 @@ from app.orm import MerchantCategoryCache
 log = logging.getLogger("docaiq.agents.categorizer")
 
 
-# Canonical category vocabularies — shared across DocAIQ, XAuditAIQ, and
-# XpenseAIQ. See docs/CATEGORIES.md for the master spec. Keep these stable
+# Canonical category vocabularies. Keep these stable
 # and additive — add new entries at the END so historical categorizations
 # remain valid.
 #

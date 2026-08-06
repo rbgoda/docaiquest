@@ -1,8 +1,7 @@
 # DocAIQ eval harness (Reducto-parity G2)
 
 The **ruler** for parsing / extraction / retrieval quality. Build it before
-changing any parsing so every later change (G1, G3–G11) is measured, not guessed.
-See `docs/REDUCTO_PARITY_ROADMAP.md`.
+changing any parsing so every later change is measured, not guessed.
 
 Pure stdlib — no DB, no LLM, no third-party deps — so it runs in CI and offline.
 

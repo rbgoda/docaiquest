@@ -8,7 +8,7 @@ v1 uses the `text` chunks only: they carry the full document content in reading 
 The layout-derived `table` chunks DUPLICATE that same content (and are mostly page layout
 captured as 2-column tables, not clean data tables), so including them would just add noise
 and repetition. Clean GFM data-table rendering is a v2 refinement that rides on better table
-detection (the PaddleOCR-VL vision tier) — see docs/TRUST_FRAMING_AND_MD_EXPORT_SCOPE.md.
+detection (the PaddleOCR-VL vision tier).
 """
 from __future__ import annotations
 

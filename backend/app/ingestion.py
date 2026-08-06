@@ -1729,7 +1729,7 @@ def _bboxes_for_chunks(pdf_bytes: bytes, chunks: list[Chunk]) -> list[dict | Non
 # Instead of post-hoc word-matching (_locate_text_span), we capture per-line
 # geometry at parse time via page.get_text("dict") and carry line_ids through
 # chunks. Chunk bbox = union of full-width line bands — no x-coordinate
-# matching needed. See docs/bboxplan.pdf for the full design rationale.
+# matching across columns.
 
 def _build_line_map(pdf_bytes: bytes) -> dict[str, dict]:
     """Build a document-global line_map from a native PDF.

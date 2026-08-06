@@ -1025,7 +1025,7 @@ def _row_sig(row) -> str:
 
 
 def _self_verify(db: Session, document_pk: int, text: str, fields: dict, settings) -> dict:
-    """Completeness reconciliation (xpenseaiq-style). For the repeating-ROW array fields the first
+    """Completeness reconciliation. For the repeating-ROW array fields the first
     pass produced (transactions / line_items / holdings / records / …), ask the model to list ONLY
     the rows that appear in the DOCUMENT but are MISSING from what we extracted; merge deduped; loop
     until a round adds nothing (max 3). This is what recovers the middle-page statement rows the

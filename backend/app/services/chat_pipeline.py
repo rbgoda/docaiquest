@@ -466,7 +466,7 @@ def _step_full_doc_ctx(ctx: ChatContext) -> ChatMessage | None:
     if not art_struct and _docs_mode:
         ef = ctx.doc.extracted_fields or {}
         art_struct = ef.get("fields") if isinstance(ef.get("fields"), dict) else ef
-    # M44.P5.2 · brutally-tight system prompt, modeled on xpenseaiq's
+    # M44.P5.2 · brutally-tight system prompt, modeled on a production-tested
     # chat tab that the user benchmarked us against. The rules force the
     # model into the right answer shape · one-line value for "how much",
     # numbered steps for procedure, table for list-of-line-items. No
@@ -574,7 +574,7 @@ def _step_artifact_fallback(ctx: ChatContext) -> ChatMessage | None:
     429, network outage, agent stuck). Reads the materialized doc memory
     (`document_artifacts`) and returns a focused answer.
 
-    Tuned for concision after user benchmarked us against xpenseaiq-v5:
+    Tuned for concision after user benchmarking:
       · Summary request ("summarize", "overview") → just summary_long
       · Single-value question ("how much", "when", "what is the X") →
         the ONE most-relevant line from full_text_md, plus structured

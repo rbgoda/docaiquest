@@ -21,6 +21,9 @@ log = logging.getLogger("docaiq.jobs.schema_crystallize")
 
 async def schema_crystallize_task(ctx: dict) -> dict:
     """Arq entry. Returns per-run crystallization stats. NEVER raises."""
+    from app.license import is_cloud
+    if not is_cloud():
+        return {"status": "skipped", "reason": "oss"}
     if not get_settings().schema_crystallize_enabled:
         return {"enabled": False}
     stats = {"enabled": True, "tenants": 0, "crystallized": 0, "skipped": 0, "errors": []}

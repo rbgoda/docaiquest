@@ -56,63 +56,6 @@ class Critique:
     corrected_hint: str | None = None
 
 
-_CRITIC_SYSTEM = """\
-You are a skeptical document-review critic for a compliance audit tool.
-Given a user question, an AI's draft answer, source excerpts, and the
-document's metadata, decide whether the draft is CORRECT and COMPLETE
-for the question asked.
-
-You are NOT generating the answer yourself. You are reviewing the draft.
-
-CHALLENGE the draft against these common failure modes:
-
-1. WRONG FIELD RETURNED
-   The draft returns a field that LOOKS like the asked-for field but is
-   actually a different one. Pay special attention to these ID formats:
-     · Aadhaar (India)              · 12 digits, "NNNN NNNN NNNN"
-     · Aadhaar Enrolment            · 14 digits, "NNNN/NNNNN/NNNNN"
-     · PAN (India)                  · 10 chars, AAAAA9999A
-     · NRIC (Singapore)             · S/T/F/G/M + 7 digits + letter
-     · UEN (Singapore business)     · varies, often 9-10 alphanumeric
-     · Passport                     · 6-9 alphanumeric, often starts letter
-     · SSN (US)                     · NNN-NN-NNNN
-     · EIN (US business)            · NN-NNNNNNN
-     · DUNS                         · 9 digits
-     · GSTIN (India)                · 15 chars, 2 digits + PAN + checksum
-     · Driver licence               · varies by state/country
-   If the draft returns one ID type when the question asked for a
-   different one, FAIL with a corrected_hint pointing at the right one
-   from the source excerpts.
-
-2. INCOMPLETE
-   Question asked for "all line items", "all parties", "all dates" etc.
-   and the draft returned only some. Source excerpts contain more.
-
-3. CONTRADICTED BY SOURCE
-   Draft makes a claim the source excerpts directly contradict.
-
-4. HALLUCINATION
-   Draft asserts something that is not in any source excerpt and is not
-   a reasonable inference. (Be lenient on summarisations / paraphrases.)
-
-5. SCOPE MISMATCH
-   Question asked about a specific party/date/entity, draft answered
-   about a different one.
-
-Respond with STRICT JSON ONLY · no preamble, no code fences:
-{
-  "passes": <true|false>,
-  "reason": "<=120 char one-liner>",
-  "suggestion": "<=200 char actionable hint for the next pass; empty if passes=true>",
-  "corrected_hint": "<the actual correct answer from the source, or null>"
-}
-
-When in doubt about a borderline draft, PASS — the human reviewer will
-catch what we miss. Only FAIL when you have specific evidence the
-draft is wrong.
-"""
-
-
 def critique(
     *,
     question: str,
@@ -152,9 +95,9 @@ def critique(
     except Exception:  # noqa: BLE001
         _critic_tid = None
     try:
-        # M44.P3.B · _CRITIC_SYSTEM is ~1K-token ID-format table — stable
-        # across every critic call. Flag for prompt caching (90% discount
-        # on the cached prefix on Anthropic / Anthropic-via-OpenRouter).
+        # The critic prompt contains an ID-format table — stable across every
+        # critic call. Flag for prompt caching (90% discount on the cached
+        # prefix on Anthropic / Anthropic-via-OpenRouter).
         result = gateway.call(
             model_id,
             messages=[

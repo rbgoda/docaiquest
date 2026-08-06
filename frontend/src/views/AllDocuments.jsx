@@ -1084,7 +1084,7 @@ export default function AllDocuments({ docsOverride = null, onDocsChanged, vendo
                             )}
                           </span>
                         )}
-                        {/* M46 · approve a processed doc as accurate (xpenseaiq-style gate) */}
+                        {/* M46 · approve a processed doc as accurate */}
                         {isDocsProduct && d.ingestionStatus === "ready" && (
                           d.reviewStatus === "reviewed" ? (
                             <span className="row" style={{ alignItems: "center", flexShrink: 0, color: "var(--emerald)" }} title="Approved as accurate">

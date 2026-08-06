@@ -1,6 +1,6 @@
 // M46 · Documents · top-right user/settings menu.
 //
-// Concept borrowed from xpenseaiq-v5's UserMenu (avatar dropdown → portalled
+// Concept borrowed from a standard UserMenu pattern (avatar dropdown → portalled
 // settings modal with per-section panels), customized to DocAIQ's editorial
 // theme tokens and the Documents product's needs: the menu surfaces the signed-
 // in Google account, and the Settings modal carries Profile / Appearance /

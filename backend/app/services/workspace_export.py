@@ -6,8 +6,8 @@ encrypts it with the user's per-user key, and stores it in THEIR Google Drive
 (`docaiq_docs/.workspace/workspace.sqlite`). This is the artifact that makes
 "your data lives in your own Drive" real.
 
-Status of the architecture: this ships the **export + a validated read path**
-(P2 of docs/architecture/DOCUMENTS_USER_OWNED_STORAGE.md). Postgres stays the
+Status of the architecture: this ships the **export + a validated read path**.
+Postgres stays the
 authoritative store; reading from the Drive workspace is opt-in behind
 `documents_storage_mode='drive'` and dual-sourced, so the live product is
 unaffected. The destructive Postgres cutover (P4) is deliberately NOT done here.

@@ -2,7 +2,7 @@
 
 Documents-product only (404 elsewhere), owner-scoped. Phase A ships the
 portfolio header + the zero-LLM alert engine; the view-engine + AI proposal
-(Phases B/C) land later. See docs/architecture/INTELLIGENCE_DASHBOARD.md.
+(Phases B/C) land later.
 """
 from __future__ import annotations
 

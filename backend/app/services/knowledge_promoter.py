@@ -10,7 +10,7 @@ Gated on two conditions: ``contribute_learning`` (tenant consent, opt-out) and
 this is a no-op. Runs nightly via the Arq cron in ``app/worker.py`` — never in
 a request path.
 
-Privacy posture (see docs/architecture/FEDERATED_LEARNING.md):
+Privacy posture:
   · only ``source='local'`` rows are eligible (global rows never re-promote);
   · every row passes through ``skeletonizer.skeletonize`` — values, PII,
     identities, tenant/doc ids are stripped or the row is dropped;

@@ -30,7 +30,7 @@ log = logging.getLogger("docaiq.extraction")
 
 # M52 · auth flows through app.api_clients.require_client — per-partner keys
 # (scoped, rate-limited) PLUS the legacy DOCAIQ_EXTRACTION_API_KEY as an implicit
-# all-scope client for back-compat. See docs/SDK_AND_API_DESIGN.md §4.
+# all-scope client for back-compat.
 
 _PARSERS = {
     "application/pdf": "parse_pdf",

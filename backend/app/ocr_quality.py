@@ -8,7 +8,7 @@ flags, so the pipeline can surface "N pages look low-confidence — review"
 This module is the deterministic foundation. Wiring it into `ingestion_vision`
 (score each OCR'd page), persisting the score, and surfacing it in the
 Intelligence dashboard is the remaining G3 work (needs a DB migration + the
-live vision path) — tracked in docs/REDUCTO_PARITY_ROADMAP.md.
+live vision path) — tracked in the Reducto parity roadmap.
 
 Score interpretation: 1.0 = clean text; < ~0.55 = likely needs human review.
 """

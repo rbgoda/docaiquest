@@ -1,7 +1,7 @@
-"""v1 public API for partners (e.g. AuditAIQ).
+"""v1 public API for partners and SDK consumers.
 
 Auth is per-partner API keys via app.api_clients.require_client (NOT the cookie
-session). See docs/SDK_AND_API_DESIGN.md + docs/AUDITAIQ_INTEGRATION.md.
+session).
 
 This module hosts the STATEFUL "match a requirement against a shared folder"
 endpoint: a partner key granted a customer's group finds the evidence doc(s) for
@@ -95,7 +95,7 @@ def _human_size(n: int) -> str:
     return f"{f:.0f} GB"
 
 
-# ── API 1 · group ingress — PUT a document into a group (unblocks AuditAIQ P3) ──
+# ── API 1 · group ingress — PUT a document into a group ──
 @router.post("/groups/{group_id}/documents", status_code=201)
 async def group_ingest(
     group_id: int = Path(...),
@@ -164,7 +164,7 @@ async def group_ingest(
             "status": "ingested", "sha256": sha, "externalId": external_id}
 
 
-# ── API 2 · grounded QA over a group (unblocks AuditAIQ P4) ────────────────────
+# ── API 2 · grounded QA over a group ────────────────────
 # A partner may request a model, but only from this vetted set — otherwise a caller could point every
 # request at the most expensive model and drain the platform's LLM budget. Unknown → server default.
 _ALLOWED_BYO_MODELS = {
@@ -291,7 +291,7 @@ async def group_answer(
 
 
 # ── Suite SSO identity (jicama_sso Bearer) → /api/v1/me/… ─────────────────────
-# chataiq (any *.jicama.tech app) calls these AS the logged-in user, passing the
+# A suite app calls these AS the logged-in user, passing the
 # shared suite token as `Authorization: Bearer <jicama_sso>`. No partner key, no
 # group id — the token's `sub` (email) resolves to the docaiq user and we operate
 # on THEIR (owner-scoped) documents. See DOCAIQ_FOR_CHATAIQ.md + SSO_VERIFIER.md.

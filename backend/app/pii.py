@@ -4,8 +4,8 @@ Detects PII in text, replaces each occurrence with a stable placeholder
 (e.g. `[PERSON_1]`, `[EMAIL_2]`), and gives the caller a mapping so the
 LLM's response can be detokenized back to real values.
 
-Design rationale and the threat model are in
-`docs/architecture/PII_LLM_SAFETY.md`. The summary: prompts sent to
+Design rationale and the threat model for PII safety at the LLM boundary.
+The summary: prompts sent to
 external LLM providers should not contain raw PII. We tokenize before
 send, the model operates on opaque placeholders, we detokenize on
 return.

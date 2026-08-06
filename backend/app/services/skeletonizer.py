@@ -4,7 +4,7 @@ Transforms a LOCAL "understanding" row into a value-free, PII-free, tenant-
 anonymous SKELETON that is safe to contribute to the global knowledge pool —
 or REFUSES (returns ``None``) when it cannot guarantee that. This is the
 load-bearing barrier the whole federated-learning design rests on
-(docs/architecture/FEDERATED_LEARNING.md): promotion is a *transform*, never
+promotion is a *transform*, never
 a copy. We keep only generalizable structure — doc_type tokens, field NAMES,
 agent tool sequences, intent-templated questions — and drop every value,
 identifier, entity, document id, and tenant id.

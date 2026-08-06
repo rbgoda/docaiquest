@@ -2,7 +2,7 @@
 
 A key looks like `dq_live_<32 url-safe chars>` (or `dq_test_…`). We store only
 its SHA-256 hash + a short prefix for display; the raw key is shown once at
-creation and never persisted. See docs/SDK_AND_API_DESIGN.md §4.
+creation and never persisted.
 """
 from __future__ import annotations
 

@@ -19,6 +19,9 @@ log = logging.getLogger("docaiq.jobs.knowledge_sync")
 
 async def knowledge_sync_task(ctx: dict) -> dict:
     """Seed the container's own tenant from the global pool. NEVER raises."""
+    from app.license import is_cloud
+    if not is_cloud():
+        return {"status": "skipped", "reason": "oss"}
     tid = get_settings().tenant_id
     db = SessionLocal()
     try:

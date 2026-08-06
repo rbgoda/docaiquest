@@ -438,7 +438,7 @@ def llm_analytics(days: int = 30,
             "avgPerDoc": avg_per_doc, "docs": int(ndocs), "docExtractionCost": round(float(doc_cost), 4)}
 
 
-# ---- Partner / cross-tenant API clients (B2B keys — AuditAIQ-style) ---------
+# ---- Partner / cross-tenant API clients (B2B keys) ---------
 # Enterprise self-serve keys are minted by users in their own account (routers/keys.py). THESE are the
 # partner keys DocAIQ issues to other apps: owner_user_id stays NULL (tenant/group-scoped, not one user).
 _PARTNER_SCOPES = ["extract", "classify", "summarize", "ask", "documents:read",

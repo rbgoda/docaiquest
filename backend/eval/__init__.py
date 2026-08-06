@@ -1,6 +1,6 @@
-"""DocAIQ parsing/extraction eval harness (Reducto-parity G2).
+"""DocAIQ parsing/extraction eval harness.
 
-The 'ruler' for parsing/extraction quality — see docs/REDUCTO_PARITY_ROADMAP.md.
+The 'ruler' for parsing/extraction quality.
 Pure-stdlib so it runs in CI and offline. `scorer` holds the metric functions;
 `run` is the manifest-driven CLI.
 """

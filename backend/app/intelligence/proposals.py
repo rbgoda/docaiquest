@@ -4,8 +4,6 @@ Builds a values-FREE profile of the user's corpus (doc types + counts + the
 field *names* each type carries — never any values) and asks the LLM to assemble
 useful View specs from it. The proposal is privacy-clean (no PII can leak: only
 schema goes to the model) and cheap (one small call, cached in saved_views).
-Routed at paid Claude Haiku for reliability. See
-docs/architecture/INTELLIGENCE_DASHBOARD.md §6.
 """
 from __future__ import annotations
 

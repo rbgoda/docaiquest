@@ -73,25 +73,6 @@ def is_mixed_language(langs: dict[str, float], threshold: float = 0.1) -> bool:
 
 from app.llm.prompts import get_prompt
 
-# ── Critique prompt ───────────────────────────────────────────────────────
-_CRITIQUE_SYSTEM = """\
-You are a document indexing quality auditor. You evaluate whether a document's \
-chunks, entities, and metadata faithfully represent the original content for \
-retrieval. Score each dimension 1-10 and provide a brief explanation.
-
-Output ONLY a JSON object with these keys:
-  "chunk_coherence": 1-10 — are chunks semantically coherent units?
-  "entity_accuracy": 1-10 — are extracted entities correct and complete?
-  "language_handling": 1-10 — is multi-language content properly captured?
-  "searchability": 1-10 — would keyword + semantic search find these chunks?
-  "overall": 1-10 — aggregate score
-  "issues": [] — list of specific problems found (empty if none)
-  "suggestions": [] — list of actionable improvements (empty if none)
-
-Be strict but fair. Flag: split paragraphs, broken table rows, missing entities, \
-garbled OCR text, language mixing without marking."""
-
-
 @dataclass
 class IndexingCritique:
     chunk_coherence: int = 0

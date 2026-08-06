@@ -3,7 +3,7 @@
 A "view" (use case) is a declarative spec — a doc-type filter + columns +
 which metrics to show — evaluated over the user's `extracted_fields`. One
 engine evaluates any spec; built-in specs ship here, AI-proposed specs land in
-Phase C. Pure compute, no LLM. See docs/architecture/INTELLIGENCE_DASHBOARD.md.
+Phase C. Pure compute, no LLM.
 
 Field access copes with the universal-extractor shape: values live either as
 flat keys (`title`, `issuer`, `primary_date`, `primary_amount`) or inside

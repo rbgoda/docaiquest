@@ -1,5 +1,5 @@
 """DocAIQ eval CLI — run R4 (stdlib) and optional Ragas LLM-judge metrics on the
-same golden set. See docs/EVAL_RAGAS.md.
+same golden set.
 
   python -m eval.ragas_eval --dry                         # R4 only, no deps/LLM
   python -m eval.ragas_eval --judge dashscope             # + Ragas (needs venv + key)

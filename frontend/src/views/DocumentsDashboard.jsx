@@ -92,7 +92,7 @@ function Kpi({ icon, label, value, sub, accent, dense }) {
   return (
     <div className="card-soft kpi-card" style={{
       padding: 16, flex: "1 1 0", minWidth: 140, position: "relative", overflow: "hidden",
-      // a faint accent wash + a colored left edge give each stat its own identity (xpenseaiq pattern)
+      // a faint accent wash + a colored left edge give each stat its own identity
       background: `linear-gradient(180deg, color-mix(in srgb, ${c} 7%, var(--bg1)), var(--bg1) 62%)`,
     }}>
       <span aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: c }} />
@@ -144,7 +144,7 @@ function AskPanel({ onOpenDocument, onCollapse, mobile }) {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
-  const [promptsOpen, setPromptsOpen] = useState(false);   // ⚡ pre-prompt popover (xpenseaiq-style)
+  const [promptsOpen, setPromptsOpen] = useState(false);   // ⚡ pre-prompt popover
   const [uploading, setUploading] = useState(false);       // + Add · inline upload from chat
   const [processing, setProcessing] = useState([]);        // [{id,name,status}] · live ingest tray
   const scroller = useRef(null);
@@ -188,7 +188,7 @@ function AskPanel({ onOpenDocument, onCollapse, mobile }) {
     return () => clearTimeout(t);
   }, [processing]);
 
-  // + Add · upload documents without leaving the chat (xpenseaiq-style). Consent-
+  // + Add · upload documents without leaving the chat. Consent-
   // gated like the Documents tab; on success the doc lands in the live processing
   // tray (animated dots) below, which polls until it's ready to ask about.
   const handleAdd = () => fileRef.current?.click();

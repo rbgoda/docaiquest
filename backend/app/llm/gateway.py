@@ -141,6 +141,15 @@ def call(
             f"tenant policy blocks provider '{backend}' · allowed: {allowlist}"
         )
 
+    # ── Cloud-task guard: refuse cloud-only tasks in OSS mode ──────────────
+    if task_kind and task_kind in _CLOUD_TASKS:
+        from app.license import is_cloud
+        if not is_cloud():
+            raise CloudProxyUnavailableError(
+                f"Task {task_kind!r} requires DocAIQuest Cloud. "
+                "Set DOCAIQ_LICENSE_MODE=cloud or use a local provider."
+            )
+
     # M44.P11 · PII redaction on user messages. System messages are not
     # redacted because they're our prompts (no PII inside them).
     pii_mapping: dict[str, str] = {}
@@ -291,6 +300,24 @@ def call(
             pass  # audit must never break the caller
 
     return result
+
+
+# ── Cloud-only task kinds ──────────────────────────────────────────────────
+# Tasks that require the DocAIQuest Cloud proxy. In OSS mode the gateway
+# refuses these immediately — belt-and-suspenders on top of caller-level
+# is_cloud() gates. A call site that misses its gate hits this wall instead
+# of silently degrading to a local LLM call.
+_CLOUD_TASKS: frozenset[str] = frozenset({
+    "agent_step",
+    "analytics_insights",
+    "critic",
+    "dashboard_propose",
+    "extract_verify",
+    "intelligence_propose",
+    "schema_architect",
+    "triage",
+    "workspace_agent",
+})
 
 
 class LLMProviderBlockedError(RuntimeError):
@@ -814,7 +841,7 @@ def _dashscope(
     Why this exists separately from OpenRouter: Dashscope hosts the
     proprietary Qwen models (qwen3-vl-235b-a22b, qwen-vl-max, qwen-plus,
     qwen-turbo) on their own infrastructure with separate rate limits
-    from OpenRouter's shared free tier. The xpenseaiq-v5 project uses
+    from OpenRouter's shared free tier. A sibling project uses
     this path; we benchmark against their answer quality.
 
     The wire protocol is identical to OpenRouter / OpenAI · just a

@@ -19,6 +19,9 @@ log = logging.getLogger("docaiq.workspace_sync_job")
 
 
 async def workspace_sync_task(ctx: dict) -> dict:
+    from app.license import is_cloud
+    if not is_cloud():
+        return {"status": "skipped", "reason": "oss"}
     s = get_settings()
     if s.product != "documents" or not getattr(s, "documents_workspace_autosync", False):
         return {"status": "skipped", "reason": "disabled or not documents product"}
