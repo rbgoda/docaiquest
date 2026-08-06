@@ -2,9 +2,15 @@
 
 **Open-source document intelligence engine.** Ingest, parse, chunk, embed,
 retrieve, and extract structured data from your documents — with AI-powered
-chat. Originals stay in your own Google Drive. Privacy-native by default.
+chat. Self-hosted. You bring your own LLM keys. Privacy-native by default.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+> **You need your own LLM provider key.** DocAIQuest OSS does not ship with
+> managed LLM access. Set at least one of `DASHSCOPE_API_KEY` (recommended),
+> `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`,
+> or `OPENROUTER_API_KEY` in your `.env` file before starting. Without a key,
+> parsing and chunking work — but extraction and chat won't.
 
 ## What it does
 
@@ -39,6 +45,9 @@ DocAIQuest is a complete document intelligence platform covering the full chain:
 | Résumé handling | Word-level two-column reading-order reconstruction, gated on CV vocabulary + section heading count |
 | MRZ protection | Passport/ID machine-readable zones never split across chunks |
 | Multilingual | BGE-M3 (1024d, 100+ languages) + RapidOCR (90+ languages) |
+| Async processing | Arq worker — documents processed in background with per-doc status tracking (queued → parsing → chunking → embedding → extracting → done) |
+| Incremental updates | Re-uploading a doc only reprocesses changed chunks (SHA-256 hash dedup at the chunk level) |
+| Document strategist | Auto-profiles every doc at upload (pages, text density, MIME) → routes to best pipeline (chunking strategy, extraction timeout, priority) |
 
 ### Chunking
 
@@ -113,6 +122,7 @@ DocAIQuest is a complete document intelligence platform covering the full chain:
 |-----------|--------|
 | Single-doc RAG | Source citations with bbox jump-to-location, thinking disclosure, structured answers |
 | Cross-doc workspace | Multi-document reasoning across all user's documents |
+| Groups (Knowledge Bases) | Group documents into shared folders — chat across a group, add collaborators, sync from Drive folders |
 | Deterministic handlers | SQL-only fast paths: identity lookup, watchlist, document overviews, entity aggregation |
 | Agent fallback | Cloud-only: ReAct loop with 9 tools (search_chunks, get_extracted_field, search_entities, cross_doc_search…) |
 | History-aware | Multi-turn with follow-up query rewriting (`_contextualize_query`) |
@@ -132,7 +142,7 @@ DocAIQuest is a complete document intelligence platform covering the full chain:
 | Self-serve API keys | `POST/GET/DELETE /api/keys` — owner-scoped keys (`dq_live_…`), mint/revoke in UI |
 | External extraction API | `POST /api/extraction/extract` (X-API-Key) — cross-app extraction reuse |
 | Swagger | `/api/docs` — interactive OpenAPI docs |
-| Partner keys | Admin console — cross-tenant API keys for partners |
+| Partner keys | Cloud-only — cross-tenant API keys for partners |
 
 ### Privacy & Security
 
@@ -160,16 +170,18 @@ DocAIQuest is a complete document intelligence platform covering the full chain:
 | Dark theme | System-aware, CSS custom properties |
 | Persona switching | Multi-role users toggle between views (owner/admin/reviewer/vendor) |
 | Feedback | In-app feedback with screenshots, chat 👍/👎 |
-| Admin console | Standalone superadmin UI — users, API clients, feature flags, reprocess, LLM analytics, QA tracker |
+| Admin console | Cloud-only — standalone superadmin UI (users, API clients, feature flags, reprocess, LLM analytics, QA tracker) |
 
 ### Database
 
 | Store | Engine | Purpose |
 |------|--------|---------|
 | Primary DB | PostgreSQL 15+ | Documents, chunks, entities, users, schema library, chat history, feedback |
-| Vector DB | pgvector (same PostgreSQL) | HNSW cosine search on `embedding` (384d) + `embedding_v2` (1024d) columns |
+| Vector DB | pgvector (same PostgreSQL) | HNSW cosine search on `embedding` (384d) + `embedding_v2` (1024d) columns. **One database for everything** — no separate vector DB to run, backup, or tune. |
 | Cache / Queue | Redis | Arq task queue, session cache, rate limiting |
 | Object store | MinIO (S3-compatible) | Original file blobs, export artifacts |
+
+Compare: most RAG stacks require MySQL + a separate vector DB (ChromaDB/Qdrant/Weaviate/Pinecone) + object storage. DocAIQuest collapses relational + vector into one PostgreSQL instance — three data stores become two.
 
 ### Deployment
 
@@ -183,23 +195,27 @@ DocAIQuest is a complete document intelligence platform covering the full chain:
 
 ## Quick start
 
+**Before you run:** open `.env` and set the two required values:
+
+| Variable | What to set |
+|----------|-------------|
+| `DOCAIQ_JWT_SECRET` | Any random string (e.g. `openssl rand -hex 32`) |
+| LLM provider key | At least one of: `DASHSCOPE_API_KEY` (recommended), `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, or `OPENROUTER_API_KEY` |
+
+Without a provider key, parsing and chunking work — but extraction and chat won't.
+
 ```bash
 git clone https://github.com/rbgoda/docaiquest.git && cd docaiquest
 cp .env.example .env
-# REQUIRED: set DOCAIQ_JWT_SECRET (any random string)
-# REQUIRED: at least one LLM provider key — DASHSCOPE_API_KEY (recommended)
-#   or OPENROUTER_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, etc.
-# Optional: GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET for Drive (without it,
-#   file upload still works — uploads go to MinIO instead of Drive)
+# NOW EDIT .env — set DOCAIQ_JWT_SECRET + at least one LLM provider key
 make up
 # → http://localhost:8085
 # → Sign up (dev login auto-verifies), upload a PDF, chat + extract
 make down   # stop
 ```
 
-**You bring your own LLM keys.** DocAIQuest OSS does not include managed LLM access.
-Set at least one of `DASHSCOPE_API_KEY`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`,
-`GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, or `ANTHROPIC_API_KEY` in your `.env`.
+**Optional:** set `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` to store originals in
+users' own Google Drive. Without it, file upload still works — files go to MinIO instead.
 
 ## Architecture
 
@@ -266,4 +282,4 @@ including model weights and bundled libraries.
 
 ---
 
-Powered by DocAIQuest — [docaiq.jicama.tech](https://docaiq.jicama.tech)
+Powered by DocAIQuest — [github.com/rbgoda/docaiquest](https://github.com/rbgoda/docaiquest)
