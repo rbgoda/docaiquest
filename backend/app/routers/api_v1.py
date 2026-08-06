@@ -304,8 +304,8 @@ class MeAnswerPayload(BaseModel):
 
 def _rag_answer_for_owner(db: Session, owner_pk: int, question: str,
                           top_k: int = 8, history: list[dict] | None = None) -> dict:
-    """Shared RAG-over-one-user's-documents core: citations + calibrated abstention. Used by both
-    the SSO `/me/answer` (chataiq) and the key-authed `/ask` (enterprise self-serve API)."""
+    """Shared RAG-over-one-user's-documents core: citations + calibrated abstention.
+    Used by the key-authed `/ask` (enterprise self-serve API)."""
     question = (question or "").strip()[:4000]  # cap input (DoS / cost guard)
     if not question:
         raise HTTPException(status_code=400, detail="question is required")
@@ -364,7 +364,7 @@ def _rag_answer_for_owner(db: Session, owner_pk: int, question: str,
         answer = ""
     if not answer:
         return {"answer": "", "grounded": False, "citations": [], "confidence": "none"}
-    # Honest "not found" for chataiq: if the model itself abstained, surface the
+    # Honest "not found": if the model itself abstained, surface the
     # canonical refusal with grounded:false — don't dress an "I don't have it"
     # answer up as a grounded result with citations.
     # Only treat it as a refusal when the answer LEADS with the disclaimer (first ~90 chars) — a valid
