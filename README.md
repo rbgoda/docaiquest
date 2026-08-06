@@ -14,8 +14,25 @@ All through a browser. You bring your own LLM keys. Privacy-native by default.
 
 ## What it does
 
-DocAIQuest is a complete document intelligence platform covering the full chain:
-**parse → chunk → embed → retrieve → extract → graph → chat → API → SDK.**
+DocAIQuest OSS is a **simple web console** — upload documents, chat with them,
+get basic extraction. Self-hosted, your own LLM keys, privacy-native.
+
+### What you get
+
+| Feature | Detail |
+|---------|--------|
+| **Document upload** | Drag & drop PDF, DOCX, XLSX, CSV, PPTX, images, EML, HTML, TXT |
+| **Layout-aware parsing** | IBM Docling + PyMuPDF — headings, paragraphs, tables with real page positions |
+| **Table extraction** | Camelot + pdfplumber for PDF tables, native XLSX/CSV support |
+| **OCR** | RapidOCR + Tesseract for scanned docs and images |
+| **Chat with documents** | RAG chat — ask questions, get answers with source citations |
+| **Basic extraction** | Universal schema — extracts dates, amounts, parties, line items from any document |
+| **Search within docs** | pgvector cosine search + BM25 full-text |
+| **API + SDK** | `POST /api/v1` unified endpoint, Python & TypeScript SDKs, MCP server for AI assistants |
+| **Multi-user** | Sign up multiple users, per-user isolation, JWT auth |
+
+The full engine (entity graph, 12 extraction schemas, agentic chat, cross-doc workspace)
+is available in DocAIQuest Cloud.
 
 ### File Type Support
 
