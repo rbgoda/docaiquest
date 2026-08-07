@@ -10,10 +10,6 @@ BYO LLM keys.
 MIT licensed.
 
 
-Opensource #DocAIQuest
-Cloud Advance model #DocAIQ cloud
-
-
 > **Document parsing · chunking · embeddings · hybrid RAG (BM25 + vector) ·
 > cross-document chat · Docker self-hosted**
 
