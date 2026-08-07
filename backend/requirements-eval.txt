@@ -1,9 +1,0 @@
-# Phase-1 Ragas eval deps — OPT-IN ONLY. Never installed in the backend/worker
-# image (keeps the R4 harness pure-stdlib + CI-safe). Install in a throwaway venv:
-#   python -m venv /tmp/ragas-eval && /tmp/ragas-eval/bin/pip install -r requirements-eval.txt
-# Then run:  python -m eval.ragas_eval --judge dashscope
-ragas==0.1.21
-langchain-openai>=0.1.7
-datasets>=2.16
-# pandas comes via ragas; pinned loosely for to_pandas().
-pandas>=2.0

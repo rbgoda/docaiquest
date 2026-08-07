@@ -102,7 +102,6 @@ RUN timeout 900 python -c "from sentence_transformers import SentenceTransformer
 USER root
 COPY --chown=docaiq:docaiq app          ./app
 COPY --chown=docaiq:docaiq migrations   ./migrations
-COPY --chown=docaiq:docaiq scripts      ./scripts
 COPY --chown=docaiq:docaiq alembic.ini  ./
 COPY --chown=docaiq:docaiq entrypoint.sh ./
 RUN chmod +x ./entrypoint.sh

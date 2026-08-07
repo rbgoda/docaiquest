@@ -26,7 +26,6 @@ COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 COPY --chown=docaiq:docaiq app          ./app
 COPY --chown=docaiq:docaiq migrations   ./migrations
-COPY --chown=docaiq:docaiq scripts      ./scripts
 COPY --chown=docaiq:docaiq alembic.ini  ./
 COPY --chown=docaiq:docaiq entrypoint.sh ./
 RUN chmod +x ./entrypoint.sh
