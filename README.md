@@ -52,8 +52,6 @@ Your own LLM keys, your own server, your data never leaves.
 | Images (PNG, JPG, HEIC, AVIF) | Vision model OCR |
 | EML (email) | Headers, body, and attachment extraction |
 | TXT / Markdown | Encoding detection |
-| Legacy Office (.doc, .xls, ODT, RTF) | LibreOffice conversion (requires opt-in config) |
-| Multi-column PDF | Column reconstruction for dense layouts |
 
 ### Chunking & Embedding
 
