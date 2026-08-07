@@ -123,7 +123,7 @@ Your own LLM keys, your own server, your data never leaves.
 │   │   ├── graph/     Entity resolution & knowledge graph
 │   │   └── jobs/      Background cron jobs
 │   └── migrations/    Alembic (auto-run on boot)
-├── frontend-oss/      OSS web console (Vite + React SPA)
+├── frontend/          Web console (Vite + React SPA)
 └── docker-compose.yml
 ```
 

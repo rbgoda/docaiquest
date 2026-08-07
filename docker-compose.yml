@@ -433,26 +433,9 @@ services:
 
   frontend:
     build:
-      context: ./frontend-oss
-      dockerfile: Dockerfile
-    image: ${COMPOSE_PROJECT_NAME:-docaiquest}-frontend:dev
-    depends_on:
-      backend:
-        condition: service_healthy
-    ports:
-      - "${DOCAIQ_HOST_PORT:-8085}:80"
-    networks:
-      - docaiquest-net
-    restart: unless-stopped
-
-  # Full-featured frontend — Cloud profile only
-  frontend-full:
-    build:
       context: ./frontend
       dockerfile: Dockerfile
-    image: ${COMPOSE_PROJECT_NAME:-docaiquest}-frontend-full:dev
-    profiles:
-      - cloud
+    image: ${COMPOSE_PROJECT_NAME:-docaiquest}-frontend:dev
     depends_on:
       backend:
         condition: service_healthy
