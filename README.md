@@ -44,7 +44,7 @@ them. Your own LLM keys, your own server, your data never leaves.
 | Reranker | BGE-Reranker-v2-m3 and ms-marco-MiniLM cross-encoders, lazy singleton, configurable |
 | Semantic chunking | Document-model-aware section boundary detection |
 
-### Retrieval & RAG
+### Retrieval
 
 | Capability | Detail |
 |-----------|------------|
