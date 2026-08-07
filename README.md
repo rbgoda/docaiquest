@@ -38,8 +38,6 @@ managed LLM access, Google Drive auto-sync, and per-document cost analytics.
 
 ## DocAIQuest
 
-## Capabilities
-
 DocAIQuest is a **self-hosted self-hosted opensource offline mode RAG with advance capabilities, like web console** — upload documents and chat with them. 
 
 Your own LLM keys, your own server, your data never leaves.
