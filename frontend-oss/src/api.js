@@ -83,6 +83,7 @@ export const setLlmSettings = (provider, { apiKey, enabled, defaultModel, clearK
 export const probeProvider = (provider) =>
   request("POST", `/llm/settings/${provider}/probe`);
 
+
 // -- Chat --
 export const fetchDocChat = (docId) => request("GET", `/documents/${docId}/chat`);
 

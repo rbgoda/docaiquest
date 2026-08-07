@@ -6,8 +6,8 @@ chat with your data — all through a browser. Privacy-native. BYO LLM keys.
 MIT licensed.
 
 > **Document parsing · OCR · chunking · embeddings · hybrid RAG (BM25 + vector) ·
-> knowledge graph · entity resolution · structured extraction · agentic chat ·
-> MCP server · Python SDK · TypeScript SDK · Docker self-hosted**
+> knowledge graph · entity resolution · structured extraction · cross-document chat ·
+> Docker self-hosted**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
@@ -126,11 +126,6 @@ them. Your own LLM keys, your own server, your data never leaves.
 | Capability | Detail |
 |-----------|------------|
 | REST API | Full OpenAPI (Swagger) at `/api/docs` — upload, extract, chat, search, list, export |
-| Unified v1 API | Single `POST /api/v1` endpoint with action field: ask, extract, list_documents, get_document |
-| Python SDK | `pip install docaiquest` — typed client with async support |
-| TypeScript SDK | `npm install @docaiquest/sdk` — typed client for Node.js and browser |
-| MCP server | `/api/mcp` — Streamable HTTP JSON-RPC, tools: ask_documents, list_documents, get_watchlist |
-| Self-serve API keys | Users mint and revoke their own keys from Settings → API Keys |
 
 ### Frontend & UX
 
@@ -415,34 +410,6 @@ PGPASSWORD=postgres psql -h localhost -U postgres -c "DROP DATABASE test_docaiqu
 ```
 
 Run `ruff check backend/app` before committing — should exit 0.
-
-## API
-
-When the stack is running, interactive docs are at
-**http://localhost:8085/api/docs**.
-
-Quick reference:
-
-| Endpoint | Description |
-|----------|------------|
-| `POST /api/v1/ask` | Grounded answer over your documents, with citations |
-| `GET /api/v1/documents` | List your documents |
-| `POST /api/extraction/extract` | Structured fields from a file (stateless) |
-| `POST /api/mcp` | MCP endpoint for AI assistants (Claude, ChatGPT, Cursor) |
-
-Auth: create an owner-scoped API key in the web app (Settings → API keys),
-send it as `X-API-Key: dq_live_…` or `Authorization: Bearer dq_live_…`.
-
-### Connect to ChatGPT
-
-You can expose your DocAIQuest instance to a ChatGPT Custom GPT via the
-OpenAPI schema at `/api/mcp/openapi.json`:
-
-1. In the web app, go to **Settings → API keys** and create a key.
-2. In ChatGPT, create a new Custom GPT.
-3. Under **Actions**, import `http://your-instance:8085/api/mcp/openapi.json`.
-4. Set authentication to **API Key** → `X-API-Key` with your `dq_live_…` key.
-5. The GPT can now call `ask_documents` and `list_documents` against your instance.
 
 ## Contributing
 
