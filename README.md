@@ -76,7 +76,6 @@ Your own LLM keys, your own server, your data never leaves.
 | Field extraction | Dates, amounts, parties, line items, IDs — from invoices, receipts, contracts, and more |
 | Schema system | Built-in schemas for common document types (invoices, contracts, IDs) |
 | Confidence scoring | Per-field confidence scores |
-| Export | JSON, Markdown, CSV |
 
 ### Chat & Query
 
