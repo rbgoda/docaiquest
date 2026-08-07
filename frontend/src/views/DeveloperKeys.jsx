@@ -12,7 +12,7 @@ const CGPT_SCHEMA = `openapi: 3.1.0
 info:
   title: DocAIQuest — Your Documents
   description: Ask questions across the API-key owner's own documents and list them, with source citations.
-  version: "1.0.2"
+  version: "1.0.3"
 servers:
   - url: ${BASE}
 paths:

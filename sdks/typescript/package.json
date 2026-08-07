@@ -1,6 +1,6 @@
 {
   "name": "@docaiquest/sdk",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Official TypeScript/JavaScript SDK for the DocAIQuest document-intelligence API",
   "type": "module",
   "main": "index.js",
