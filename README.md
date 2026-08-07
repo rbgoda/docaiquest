@@ -1,17 +1,15 @@
 # DocAIQuest
 
-**Self-hosted Document Intelligence & GraphRAG Engine.** 
+**Self-hosted Document Intelligence Engine.** 
 Documents → Data → Intel.
 
-Upload any document, build a knowledge graph, and chat with your data —
-all through a browser. 
+Upload any document and chat with your data — all through a browser.
 Privacy-native. 
 BYO LLM keys.
 MIT licensed.
 
-> **Document parsing · OCR · chunking · embeddings · hybrid RAG (BM25 + vector) ·
-> knowledge graph · entity resolution · cross-document chat ·
-> Docker self-hosted**
+> **Document parsing · chunking · embeddings · hybrid RAG (BM25 + vector) ·
+> cross-document chat · Docker self-hosted**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
@@ -76,15 +74,6 @@ Your own LLM keys, your own server, your data never leaves.
 | Single-document chat | RAG with citations — ask questions about one document |
 | Cross-document chat | Ask across all your documents at once |
 | Multi-turn conversations | Follow-up questions with full conversation history |
-
-### Multimodal & Vision
-
-| Capability | Detail |
-|-----------|------------|
-| Image OCR | Vision model OCR for scanned documents and images |
-| Table extraction | Tables rendered as HTML with in-page jump links |
-| Figure extraction | Embedded images extracted from PDFs and Office docs |
-| Office image OCR | OCR for images embedded in DOCX and PPTX files |
 
 ### Privacy & Security
 
