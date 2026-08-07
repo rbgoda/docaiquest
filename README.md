@@ -1,8 +1,12 @@
 # DocAIQuest
 
-**Self-hosted Document Intelligence & GraphRAG Engine.** Documents → Data → Intel.
+**Self-hosted Document Intelligence & GraphRAG Engine.** 
+Documents → Data → Intel.
+
 Upload any document, extract structured fields, build a knowledge graph, and
-chat with your data — all through a browser. Privacy-native. BYO LLM keys.
+chat with your data — all through a browser. 
+Privacy-native. 
+BYO LLM keys.
 MIT licensed.
 
 > **Document parsing · OCR · chunking · embeddings · hybrid RAG (BM25 + vector) ·
@@ -14,11 +18,12 @@ MIT licensed.
 [![Docker](https://img.shields.io/badge/Docker-self--hosted-2496ED.svg)](https://docs.docker.com/compose/)
 [![GitHub Discussions](https://img.shields.io/badge/Discussions-Q%26A-important.svg)](https://github.com/rbgoda/docaiquest/discussions)
 
-> **You need your own LLM provider key.** DocAIQuest OSS does not ship with
-> managed LLM access. Set at least one of `DASHSCOPE_API_KEY` (recommended),
+> **You need your own LLM provider key.** D
+> ocAIQuest OSS does not ship with managed LLM access.
+> Set at least one of `DASHSCOPE_API_KEY` (recommended),
 > `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`,
-> or `OPENROUTER_API_KEY` in your `.env` file before starting. Without a key,
-> parsing and chunking work — but extraction and chat won't.
+> or `OPENROUTER_API_KEY` in your `.env` file before starting.
+> Without a key, parsing and chunking work — but extraction and chat won't.
 
 ## Screenshots
 
@@ -31,8 +36,10 @@ MIT licensed.
 
 ## Capabilities
 
-DocAIQuest is a **self-hosted web console** — upload documents and chat with
-them. Your own LLM keys, your own server, your data never leaves.
+DocAIQuest is a **self-hosted web console** — upload documents and chat with them. 
+Your own LLM keys, your own server, your data never leaves.
+
+**Pipeline:** Upload → Parse → Chunk → Embed → Store → Retrieve → Generate answer.
 
 ### Document Parsing
 
@@ -135,17 +142,6 @@ them. Your own LLM keys, your own server, your data never leaves.
 | Google Drive connector | OAuth-based Drive folder sync with auto-ingest and encrypted backup |
 | Responsive design | Mobile-responsive across all views — chat, documents, dashboards |
 
-### Operations & Admin
-
-| Capability | Detail |
-|-----------|------------|
-| Admin console | Standalone superadmin UI: user management, API clients, reprocess, LLM analytics |
-| Background jobs | Arq worker: ingestion, embedding, extraction, graph bootstrap, retention purge, cron scheduling |
-| LLM cost guard | Per-user hourly and daily caps; per-document cost tracking |
-| Retention policies | Configurable document retention purge (re-pullable from Drive) |
-| Feedback system | Per-answer user feedback with screenshot capture and triage dashboard |
-| Eval harness | 1,180-question QA bank runner with LLM judge, R4 stdlib metrics, Ragas integration |
-
 ### Deployment
 
 | Capability | Detail |
@@ -156,21 +152,6 @@ them. Your own LLM keys, your own server, your data never leaves.
 | Air-gapped capable | Hash embedding backend + local models — zero external calls |
 | Configuration | Single `.env` file, 100+ knobs, sensible defaults for all |
 | Platform | Linux, macOS (Docker); ARM64 and AMD64 |
-
-### Supported file formats
-
-| Format | Can upload? | Can chat with? | Can extract fields? |
-|--------|:--:|:--:|:--:|
-| PDF (text + scanned) | ✅ | ✅ | ✅ |
-| DOCX (Word) | ✅ | ✅ | ✅ |
-| XLSX / CSV / TSV | ✅ | ✅ | ✅ |
-| PPTX (PowerPoint) | ✅ | ✅ | ✅ |
-| Images (PNG, JPG, HEIC) | ✅ | ✅ | ✅ |
-| EML (email) | ✅ | ✅ | ✅ |
-| HTML | ✅ | ✅ | ✅ |
-| TXT / Markdown | ✅ | ✅ | ✅ |
-| Legacy Office (DOC, XLS, ODT, RTF) | ✅ | ✅ | ✅ |
-| Audio / Video | ❌ | ❌ | ❌ |
 
 ## Quick start
 
@@ -208,6 +189,24 @@ file storage, the API backend, a background worker, and the web frontend.
 On first boot, database tables are created automatically. Wait ~30 seconds
 for all services to settle.
 
+## Layout
+
+```
+├── backend/           FastAPI application (package: `app`)
+│   ├── app/
+│   │   ├── agents/    Extraction, OCR, chat agents
+│   │   ├── routers/   API endpoints
+│   │   ├── services/  Business logic (chat pipeline, workspace)
+│   │   ├── llm/       LLM gateway, prompts, routing
+│   │   ├── graph/     Entity resolution & knowledge graph
+│   │   └── jobs/      Background cron jobs
+│   └── migrations/    Alembic (auto-run on boot)
+├── frontend-oss/      OSS web console (Vite + React SPA)
+├── admin-ui/          Superadmin console (static HTML)
+├── sdks/              Python + TypeScript API clients
+└── docker-compose.yml
+```
+
 ### 2. Verify
 
 ```bash
@@ -241,18 +240,6 @@ make down          # stop containers, keep data
 make down-clean    # stop + delete all data (fresh start)
 ```
 
-### Optional configuration
-
-| Variable | What it does |
-|----------|-------------|
-| `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` | Store originals in users' own Google Drive instead of local storage |
-| `DOCAIQ_EMBED_BACKEND` | `local` (default, CPU embeddings) or `dashscope` (API) or `hash` (offline, no model needed) |
-| `DOCAIQ_EMBED_V2_ACTIVE` | Set to `true` for higher-quality multilingual embeddings (needs ~2.2 GB extra disk) |
-| `DOCAIQ_RERANKER_ENABLED` | Set to `true` for smarter search ranking (improves answer quality, CPU-friendly) |
-| `DOCAIQ_ENVIRONMENT` | `local` (default) or `production` (enables stricter security) |
-
-See `.env.example` for every available setting.
-
 ### Troubleshooting
 
 | Symptom | Likely fix |
@@ -279,52 +266,8 @@ See `.env.example` for every available setting.
                     └──────────────┘    └──────────────┘
 ```
 
-**Pipeline:** Upload → Parse → Chunk → Embed → Store → Retrieve → Generate answer.
 
-### Retrieval
 
-Hybrid BM25 + cosine similarity (BGE-M3 multilingual embeddings when
-`DOCAIQ_EMBED_V2_ACTIVE=true`) → BGE-Reranker-v2-m3 cross-encoder for
-re-ranking when `DOCAIQ_RERANKER_ENABLED=true`. Results are fused with
-Reciprocal Rank Fusion (RRF).
-
-### Parsing
-
-Each format dispatches to the best available parser:
-
-| Format | Primary parser | Notes |
-|--------|---------------|-------|
-| PDF (text) | PyMuPDF + pdfplumber | Word-level bbox extraction; tables via pdfplumber |
-| PDF (scanned) | OCR cascade | RapidOCR → external vision model if configured |
-| DOCX / PPTX | python-docx / python-pptx | Embedded images OCR'd when `DOCAIQ_DOCUMENTS_OFFICE_IMAGE_OCR=true` |
-| XLSX | openpyxl | Sheets → structured Markdown tables |
-| CSV / TSV | stdlib csv | Delimiter-sniffing, quote-aware |
-| EML | Python email | MIME-aware, attachments extracted |
-| Images | OCR cascade | PNG, JPG, HEIC, AVIF supported |
-| HTML | BeautifulSoup | Text extraction + table preservation |
-| Legacy Office | LibreOffice (headless) | DOC, XLS, ODT, RTF → converted to modern format first |
-
-All formats normalize into a single structured Document Model IR before
-chunking and embedding, so retrieval quality is consistent regardless of
-source format.
-
-## Layout
-
-```
-├── backend/           FastAPI application (package: `app`)
-│   ├── app/
-│   │   ├── agents/    Extraction, OCR, chat agents
-│   │   ├── routers/   API endpoints
-│   │   ├── services/  Business logic (chat pipeline, workspace)
-│   │   ├── llm/       LLM gateway, prompts, routing
-│   │   ├── graph/     Entity resolution & knowledge graph
-│   │   └── jobs/      Background cron jobs
-│   └── migrations/    Alembic (auto-run on boot)
-├── frontend-oss/      OSS web console (Vite + React SPA)
-├── admin-ui/          Superadmin console (static HTML)
-├── sdks/              Python + TypeScript API clients
-└── docker-compose.yml
-```
 
 ## Development
 
@@ -341,15 +284,6 @@ source format.
 - **Worker:** Arq (Redis-backed async task queue)
 - **Frontend:** Vite + React (SPA)
 - **Storage:** MinIO (S3-compatible, local dev) / AWS S3
-
-### Conventions
-
-- **Schema = Alembic** (`backend/migrations/`). Adding a table or column
-  requires a new migration — never use `create_all()`.
-- **Per-user isolation:** `current_owner_user_pk` ContextVar (set by
-  `TenantMiddleware`) + repo-layer filtering. Never bypass it.
-- **Email verification** (Resend) activates only when
-  `DOCAIQ_RESEND_API_KEY` is set; else signups auto-verify.
 
 ### Running locally (without Docker)
 
