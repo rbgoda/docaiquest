@@ -522,12 +522,6 @@ class Settings(BaseSettings):
     # embeddings/LLM pluggable-backend pattern.
     documents_drive_connector: bool = True
     drive_backend: Literal["stub", "google"] = "stub"
-    # M46 · auto-mirror direct uploads to the user's docaiq_docs Drive folder
-    # after processing, then purge the server copy (re-pullable on demand). Makes
-    # Drive the store of record so server storage stays flat. No-op when Drive
-    # isn't connected. Manual backfill is always available regardless.
-    documents_drive_autobackup: bool = True
-
     # M46 · Documents System · universal-adaptive extraction. When on (documents
     # product only), the fact extractor ALWAYS uses the universal schema —
     # type-agnostic, so a mis-classification never routes a doc to the wrong
@@ -556,10 +550,6 @@ class Settings(BaseSettings):
     # audit chat is unchanged. critic_max_refines bounds the refine loop.
     documents_critic_enabled: bool = True
     critic_max_refines: int = 1
-    # M46 · §5 · auto-sync each connected user's docaiq_docs Drive folder on a
-    # schedule (worker cron, every 15 min) so dropped files ingest without a
-    # manual sync. Documents product only. Dedup by sha256 → re-syncs are cheap.
-    documents_drive_autosync: bool = True
     # M46 · B7 · client-side encryption of files we store in the user's Drive.
     # When ON, files are encrypted (per-user, server-escrowed key) before upload
     # so Google can't read them at rest. Toggle freely — already-encrypted files
@@ -570,9 +560,6 @@ class Settings(BaseSettings):
     # workspace.sqlite in their Drive; Postgres stays the source of truth). The
     # workspace EXPORT is always available; this only switches the READ path.
     documents_storage_mode: str = "postgres"
-    # M46 · §5 · nightly auto-sync each user's workspace to their Drive (writes to
-    # real user Drives → opt-in, default off).
-    documents_workspace_autosync: bool = False
     # M46 · §compliance · data retention. When > 0, a daily worker job moves
     # each connected user's server-stored originals OLDER than N days into their
     # Drive (then purges the server blob — re-pullable), minimizing what we hold

@@ -255,37 +255,6 @@ def _gen_markdown(full_text: str, *, max_windows: int) -> str:
         db.close()
 
 
-def _gen_structured_json(full_text: str) -> dict | None:
-    """Single LLM call producing typed JSON. Best for small docs · for
-    larger ones the call truncates anyway and we get only partial data."""
-    from app.services.doc_chat import llm_one_shot
-    from app.db import SessionLocal as _SL
-    db = _SL()
-    try:
-        system = (
-            "Extract every typed field from the document below into JSON. "
-            "Use snake_case keys. Group repeated structures into arrays "
-            "(e.g. line_items, parties, signatures). For values you can't "
-            "confidently extract, omit the key entirely — do NOT invent. "
-            "Reply with ONLY the JSON object."
-        )
-        raw = llm_one_shot(db, system, full_text[:50_000], max_tokens=2000).strip()
-        if raw.startswith("```"):
-            # Strip code fences if model added them
-            lines = raw.split("\n")
-            if lines and lines[0].startswith("```"):
-                lines = lines[1:]
-            if lines and lines[-1].strip().startswith("```"):
-                lines = lines[:-1]
-            raw = "\n".join(lines).strip()
-        import json as _json
-        return _json.loads(raw) if raw else None
-    except Exception:  # noqa: BLE001
-        return None
-    finally:
-        db.close()
-
-
 def _gen_key_entities(db: Session, doc_pk: int, tenant_id: str) -> list[dict]:
     """Query the entities table (already populated during ingest) and
     group by kind. Returns the top 20 most-frequent entities per doc."""

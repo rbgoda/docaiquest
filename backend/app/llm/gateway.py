@@ -227,8 +227,6 @@ def call(
                 api_key=settings.deepseek_api_key or "",
                 provider="deepseek",
             )
-        elif backend == "proxy" or model.startswith("proxy/"):
-            result = _proxy_stub(model_id, messages)
         elif tenant_id and backend in _CUSTOM_CACHE.get(tenant_id, {}):
             cfg = _CUSTOM_CACHE[tenant_id][backend]
             result = _openai_compat(
@@ -280,15 +278,12 @@ def call(
 # is_cloud() gates. A call site that misses its gate hits this wall instead
 # of silently degrading to a local LLM call.
 _CLOUD_TASKS: frozenset[str] = frozenset({
-    "agent_step",
     "analytics_insights",
     "critic",
     "dashboard_propose",
     "extract_verify",
     "intelligence_propose",
-    "schema_architect",
     "triage",
-    "workspace_agent",
 })
 
 
@@ -375,13 +370,6 @@ def _resolve_backend(model: str) -> tuple[str, str]:
     prefix is the provider name and we strip it too.
     """
     settings = get_settings()
-
-    # P2 · DocAIQ Cloud proxy. Special-cased BEFORE the key-gated providers:
-    # a proxy/ model must never silently fall through to the canned stub —
-    # the placeholder raises CloudProxyUnavailableError until Phase 4 wires
-    # the real proxy client.
-    if model.startswith("proxy/"):
-        return "proxy", model.removeprefix("proxy/")
 
     for prefix, backend, key_attr in _PREFIX_MAP:
         if model.startswith(prefix):
@@ -953,18 +941,6 @@ def _openai_compat(
         tool_calls=tool_calls,
     )
 
-
-# ---- Cloud proxy stub (Phase 2 placeholder, Phase 4 real client) ----------
-def _proxy_stub(model: str, messages: list[Message]) -> CompletionResult:
-    """P2 placeholder for the DocAIQ Cloud proxy client (Phase 4). Cloud-only
-    tasks reach here when proxy_base_url/proxy_api_key are unset. Refuses
-    loudly instead of silently degrading to canned answers."""
-    raise CloudProxyUnavailableError(
-        f"Model {model!r} requires the DocAIQuest Cloud proxy, which is not configured "
-        "on this deployment. Set DOCAIQ_LICENSE_MODE=cloud and configure "
-        "DOCAIQ_PROXY_BASE_URL / DOCAIQ_PROXY_API_KEY, or use a local "
-        "provider-prefixed model instead."
-    )
 
 
 # ---- Stub -----------------------------------------------------------------

@@ -114,17 +114,6 @@ REGISTRY: dict[str, ModelOperation] = {
         cost_tier="paid",
         description="Second OCR pass on low-confidence pages using a different model. Gated by DOCAIQ_DOCUMENTS_MULTIPASS_OCR.",
     ),
-    "vision_kyc": ModelOperation(
-        id="vision_kyc",
-        label="KYC Vision Extraction",
-        category="Vision / OCR",
-        default_model="google/gemini-2.5-flash",
-        env_var=None,
-        provider="google",
-        editable=True,
-        cost_tier="paid",
-        description="KYC document vision cascade: Qwen-VL → Gemini → Claude. Audit product only (dormant in documents).",
-    ),
     # ═══ Extraction & Classification ════════════════════════════════════════
     "classification": ModelOperation(
         id="classification",

@@ -185,9 +185,6 @@ FEATURE_FLAGS = [
     {"name": "documents_figure_extraction", "label": "Figure Extraction", "category": "Parsing & OCR",
      "type": "bool", "default": False,
      "help": "Extract charts, graphs, and figures from pages as structured data."},
-    {"name": "documents_llm_bbox_fallback", "label": "LLM Bbox Fallback", "category": "Parsing & OCR",
-     "type": "bool", "default": False,
-     "help": "Use LLM to estimate bounding boxes when native parser bboxes are unavailable."},
 
     # ── Retrieval ──────────────────────────────────────────────────────────
     {"name": "reranker_enabled", "label": "Cross-encoder Reranker", "category": "Retrieval",
