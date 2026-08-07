@@ -252,39 +252,6 @@ make down-clean    # stop + delete all data (fresh start)
 | **Out of disk space** | `docker builder prune -f --keep-storage 30GB && docker image prune -f` to reclaim build cache. |
 | **Fresh start (wipe everything)** | `make down-clean && make up` — deletes all containers, volumes, and data. |
 
-## Layout
-
-```
-├── backend/           FastAPI application (package: `app`)
-│   ├── app/
-│   │   ├── agents/    Extraction, OCR, chat agents
-│   │   ├── routers/   API endpoints
-│   │   ├── services/  Business logic (chat pipeline, workspace)
-│   │   ├── llm/       LLM gateway, prompts, routing
-│   │   ├── graph/     Entity resolution & knowledge graph
-│   │   └── jobs/      Background cron jobs
-│   └── migrations/    Alembic (auto-run on boot)
-├── frontend-oss/      OSS web console (Vite + React SPA)
-├── admin-ui/          Superadmin console (static HTML)
-├── sdks/              Python + TypeScript API clients
-└── docker-compose.yml
-```
-
-## Development
-
-### Prerequisites
-
-- Python 3.11+
-- Node.js 22+
-- PostgreSQL with pgvector extension
-- Redis
-
-### Stack
-
-- **Backend:** FastAPI + SQLAlchemy + Alembic + PostgreSQL (pgvector)
-- **Worker:** Arq (Redis-backed async task queue)
-- **Frontend:** Vite + React (SPA)
-- **Storage:** MinIO (S3-compatible, local dev) / AWS S3
 
 ### Conventions
 
