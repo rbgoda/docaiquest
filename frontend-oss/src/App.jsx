@@ -94,7 +94,7 @@ function SignupForm({ onLogin, onSwitch }) {
 
 // ---- Document list panel ---------------------------------------------------
 
-function DocList({ docs, selectedId, onSelect, onUpload, onDelete, uploading }) {
+function DocList({ docs, selectedId, onSelect, onUpload, onDelete, uploading, collapsed, onToggleCollapse }) {
   const fileRef = useRef(null);
   const [dragOver, setDragOver] = useState(false);
 
@@ -113,60 +113,75 @@ function DocList({ docs, selectedId, onSelect, onUpload, onDelete, uploading }) 
   };
 
   return (
-    <div className="doc-list">
-      <div className="doc-list-header">
-        <h2>Documents</h2>
-      </div>
-
-      {/* Upload zone */}
-      <div
-        className={`upload-zone${dragOver ? " drag-over" : ""}`}
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDrop={onDrop}
-        onClick={() => fileRef.current?.click()}
-      >
-        {uploading ? (
-          <span className="spinner" />
-        ) : (
-          <>
-            <span className="upload-icon">+</span>
-            <span>Drop a file or click to upload</span>
-          </>
-        )}
-        <input
-          ref={fileRef}
-          type="file"
-          accept=".pdf,.docx,.xlsx,.csv,.tsv,.pptx,.eml,.html,.txt,.md,.png,.jpg,.jpeg,.heic,.avif"
-          style={{ display: "none" }}
-          onChange={(e) => handleFile(e.target.files?.[0])}
-        />
-      </div>
-
-      {/* Document list */}
-      <div className="doc-items">
-        {docs.length === 0 && !uploading && (
-          <p className="empty-hint">Upload your first document.</p>
-        )}
-        {docs.map((doc) => (
-          <div
-            key={doc.id}
-            className={`doc-item${doc.id === selectedId ? " selected" : ""}`}
-            onClick={() => onSelect(doc)}
+    <>
+      {/* Expand handle when collapsed */}
+      {collapsed && (
+        <div className="sidebar-collapsed-strip" onClick={onToggleCollapse} title="Show documents">
+          <span className="sidebar-expand-arrow">▸</span>
+        </div>
+      )}
+      <div className={`doc-list${collapsed ? " collapsed" : ""}`}>
+        <div className="doc-list-header">
+          <h2>Documents</h2>
+          <button
+            className="sidebar-toggle"
+            onClick={onToggleCollapse}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            <span className="doc-icon">{doc.mimeType === "application/pdf" ? "📄" : "📃"}</span>
-            <span className="doc-name" title={doc.name}>{doc.name}</span>
-            <button
-              className="doc-delete"
-              title="Delete"
-              onClick={(e) => { e.stopPropagation(); onDelete(doc); }}
+            {collapsed ? "▸" : "◂"}
+          </button>
+        </div>
+
+        {/* Upload zone */}
+        <div
+          className={`upload-zone${dragOver ? " drag-over" : ""}`}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+          onClick={() => fileRef.current?.click()}
+        >
+          {uploading ? (
+            <span className="spinner" />
+          ) : (
+            <>
+              <span className="upload-icon">+</span>
+              <span>Drop a file or click to upload</span>
+            </>
+          )}
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".pdf,.docx,.xlsx,.csv,.tsv,.pptx,.eml,.html,.txt,.md,.png,.jpg,.jpeg,.heic,.avif"
+            style={{ display: "none" }}
+            onChange={(e) => handleFile(e.target.files?.[0])}
+          />
+        </div>
+
+        {/* Document list */}
+        <div className="doc-items">
+          {docs.length === 0 && !uploading && (
+            <p className="empty-hint">Upload your first document.</p>
+          )}
+          {docs.map((doc) => (
+            <div
+              key={doc.id}
+              className={`doc-item${doc.id === selectedId ? " selected" : ""}`}
+              onClick={() => onSelect(doc)}
             >
-              ×
-            </button>
-          </div>
-        ))}
+              <span className="doc-icon">{doc.mimeType === "application/pdf" ? "📄" : "📃"}</span>
+              <span className="doc-name" title={doc.name}>{doc.name}</span>
+              <button
+                className="doc-delete"
+                title="Delete"
+                onClick={(e) => { e.stopPropagation(); onDelete(doc); }}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -177,6 +192,7 @@ function ChatPanel({ doc, docId, docs, onClose }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [fileUrl, setFileUrl] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(true);
   const bottomRef = useRef(null);
 
   // Load chat history when doc changes
@@ -225,12 +241,23 @@ function ChatPanel({ doc, docId, docs, onClose }) {
     <div className="chat-panel">
       <div className="chat-header">
         <h2>{doc ? doc.name : "Chat"}</h2>
-        {onClose && <button className="chat-close" onClick={onClose}>×</button>}
+        <div className="chat-header-actions">
+          {fileUrl && (
+            <button
+              className="preview-toggle"
+              onClick={() => setPreviewOpen((v) => !v)}
+              title={previewOpen ? "Hide document preview" : "Show document preview"}
+            >
+              {previewOpen ? "▼" : "▲"} Preview
+            </button>
+          )}
+          {onClose && <button className="chat-close" onClick={onClose}>×</button>}
+        </div>
       </div>
 
       {/* Document embed */}
       {fileUrl && (
-        <div className="doc-preview">
+        <div className={`doc-preview${previewOpen ? "" : " collapsed"}`}>
           <iframe src={fileUrl} title="Document preview" />
         </div>
       )}
@@ -443,6 +470,7 @@ export default function App() {
   const [checking, setChecking] = useState(true);
   const [needConsent, setNeedConsent] = useState(false); // upload blocked on consent
   const [showSettings, setShowSettings] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Check existing session on mount
   useEffect(() => {
@@ -560,6 +588,8 @@ export default function App() {
           onUpload={handleUpload}
           onDelete={handleDelete}
           uploading={uploading}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
         />
         <ChatPanel
           doc={selectedDoc}
