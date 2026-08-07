@@ -1,8 +1,13 @@
 # DocAIQuest
 
-**Open-source document intelligence engine.** A complete web app you self-host —
-upload documents, chat with them, and extract structured data.
-All through a browser. You bring your own LLM keys. Privacy-native by default.
+**Self-hosted Document Intelligence & GraphRAG Engine.** Documents → Data → Intel.
+Upload any document, extract structured fields, build a knowledge graph, and
+chat with your data — all through a browser. Privacy-native. BYO LLM keys.
+MIT licensed.
+
+> **Document parsing · OCR · chunking · embeddings · hybrid RAG (BM25 + vector) ·
+> knowledge graph · entity resolution · structured extraction · agentic chat ·
+> MCP server · Python SDK · TypeScript SDK · Docker self-hosted**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
