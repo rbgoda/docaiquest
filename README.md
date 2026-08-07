@@ -28,7 +28,6 @@ MIT licensed.
 
 ## DocAIQ Cloud
 
-
 For teams that need more than self-hosted RAG, **DocAIQ Cloud** ([docaiq.jicama.tech](https://docaiq.jicama.tech)) layers
 proprietary intelligence on top of the open-source engine: a **tool-using ReAct agent** that searches,
 cross-references, and validates across documents; **multi-pass extraction** with row-level reconciliation
@@ -37,7 +36,8 @@ extraction schema; a **personal watchlist** that tracks renewals, expiries, and 
 reminders; and a **reflexion learning loop** where every 👍/👎 improves future answers — all with
 managed LLM access, Google Drive auto-sync, and per-document cost analytics.
 
-##DocAIQuest Console
+## DocAIQuest
+
 
 <p align="center">
   <img src="docs/screenshots/02-doc-list.png" width="48%" alt="Document list with upload zone" />
