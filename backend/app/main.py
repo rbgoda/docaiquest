@@ -119,6 +119,16 @@ async def lifespan(app: FastAPI):
                 _refresh_feature_flags_cache(session)
             except Exception:  # noqa: BLE001
                 log.warning("feature_flags: config cache warm at boot failed (non-fatal)")
+            # Phase 4 · cloud proxy prompt loader — fetch proprietary prompts
+            # from the DocAIQ Cloud proxy at boot so they replace OSS fallbacks.
+            try:
+                from app.license import is_cloud as _is_cloud
+                from app.llm.gateway import _cloud_proxy_health, _fetch_cloud_prompts
+                if _is_cloud() and settings.cloud_proxy_url:
+                    _fetch_cloud_prompts(settings.cloud_proxy_url, settings.cloud_proxy_api_key)
+                    log.info("cloud proxy: prompts loaded")
+            except Exception:  # noqa: BLE001
+                log.warning("cloud proxy: prompt fetch failed (non-fatal) — using OSS fallbacks")
     except Exception:
         log.exception("Seed failed for tenant %s", settings.tenant_id)
         raise
@@ -158,13 +168,24 @@ app.add_middleware(RequestIdMiddleware)
 
 # ---- Public routes ---------------------------------------------------------
 @app.get("/api/health", tags=["meta"])
-def health() -> dict[str, str]:
-    return {
+def health() -> dict:
+    """Public health check. Includes cloud proxy status when applicable."""
+    result: dict = {
         "status": "ok",
         "tenant": settings.tenant_id,
         "environment": settings.environment,
         "license_mode": settings.license_mode,
     }
+    # Phase 4 · cloud proxy connectivity (cached 60s, non-blocking)
+    from app.license import is_cloud as _is_cloud
+    if _is_cloud() and settings.cloud_proxy_url:
+        try:
+            from app.llm.gateway import _cloud_proxy_health
+            proxy_ok = _cloud_proxy_health()
+            result["cloud_proxy"] = "connected" if proxy_ok else "unreachable"
+        except Exception:  # noqa: BLE001
+            result["cloud_proxy"] = "unreachable"
+    return result
 
 
 # Auth router is public (its job *is* to issue sessions).

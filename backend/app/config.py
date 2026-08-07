@@ -28,6 +28,13 @@ class Settings(BaseSettings):
     # cloud (DocAIQ-hosted premium with proxy). Gated by DOCAIQ_LICENSE_MODE.
     license_mode: Literal["oss", "cloud"] = "oss"
 
+    # ── Cloud proxy (Phase 4) ─────────────────────────────────────────────
+    # Only used when DOCAIQ_LICENSE_MODE=cloud. The proxy runs proprietary
+    # prompts, model routing, and metering on DocAIQ's infrastructure.
+    cloud_proxy_url: str = ""               # DOCAIQ_CLOUD_PROXY_URL
+    cloud_proxy_api_key: str = ""           # DOCAIQ_CLOUD_PROXY_API_KEY
+    cloud_proxy_timeout: int = 0            # DOCAIQ_CLOUD_PROXY_TIMEOUT  (0 = use llm_request_timeout)
+
     # M47 · superadmin console. Comma-separated emails allowed to call the
     # /api/superadmin/* plan-management endpoints (list users, set plan, extend
     # trial). Documents product only. Empty = no superadmin (endpoints 403).

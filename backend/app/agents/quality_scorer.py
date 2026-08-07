@@ -58,7 +58,7 @@ class QualityScorer:
         field_name: str,
         field_data: Dict,
         all_fields: Dict,
-        surya_results: Dict,
+        extraction_results: Dict,
     ) -> Dict:
         """
         Calculate comprehensive quality score for a field.
@@ -101,7 +101,7 @@ class QualityScorer:
         scores["uniqueness"] = max(0, min(1, base_llm + unique_adj))
 
         # 6. Text Clarity (15%)
-        clarity_adj = self._check_clarity(surya_results, field_name)
+        clarity_adj = self._check_clarity(extraction_results, field_name)
         scores["text_clarity"] = max(0, min(1, base_llm + clarity_adj))
 
         # Combine with weights
@@ -211,11 +211,11 @@ class QualityScorer:
         else:
             return -0.10
 
-    def _check_clarity(self, surya_results: Dict, field_name: str) -> float:
-        """Check text clarity from Surya metrics"""
+    def _check_clarity(self, extraction_results: Dict, field_name: str) -> float:
+        """Check text clarity from extraction metrics"""
 
-        if "ocr_confidence" in surya_results.get(field_name, {}):
-            ocr_conf = surya_results[field_name]["ocr_confidence"]
+        if "ocr_confidence" in extraction_results.get(field_name, {}):
+            ocr_conf = extraction_results[field_name]["ocr_confidence"]
 
             if ocr_conf > 0.95:
                 return +0.10
@@ -226,7 +226,7 @@ class QualityScorer:
             else:
                 return -0.15
 
-        sparsity = surya_results.get("_metadata", {}).get("sparsity", 0.0)
+        sparsity = extraction_results.get("_metadata", {}).get("sparsity", 0.0)
 
         if sparsity > 0.7:
             return -0.20

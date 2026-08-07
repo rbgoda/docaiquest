@@ -242,6 +242,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 DocAIQuest is [MIT](LICENSE) licensed. See [NOTICE](NOTICE) for third-party attributions,
 including model weights and bundled libraries.
 
+> **Third-party licenses:** DocAIQuest includes PyMuPDF (AGPL 3.0, dual-licensed —
+> commercial licenses available from Artifex) for PDF parsing, psycopg (LGPL 3.0)
+> for PostgreSQL, and chardet (LGPL 2.1) for encoding detection. These are used as
+> unmodified libraries through their public APIs. If you modify PyMuPDF itself or
+> redistribute a modified build as a network service, AGPL §13 obligations apply.
+> All DocAIQuest-original code remains MIT.
+
 ---
 
 Powered by DocAIQuest — [github.com/rbgoda/docaiquest](https://github.com/rbgoda/docaiquest)

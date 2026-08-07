@@ -60,7 +60,12 @@ We are grateful to their maintainers and contributors.
 ### Pillow
   - License: HPND (Historical Permission Notice and Disclaimer)
   - URL: https://github.com/python-pillow/Pillow
-  - Used for: Image processing, HEIC/HEIF/AVIF → JPEG conversion
+  - Used for: Image processing
+
+### pillow-heif
+  - License: BSD 3-Clause
+  - URL: https://github.com/bigcat88/pillow_heif
+  - Used for: HEIC/HEIF → JPEG conversion (iPhone photo uploads)
 
 ### pdfplumber
   - License: MIT
@@ -83,7 +88,7 @@ We are grateful to their maintainers and contributors.
   - Used for: Layout-aware PDF parsing, multi-column reading order
 
 ### RapidOCR
-  - License: MIT
+  - License: Apache 2.0
   - URL: https://github.com/RapidAI/RapidOCR
   - Used for: Primary OCR engine (ONNX runtime, PP-OCRv6 models)
 
@@ -214,10 +219,15 @@ We are grateful to their maintainers and contributors.
 ### ms-marco-MiniLM-L-6-v2 (cross-encoder/ms-marco-MiniLM-L-6-v2)
   - License: MIT
   - URL: https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-6-v2
-  - Used for: Cross-encoder retrieval re-ranking.
+  - Used for: Cross-encoder retrieval re-ranking (default reranker).
+
+### BGE-Reranker-v2-m3 (BAAI/bge-reranker-v2-m3)
+  - License: Apache 2.0
+  - URL: https://huggingface.co/BAAI/bge-reranker-v2-m3
+  - Used for: Cross-encoder retrieval re-ranking (optional, higher accuracy).
 
 ### RapidOCR PP-OCRv6 ONNX models
-  - License: MIT
+  - License: Apache 2.0
   - URL: https://github.com/RapidAI/RapidOCR
   - Used for: Optical character recognition (detection + recognition).
 

@@ -81,7 +81,7 @@ def document_review(doc_id: str, db: Session = Depends(get_session)) -> dict:
         raise HTTPException(status_code=404, detail=f"Document {doc_id} not found")
     ef = row.extracted_fields or {}
     detector = QualityDetector()
-    # surya_results not available separately — fields already contain bbox info
+    # extraction_results not available separately — fields already contain bbox info
     return asyncio.run(detector.detect_quality(ef, {}))
 
 

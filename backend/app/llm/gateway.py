@@ -134,21 +134,32 @@ def call(
     except ImportError:
         pass
 
-    # M44.P11 · provider allowlist enforcement BEFORE we do any work.
-    allowlist = [p.strip() for p in (settings.llm_provider_allowlist or "").split(",") if p.strip()]
-    if allowlist and backend not in allowlist:
-        raise LLMProviderBlockedError(
-            f"tenant policy blocks provider '{backend}' · allowed: {allowlist}"
-        )
+    # ── Cloud-task guard ───────────────────────────────────────────────────
+    # OSS mode: refuse cloud-only tasks immediately.
+    # Cloud mode: forward to the DocAIQ Cloud proxy (Phase 4).
+    from app.license import is_cloud as _is_cloud
+    _will_proxy = bool(task_kind and task_kind in _CLOUD_TASKS and _is_cloud())
 
-    # ── Cloud-task guard: refuse cloud-only tasks in OSS mode ──────────────
     if task_kind and task_kind in _CLOUD_TASKS:
-        from app.license import is_cloud
-        if not is_cloud():
+        if _is_cloud():
+            if not settings.cloud_proxy_url:
+                raise CloudProxyUnavailableError(
+                    "DOCAIQ_LICENSE_MODE=cloud but DOCAIQ_CLOUD_PROXY_URL is not set."
+                )
+            # Proxy dispatch happens below in the try block.
+        else:
             raise CloudProxyUnavailableError(
                 f"Task {task_kind!r} requires DocAIQuest Cloud. "
                 "Set DOCAIQ_LICENSE_MODE=cloud or use a local provider."
             )
+
+    # M44.P11 · provider allowlist enforcement BEFORE we do any work.
+    # Skip for cloud-proxy tasks — the proxy is not a "provider" in the allowlist.
+    allowlist = [p.strip() for p in (settings.llm_provider_allowlist or "").split(",") if p.strip()]
+    if not _will_proxy and allowlist and backend not in allowlist:
+        raise LLMProviderBlockedError(
+            f"tenant policy blocks provider '{backend}' · allowed: {allowlist}"
+        )
 
     # M44.P11 · PII redaction on user messages. System messages are not
     # redacted because they're our prompts (no PII inside them).
@@ -209,7 +220,10 @@ def call(
     http_status: int | None = None
     failure_kind: str | None = None
     try:
-        if backend == "openrouter":
+        if _will_proxy:
+            result = _cloud_proxy(task_kind, messages, model, tenant_id,
+                                  temperature, max_tokens, structured)
+        elif backend == "openrouter":
             result = _openrouter(model_id, messages, temperature, max_tokens, structured, tools, tool_choice, cache_system)
         elif backend == "anthropic":
             result = _anthropic(model_id, messages, temperature, max_tokens, structured, cache_system)
@@ -295,9 +309,119 @@ class LLMProviderBlockedError(RuntimeError):
 
 class CloudProxyUnavailableError(RuntimeError):
     """Raised when a model/task needs the DocAIQ Cloud proxy but it isn't
-    configured (license_mode != cloud, or proxy keys missing). Phase 4
-    replaces the placeholder with a real proxy call; callers may treat
-    this as a hard 'cloud required' signal."""
+    configured (license_mode != cloud, or proxy keys missing). Callers
+    may treat this as a hard 'cloud required' signal."""
+
+
+def _cloud_proxy(
+    task_kind: str,
+    messages: list[Message],
+    model: str,
+    tenant_id: str | None,
+    temperature: float,
+    max_tokens: int,
+    structured: bool,
+) -> CompletionResult:
+    """Forward a cloud-only task to the DocAIQ Cloud proxy (Phase 4).
+
+    The proxy runs proprietary prompts, tuned model cascades, and metering.
+    Messages are already PII-redacted by the caller (gateway.call handles
+    redaction before dispatch), so the proxy never sees raw PII.
+    """
+    settings = get_settings()
+    payload: dict = {
+        "task_kind": task_kind,
+        "messages": [{"role": m.role, "content": m.content} for m in messages],
+        "model": model,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    if tenant_id:
+        payload["tenant_id"] = tenant_id
+
+    headers = {
+        "Authorization": f"Bearer {settings.cloud_proxy_api_key}",
+        "Content-Type": "application/json",
+    }
+
+    timeout = settings.cloud_proxy_timeout or settings.llm_request_timeout
+    url = f"{settings.cloud_proxy_url.rstrip('/')}/v1/proxy"
+
+    try:
+        resp = _post_with_retry(url, payload=payload, headers=headers, timeout=timeout)
+    except httpx.HTTPStatusError as e:
+        status = e.response.status_code if e.response is not None else None
+        if status == 402:
+            raise CloudProxyUnavailableError(
+                "Cloud proxy: subscription required. Upgrade your plan at https://docaiq.jicama.tech"
+            ) from e
+        if status == 429:
+            raise CloudProxyUnavailableError(
+                "Cloud proxy: rate limit exceeded. Upgrade your plan for higher limits."
+            ) from e
+        raise CloudProxyUnavailableError(
+            f"Cloud proxy error ({status}): {e.response.text if e.response else str(e)[:200]}"
+        ) from e
+
+    data = resp.json()
+    return CompletionResult(
+        text=data.get("content", ""),
+        model=data.get("model", model),
+        provider="docaiq_cloud",
+        input_tokens=data.get("usage", {}).get("input_tokens", 0),
+        output_tokens=data.get("usage", {}).get("output_tokens", 0),
+        finish_reason=data.get("finish_reason", "stop"),
+        raw_json=data,
+    )
+
+
+# Cached proxy health status (60s TTL) — avoids hammering the proxy on every
+# /api/health call while staying reasonably fresh.
+_proxy_health_ts: float = 0.0
+_proxy_health_val: bool = False
+
+
+def _cloud_proxy_health() -> bool:
+    """Check whether the cloud proxy is reachable. Cached 60s, non-blocking."""
+    global _proxy_health_ts, _proxy_health_val
+    import time as _time
+    now = _time.monotonic()
+    if now - _proxy_health_ts < 60:
+        return _proxy_health_val
+    settings = get_settings()
+    if not settings.cloud_proxy_url:
+        _proxy_health_val = False
+        _proxy_health_ts = now
+        return False
+    try:
+        r = httpx.get(
+            f"{settings.cloud_proxy_url.rstrip('/')}/v1/health",
+            timeout=2.0,
+        )
+        _proxy_health_val = r.status_code < 500
+    except Exception:  # noqa: BLE001
+        _proxy_health_val = False
+    _proxy_health_ts = now
+    return _proxy_health_val
+
+
+def _fetch_cloud_prompts(proxy_url: str, api_key: str) -> None:
+    """Fetch proprietary prompts from the cloud proxy at boot.
+
+    Calls _register_prompts() from prompts.py to replace OSS fallbacks
+    with the real cloud prompts for the lifetime of this process.
+    """
+    from app.llm.prompts import _register_prompts
+    settings = get_settings()
+    timeout = settings.cloud_proxy_timeout or settings.llm_request_timeout
+    url = f"{proxy_url.rstrip('/')}/v1/prompts"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    r = httpx.get(url, headers=headers, timeout=timeout)
+    r.raise_for_status()
+    data = r.json()
+    prompts = data.get("prompts") if isinstance(data, dict) else None
+    if isinstance(prompts, dict):
+        _register_prompts(prompts)
 
 
 # ---- Backend selection ----------------------------------------------------

@@ -14,7 +14,7 @@ class AnomalyDetector:
     def __init__(self):
         self.logger = logger
 
-    async def detect(self, fields: Dict, surya_results: Dict) -> List[Dict]:
+    async def detect(self, fields: Dict, extraction_results: Dict) -> List[Dict]:
         """Detect anomalies in extracted data"""
 
         anomalies = []
@@ -121,7 +121,7 @@ class AnomalyDetector:
                     )
 
         # 5. Sparse PDF Warnings
-        sparsity = surya_results.get("_metadata", {}).get("sparsity", 0.0)
+        sparsity = extraction_results.get("_metadata", {}).get("sparsity", 0.0)
 
         if sparsity > 0.7:
             anomalies.append(
@@ -182,14 +182,14 @@ class QualityDetector:
         self.anomaly_detector = AnomalyDetector()
 
     async def detect_quality(
-        self, extracted_fields: Dict, surya_results: Dict
+        self, extracted_fields: Dict, extraction_results: Dict
     ) -> Dict:
         """
         Detect quality for entire extraction.
 
         Args:
             extracted_fields: All fields with values
-            surya_results: Surya output (with handler results)
+            extraction_results: Extraction output (with handler results)
 
         Returns:
         {
@@ -208,16 +208,16 @@ class QualityDetector:
             if not field_value:
                 continue
 
-            field_data = surya_results.get(
+            field_data = extraction_results.get(
                 field_name, {"value": field_value, "confidence": 0.75}
             )
 
             field_quality = await self.scorer.score_field(
-                field_name, field_data, extracted_fields, surya_results
+                field_name, field_data, extracted_fields, extraction_results
             )
             field_scores[field_name] = field_quality
 
-        anomalies = await self.anomaly_detector.detect(extracted_fields, surya_results)
+        anomalies = await self.anomaly_detector.detect(extracted_fields, extraction_results)
 
         overall_quality = self._aggregate_quality(field_scores)
 

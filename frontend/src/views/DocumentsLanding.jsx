@@ -33,7 +33,21 @@ function cell(v) {
 }
 
 // Rotating hero taglines — the brand's voice in motion.
-const TAGLINES = [
+const OSS_TAGLINES = [
+  "Talk to your documents.",
+  "Documents → Data → AI-IQ.",
+  "Get the intel — skip the reading.",
+  "Don't miss anything.",
+  "Ask. Cited. Done.",
+  "Your docs, your data, real answers.",
+  "From a pile of PDFs to instant answers.",
+  "Self-hosted. BYO keys. MIT licensed.",
+  "Ask across all your documents at once.",
+  "Totals, comparisons, counts — in one question.",
+  "Answers in clean tables, not walls of text.",
+  "100+ document types, deeply understood.",
+];
+const CLOUD_TAGLINES = [
   "Talk to your documents.",
   "Documents → Data → AI-IQ.",
   "Get the intel — skip the reading.",
@@ -50,7 +64,7 @@ const TAGLINES = [
 
 // Contact-us popup — collects name + BUSINESS email + message, posts to /api/contact
 // (which emails the team). Business-email check mirrors the server (no free-mail).
-function ContactModal({ open, onClose }) {
+function ContactModal({ open, onClose, isCloud }) {
   const [f, setF] = React.useState({ firstName: "", lastName: "", businessEmail: "", description: "" });
   const [status, setStatus] = React.useState("idle");   // idle · sending · done · error
   const [err, setErr] = React.useState("");
@@ -63,7 +77,7 @@ function ContactModal({ open, onClose }) {
     const fn = f.firstName.trim(), ln = f.lastName.trim(), em = f.businessEmail.trim(), d = f.description.trim();
     if (!fn || !ln || !em || !d) { setErr("All fields are required."); return; }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { setErr("Please enter a valid email address."); return; }
-    if (FREE.test(em)) { setErr("Please use your business email (not a personal Gmail/Yahoo/Outlook address)."); return; }
+    if (isCloud && FREE.test(em)) { setErr("Please use your business email (not a personal Gmail/Yahoo/Outlook address)."); return; }
     setStatus("sending");
     try {
       await submitContact({ firstName: fn, lastName: ln, businessEmail: em, description: d });
@@ -107,7 +121,7 @@ function ContactModal({ open, onClose }) {
 }
 
 export default function DocumentsLanding({ onSignIn }) {
-  const { config } = useAuth();
+  const { config, isCloud } = useAuth();
   const googleEnabled = config?.googleLoginEnabled;
   const [signingIn, setSigningIn] = React.useState(false);
   const [contactOpen, setContactOpen] = React.useState(false);
@@ -123,11 +137,12 @@ export default function DocumentsLanding({ onSignIn }) {
   };
 
   // Cycle the hero tagline every ~2.8s (pure presentation; cleaned up on unmount).
+  const TAGLINES = isCloud ? CLOUD_TAGLINES : OSS_TAGLINES;
   const [taglineIdx, setTaglineIdx] = React.useState(0);
   React.useEffect(() => {
     const id = setInterval(() => setTaglineIdx((i) => (i + 1) % TAGLINES.length), 2800);
     return () => clearInterval(id);
-  }, []);
+  }, [TAGLINES.length]);
 
   // Primary CTA: Google when available, else reveal the email form.
   const GoogleBtn = ({ block }) =>
@@ -139,7 +154,7 @@ export default function DocumentsLanding({ onSignIn }) {
     ) : (
       <button className="ld-btn ld-btn-primary" onClick={onSignIn}
               style={block ? { width: "100%", justifyContent: "center" } : undefined}>
-        Get started — it's free
+        {isCloud ? "Get started — it's free" : "Get started"}
       </button>
     );
 
@@ -157,7 +172,7 @@ export default function DocumentsLanding({ onSignIn }) {
           <div className="ld-links">
             <a href="#flow">How it works</a>
             <a href="#features">Features</a>
-            <a href="#plans">Plans</a>
+            {isCloud && <a href="#plans">Plans</a>}
             <a href="#compare">Compare</a>
             <a href="#faq">FAQ</a>
           </div>
@@ -176,7 +191,9 @@ export default function DocumentsLanding({ onSignIn }) {
             <GoogleBtn />
           </div>
           <div className="ld-tagstrip">
-            {["Trust score","Cited answers","Never makes it up","Any document type","Your Google Drive","Purge anytime","PII-safe · GDPR · PDPA"]
+            {(isCloud
+              ? ["Trust score","Cited answers","Never makes it up","Any document type","Your Google Drive","Purge anytime","PII-safe · GDPR · PDPA"]
+              : ["Trust score","Cited answers","Never makes it up","Any document type","Self-hosted","BYO LLM keys","MIT licensed","PII-safe"])
               .map((t) => <span key={t} className="ld-fw">{t}</span>)}
           </div>
         </div>
@@ -207,7 +224,7 @@ export default function DocumentsLanding({ onSignIn }) {
             <div className="ld-uc ld-uc3">
               <div className="ld-uc-ic">🔒</div>
               <h3>Private by design</h3>
-              <p>Any document type, out of the box — and your files never leave your own Google Drive.</p>
+              <p>{isCloud ? "Any document type, out of the box — and your files never leave your own Google Drive." : "Any document type, out of the box — self-hosted on your own infrastructure."}</p>
             </div>
           </div>
         </div>
@@ -225,7 +242,9 @@ export default function DocumentsLanding({ onSignIn }) {
               ["💬","Ask across everything","Totals, counts and answers across all your files at once — with clickable sources."],
               ["📊","Export to spreadsheet","Your documents' extracted data → CSV or Excel in one click."],
               ["🔀","Compare side by side","See what differs between documents at a glance — as a clean table."],
-              ["📂","Drive-native","Connect a folder; new files sync automatically."],
+              (isCloud
+                ? ["📂","Drive-native","Connect a folder; new files sync automatically."]
+                : ["💻","Self-hosted","Runs on your infrastructure — Docker, one command."]),
               ["🤝","Share & review","Invite teammates or reviewers by email."],
               ["🛡️","PII-safe","Sensitive details are masked before processing."],
             ].map(([ic, h, p]) => (
@@ -244,7 +263,7 @@ export default function DocumentsLanding({ onSignIn }) {
             <table className="ld-cmp">
               <thead><tr><th>Capability</th><th>Office AI suite</th><th>Workspace AI</th><th>AI chatbot</th><th className="ld-col-us">DocAIQuest</th></tr></thead>
               <tbody>
-                <tr><td>Where your data lives</td><td>Vendor cloud</td><td>Vendor cloud</td><td>Vendor cloud</td><td className="ld-col-us ld-us">Your own Drive</td></tr>
+                <tr><td>Where your data lives</td><td>Vendor cloud</td><td>Vendor cloud</td><td>Vendor cloud</td><td className="ld-col-us ld-us">{isCloud ? "Your own Drive" : "Your own server"}</td></tr>
                 <tr><td>Keeps a copy of your originals</td><td className="ld-no">Yes</td><td className="ld-no">Yes</td><td className="ld-no">Yes</td><td className="ld-col-us ld-us">No — they stay in your Drive</td></tr>
                 <tr><td>Encryption with your own key</td><td className="ld-no">No</td><td className="ld-no">No</td><td className="ld-no">No</td><td className="ld-col-us ld-yes">Optional</td></tr>
                 <tr><td>Any document type</td><td>Suite-bound</td><td>Workspace-bound</td><td>Manual uploads</td><td className="ld-col-us ld-us">Universal + self-learning</td></tr>
@@ -255,9 +274,9 @@ export default function DocumentsLanding({ onSignIn }) {
             </table>
           </div>
           <div className="ld-kpis">
-            <div className="ld-kpi"><div className="ld-n">~$0</div><div className="ld-l">storage at idle — it's your own Drive</div></div>
-            <div className="ld-kpi"><div className="ld-n">7-day</div><div className="ld-l">free trial, full access</div></div>
-            <div className="ld-kpi"><div className="ld-n">0</div><div className="ld-l">kept once you delete your account</div></div>
+            <div className="ld-kpi"><div className="ld-n">{isCloud ? "~$0" : "100%"}</div><div className="ld-l">{isCloud ? "storage at idle — it's your own Drive" : "open source — it's your code"}</div></div>
+            {isCloud && <div className="ld-kpi"><div className="ld-n">7-day</div><div className="ld-l">free trial, full access</div></div>}
+            {isCloud && <div className="ld-kpi"><div className="ld-n">0</div><div className="ld-l">kept once you delete your account</div></div>}
             <div className="ld-kpi"><div className="ld-n">Any</div><div className="ld-l">document type, self-learning</div></div>
           </div>
         </div>
@@ -283,7 +302,8 @@ export default function DocumentsLanding({ onSignIn }) {
         </div>
       </section>
 
-      {/* PLANS / FEATURE MATRIX */}
+      {/* PLANS / OSS — cloud gets the full pricing matrix; OSS gets a simple self-hosted blurb */}
+      {isCloud ? (
       <section id="plans" className="ld-sec">
         <div className="ld-wrap">
           <div className="ld-kicker">Plans · what's included</div>
@@ -382,6 +402,36 @@ export default function DocumentsLanding({ onSignIn }) {
           <p className="ld-fineprint">Your files always live in your own Google Drive (~$0 idle); free-tier uploads may help improve our models, paid plans never do.</p>
         </div>
       </section>
+      ) : (
+      <section id="oss" className="ld-sec">
+        <div className="ld-wrap">
+          <div className="ld-kicker">Self-hosted · MIT licensed</div>
+          <h2 className="ld-h2">Free. Open source. <span className="ld-gold">Your server, your data.</span></h2>
+          <p className="ld-lead">DocAIQuest runs on your own infrastructure. Bring your own LLM keys — nothing leaves your server except the API calls you configure. Parse, chunk, embed, retrieve, and chat across your documents with cited answers. All <a href="https://github.com/rbgoda/docaiquest" style={{color: "var(--gold2)", textDecoration: "underline"}}>MIT licensed on GitHub</a>.</p>
+          <div className="ld-grid ld-g3" style={{marginTop: 28}}>
+            {[
+              ["📦","Self-hosted","One command: docker compose up. PostgreSQL, Redis, MinIO, FastAPI, React — all in one stack."],
+              ["🔑","BYO LLM keys","Bring your own DashScope, OpenAI, Anthropic, or Gemini keys. No managed LLM access — you control cost and privacy."],
+              ["🛡️","Privacy-native","Your documents stay on your hardware. PII redaction before LLM calls. Zero telemetry. No training on your data."],
+              ["🔍","Hybrid RAG","BM25 + vector search with cross-encoder reranking. Per-sentence citations. Abstains when evidence is thin."],
+              ["📄","Deep parsing","PDF, DOCX, XLSX, CSV, images, EML — layout-aware parsing with OCR. Tables, figures, multi-column text."],
+              ["🧩","Entity graph","Deterministic entity resolution across documents. Zero-LLM canonicalization. Graph traversal for related docs."],
+            ].map(([icon, title, desc]) => (
+              <div className="ld-uc" key={title}>
+                <div className="ld-uc-ic">{icon}</div>
+                <h3>{title}</h3>
+                <p>{desc}</p>
+              </div>
+            ))}
+          </div>
+          <div style={{textAlign: "center", marginTop: 24}}>
+            <a href="https://github.com/rbgoda/docaiquest" className="ld-btn ld-btn-ghost" style={{justifyContent: "center"}}>
+              View on GitHub →
+            </a>
+          </div>
+        </div>
+      </section>
+      )}
 
       {/* FAQ */}
       <section id="faq" className="ld-sec">
@@ -391,15 +441,23 @@ export default function DocumentsLanding({ onSignIn }) {
           <div className="ld-faq">
             {[
               ['How does it work?',
-               'Upload documents or connect a Drive folder → DocAIQuest extracts the key facts, builds dashboards, and answers questions across everything — with answers you can trace to the source.'],
+               isCloud
+                 ? 'Upload documents or connect a Drive folder → DocAIQuest extracts the key facts, builds dashboards, and answers questions across everything — with answers you can trace to the source.'
+                 : 'Upload documents → DocAIQuest parses, chunks, embeds, and indexes them. Ask questions across your library and get cited answers traceable to the exact source. Everything runs on your server with your own LLM keys.'],
               ['Where do my documents live? Do you keep a copy?',
-               'Always in your own Google Drive (encryption optional) — delete your account anytime to purge all DocAIQuest metadata; your Drive and files stay with you.'],
+               isCloud
+                 ? 'Always in your own Google Drive (encryption optional) — delete your account anytime to purge all DocAIQuest metadata; your Drive and files stay with you.'
+                 : 'On your own server. DocAIQuest is self-hosted — all documents, embeddings, and metadata live in your own PostgreSQL and MinIO instances. No cloud dependency beyond the LLM providers you configure yourself.'],
               ['Is my private data safe?',
-               'Yes — sensitive details (passport, account number, DOB, email…) are masked before processing; on paid plans your uploads are never used for training.'],
+               isCloud
+                 ? 'Yes — sensitive details (passport, account number, DOB, email…) are masked before processing; on paid plans your uploads are never used for training.'
+                 : 'Yes — sensitive details (passport, account number, DOB, email…) are masked before processing. Your data never leaves your server and is never used for training.'],
               ['Can it answer across all my documents?',
                'Yes — ask in plain language, trace every answer to its source, and it says so when evidence is weak instead of guessing.'],
               ['What does it cost?',
-               'Test free (7 single-page docs + a 7-day full-feature trial), then pay only for what you use — no per-seat fees.'],
+               isCloud
+                 ? 'Test free (7 single-page docs + a 7-day full-feature trial), then pay only for what you use — no per-seat fees.'
+                 : 'DocAIQuest is free and MIT licensed. You only pay for your own LLM provider usage (DashScope, OpenAI, Anthropic, etc.) and your server costs.'],
             ].map(([q, a]) => (
               <details className="ld-q" key={q}>
                 <summary>{q}</summary>
@@ -413,12 +471,12 @@ export default function DocumentsLanding({ onSignIn }) {
       {/* CTA BAND */}
       <section className="ld-sec ld-ctaband">
         <div className="ld-wrap">
-          <h2 className="ld-h2">Most document AI keeps your documents.<br/><span className="ld-gold">DocAIQuest keeps them in your Drive.</span></h2>
-          <p className="ld-ctap">Any document, in your own Drive, purge anytime — start free in seconds.</p>
+          <h2 className="ld-h2">{isCloud ? <>Most document AI keeps your documents.<br/><span className="ld-gold">DocAIQuest keeps them in your Drive.</span></> : <>Self-hosted document intelligence.<br/><span className="ld-gold">Your server. Your data. Your keys.</span></>}</h2>
+          <p className="ld-ctap">{isCloud ? "Any document, in your own Drive, purge anytime — start free in seconds." : "One command to deploy. MIT licensed. Free forever."}</p>
           <div className="ld-cta-row" style={{ justifyContent: "center" }}>
             <GoogleBtn />
           </div>
-          <div className="ld-ctmeta">your docs · your Drive · purge anytime</div>
+          <div className="ld-ctmeta">{isCloud ? "your docs · your Drive · purge anytime" : "your docs · your server · MIT licensed"}</div>
         </div>
       </section>
 
@@ -428,13 +486,15 @@ export default function DocumentsLanding({ onSignIn }) {
           <span>
             <button type="button" className="ld-foot-link" onClick={() => setContactOpen(true)}>Contact us</button>
             {" · "}<a href="/privacy">Privacy</a> · <a href="/termsofservice">Terms</a>
-            {" · "}PII-safe · GDPR · PDPA · your data stays yours
+            {isCloud
+              ? " · PII-safe · GDPR · PDPA · your data stays yours"
+              : " · PII-safe · self-hosted · MIT licensed"}
             {" · "}<span className="ld-powered">Powered by DocAIQuest</span>
           </span>
         </div>
       </footer>
 
-      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
+      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} isCloud={isCloud} />
     </div>
   );
 }
