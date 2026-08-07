@@ -69,7 +69,6 @@ them. Your own LLM keys, your own server, your data never leaves.
 | Graph retrieval | Cross-doc entity graph traversal + entity profile resolution |
 | Citation & sourcing | Per-sentence source citations with bbox page-jump links |
 | Abstention | Calibrated abstention — refuses to answer when evidence is insufficient, with confidence scoring |
-| Faithfulness pipeline | Critic agent + claim verifier + guardrail, all configurable |
 
 ### Extraction & Structured Data
 
@@ -77,7 +76,6 @@ them. Your own LLM keys, your own server, your data never leaves.
 |-----------|------------|
 | Field extraction | Dates, amounts, parties, line items, IDs — from invoices, receipts, contracts, and more |
 | Schema system | 123-type document taxonomy + curated schema library with HITL approval workflow |
-| Multi-pass verification | Verify pass with row-reconciliation loop for statement/invoice line items |
 | Confidence scoring | Per-field confidence with trust scoring |
 | Bulk operations | Re-extract across all documents; scoped reprocess via admin console |
 | Export formats | Structured JSON, Markdown, CSV; deterministic Markdown export for reproducibility |
@@ -87,9 +85,8 @@ them. Your own LLM keys, your own server, your data never leaves.
 | Capability | Detail |
 |-----------|------------|
 | Single-document chat | RAG with citations + deterministic fast-paths for counts, money, identity, dates |
-| Cross-document chat | Workspace chat with tool-using agent across all user documents |
-| Agentic chat (ReAct loop) | Document agent with 9 tools: search chunks, get extracted fields, search entities, cross-doc search, related documents, get doc summary, validate ID format, schema record, final answer |
-| Deterministic handlers | SQL-only path for accurate counts, money totals, identity lookups, watchlist — zero LLM cost |
+| Cross-document chat | Deterministic SQL handlers + RAG across all user documents |
+| Deterministic handlers | SQL-only path for accurate counts, money totals, identity lookups — zero LLM cost |
 | Multi-turn conversations | Contextual query rewriting with full history awareness |
 | MCP server | Streamable HTTP JSON-RPC — connect ChatGPT, Claude, or Cursor directly to your documents |
 
@@ -152,7 +149,7 @@ them. Your own LLM keys, your own server, your data never leaves.
 |-----------|------------|
 | Admin console | Standalone superadmin UI: user management, API clients, reprocess, LLM analytics |
 | Background jobs | Arq worker: ingestion, embedding, extraction, graph bootstrap, retention purge, cron scheduling |
-| LLM cost guard | Per-user hourly and daily caps; per-document cost tracking; provider-level analytics |
+| LLM cost guard | Per-user hourly and daily caps; per-document cost tracking |
 | Retention policies | Configurable document retention purge (re-pullable from Drive) |
 | Feedback system | Per-answer user feedback with screenshot capture and triage dashboard |
 | Eval harness | 1,180-question QA bank runner with LLM judge, R4 stdlib metrics, Ragas integration |
