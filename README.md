@@ -109,17 +109,6 @@ Your own LLM keys, your own server, your data never leaves.
 - **4 GB RAM** minimum / **8 GB** recommended (multilingual embeddings use more memory)
 - **~10 GB** free disk space (Docker images + database + file storage)
 - **An LLM provider key** — you bring your own
-- Python 3.11+
-- Node.js 22+
-- PostgreSQL with pgvector extension
-- Redis
-
-### Stack
-
-- **Backend:** FastAPI + SQLAlchemy + Alembic + PostgreSQL (pgvector)
-- **Worker:** Arq (Redis-backed async task queue)
-- **Frontend:** Vite + React (SPA)
-- **Storage:** MinIO (S3-compatible, local dev) / AWS S3
 
 ## Layout
 
@@ -177,7 +166,7 @@ curl http://localhost:8085/api/health
 1. **Sign up** — create an account (auto-verified in local mode).
 2. **Upload** — drag a file onto the upload area. Processing begins automatically (10–60s).
 3. **Chat** — click the document and ask questions. "Summarize this document."
-4. **Explore** — browse extracted fields, entities, and the knowledge graph.
+4. **View** — preview the document in the split-pane viewer with zoom controls.
 
 ### Stop
 
@@ -197,6 +186,22 @@ make down-clean    # stop + delete all data (fresh start)
 | **Out of disk space** | `docker builder prune -f --keep-storage 30GB && docker image prune -f` to reclaim build cache. |
 | **Fresh start (wipe everything)** | `make down-clean && make up` — deletes all containers, volumes, and data. |
 
+
+## Development
+
+### Prerequisites
+
+- Python 3.11+
+- Node.js 22+
+- PostgreSQL with pgvector extension
+- Redis
+
+### Stack
+
+- **Backend:** FastAPI + SQLAlchemy + Alembic + PostgreSQL (pgvector)
+- **Worker:** Arq (Redis-backed async task queue)
+- **Frontend:** Vite + React (SPA)
+- **Storage:** MinIO (S3-compatible, local dev) / AWS S3
 
 ### Conventions
 
