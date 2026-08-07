@@ -83,15 +83,6 @@ Your own LLM keys, your own server, your data never leaves.
 | No telemetry | Zero outbound calls beyond the LLM providers you configure |
 | Per-user isolation | Each user sees only their own documents |
 
-### API & SDK
-
-| Capability | Detail |
-|-----------|------------|
-| REST API | Full OpenAPI (Swagger) at `/api/docs` — upload, extract, chat, search, list, export |
-| Python SDK | `pip install docaiquest` — typed client for the extraction and chat API |
-| TypeScript SDK | `npm install @docaiquest/sdk` — typed client for Node.js and browser |
-| MCP server | Streamable HTTP JSON-RPC at `/api/mcp` — connect Claude, ChatGPT, or Cursor to your documents |
-
 ### Frontend & UX
 
 | Capability | Detail |
@@ -144,7 +135,6 @@ Your own LLM keys, your own server, your data never leaves.
 │   └── migrations/    Alembic (auto-run on boot)
 ├── frontend-oss/      OSS web console (Vite + React SPA)
 ├── admin-ui/          Superadmin console (static HTML)
-├── sdks/              Python + TypeScript API clients
 └── docker-compose.yml
 ```
 
