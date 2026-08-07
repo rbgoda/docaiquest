@@ -46,14 +46,13 @@ Your own LLM keys, your own server, your data never leaves.
 | Format | Detail |
 |--------|--------|
 | PDF (text) | Layout preservation, table extraction |
-| PDF (scanned/OCR) | RapidOCR + external vision models |
+| PDF (scanned/OCR) | External vision models |
 | DOCX / PPTX | Native parsers with embedded-image OCR support |
 | XLSX / CSV / TSV | Structured table extraction |
 | Images (PNG, JPG, HEIC, AVIF) | Vision model OCR |
-| HTML | Structure-preserving text extraction |
 | EML (email) | Headers, body, and attachment extraction |
 | TXT / Markdown | Encoding detection |
-| Legacy Office (.doc, .xls, ODT, RTF) | LibreOffice conversion |
+| Legacy Office (.doc, .xls, ODT, RTF) | LibreOffice conversion (requires opt-in config) |
 | Multi-column PDF | Column reconstruction for dense layouts |
 
 ### Chunking & Embedding
