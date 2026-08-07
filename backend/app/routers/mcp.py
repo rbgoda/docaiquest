@@ -21,7 +21,7 @@ log = logging.getLogger("docaiq.mcp")
 router = APIRouter()
 
 PROTOCOL_VERSION = "2024-11-05"
-SERVER_INFO = {"name": "docaiq", "version": "1.0.0", "title": "DocAIQuest — your documents"}
+SERVER_INFO = {"name": "docaiq", "version": "1.0.1", "title": "DocAIQuest — your documents"}
 
 TOOLS = [
     {"name": "ask_documents",
