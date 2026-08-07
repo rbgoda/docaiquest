@@ -20,7 +20,6 @@ from sqlalchemy import select
 from app.config import get_settings
 from app.db import get_current_tenant
 from app.orm import DocumentChunk, SchemaLibrary
-from app.agents import schema_architect
 from app.agents.fact_extractor import _resolve_schema_slug
 
 log = logging.getLogger("docaiq.autopilot")
@@ -93,6 +92,7 @@ def autopilot_draft(db, doc, created_by: str = "autopilot") -> dict | None:
         return {"slug": slug, "skipped": "draft_already_pending", "schema_pk": dup.pk}
     model = getattr(s, "schema_autopilot_model", "") or s.strong_extract_model
     try:
+        from app.agents import schema_architect  # noqa: F811 — cloud feature, may not exist
         drafted = schema_architect.draft_schema(db, type_slug=slug,
                                                 sample_text=_full_text(db, doc), model=model)
     except Exception as e:  # noqa: BLE001

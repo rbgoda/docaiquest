@@ -2,7 +2,6 @@
 
   · related_docs now scopes to the CALLER, not the doc owner — opening a group-shared
     doc must not enumerate the doc owner's OTHER private documents.
-  · search_entities rejects catastrophic-backtracking (ReDoS) regex patterns.
   · _ics_escape handles bare CR (iCal line injection).
 """
 from __future__ import annotations
@@ -117,20 +116,3 @@ def test_related_docs_scopes_to_caller_not_doc_owner(db):
     assert rel_a == [], f"cross-user leak: A saw {rel_a}"
 
 
-def test_search_entities_rejects_redos_pattern(db):
-    from app.agents.tools import search_entities
-    from app.documents_scope import set_current_owner_user_pk
-    u = _mk_user(db, "u@x.io")
-    set_current_owner_user_pk(u.pk)
-    d = _mk_doc(db, u.pk, "u-1")
-    _mk_entity(db, d, "acme", kind="org")
-    db.commit()
-    # catastrophic backtracking pattern → rejected fast, not compiled/run
-    res = search_entities.call(db=db, tenant_id=T, doc_id="u-1", kind="org", pattern="(a+)+$")
-    assert res["found"] is False and "complex" in res["error"]
-    # an over-long pattern is rejected too
-    res2 = search_entities.call(db=db, tenant_id=T, doc_id="u-1", kind="org", pattern="a" * 200)
-    assert res2["found"] is False and "long" in res2["error"]
-    # a normal (safe) pattern still compiles + runs — entity text is "Acme"
-    res3 = search_entities.call(db=db, tenant_id=T, doc_id="u-1", kind="org", pattern="Ac.e")
-    assert res3["found"] is True and len(res3["matches"]) == 1

@@ -256,9 +256,6 @@ FEATURE_FLAGS = [
     {"name": "documents_office_image_max", "label": "Max Office Images", "category": "Limits",
      "type": "int", "default": 12,
      "help": "Maximum embedded images to OCR per Office document."},
-    {"name": "documents_retention_purge_days", "label": "Retention Purge Days", "category": "Limits",
-     "type": "int", "default": 0,
-     "help": "Auto-delete documents older than this many days. 0 = never."},
 ]
 
 

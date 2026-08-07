@@ -121,17 +121,6 @@ class Settings(BaseSettings):
     # is installed AND this is true. .pptx (python-pptx, pure-Python) is always on.
     office_convert_enabled: bool = False
 
-    # Fleet (Enterprise dedicated containers). The CENTRAL (shared) instance is
-    # the registry; a dedicated container sets fleet_admin_url + instance_id +
-    # fleet_token to self-register and heartbeat. fleet_token gates the public
-    # /api/sync/* endpoints. heartbeat_seconds = how often a member checks in.
-    fleet_token: str = ""
-    fleet_admin_url: str = ""          # set on a MEMBER → points at the central instance
-    instance_id: str = ""             # set on a MEMBER → its unique id
-    instance_name: str = ""
-    fleet_heartbeat_seconds: int = 300
-    fleet_offline_after_seconds: int = 900   # central marks a member offline past this
-
     # When the reranker is enabled, the hybrid layer fetches this many
     # candidates before re-ranking. 20 is the proven sweet spot — more
     # adds latency without meaningful precision gains, fewer caps the
@@ -588,12 +577,6 @@ class Settings(BaseSettings):
     # each connected user's server-stored originals OLDER than N days into their
     # Drive (then purges the server blob — re-pullable), minimizing what we hold
     # at rest. 0 = off (originals kept on the server until manual backup).
-    documents_retention_purge_days: int = 0
-    # LLM call ledger retention. The `llm_calls` + `llm_call_audit` tables grow
-    # ~1.5M rows/mo at 1000 users × 50 docs. When > 0, a daily job deletes rows
-    # older than this many days. Default 0 (OFF) so an existing ledger is never
-    # purged on deploy — set DOCAIQ_LLM_CALLS_RETENTION_DAYS=90 to enable.
-    llm_calls_retention_days: int = 0
     # M47 · retrieval_metrics retention. When > 0, a lightweight inline cleanup
     # (probabilistic, ~1:100 calls) deletes rows older than this many days.
     # Default 90 keeps a rolling quarter of observability data; set to 0 to
