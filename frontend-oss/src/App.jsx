@@ -94,9 +94,28 @@ function SignupForm({ onLogin, onSwitch }) {
 
 // ---- Document list panel ---------------------------------------------------
 
-function DocList({ docs, selectedId, onSelect, onUpload, onDelete, uploading, collapsed, onToggleCollapse }) {
+function DocList({ docs, selectedId, onSelect, onUpload, onDelete, uploading, collapsed, onToggleCollapse, sidebarWidth, onSidebarResize }) {
   const fileRef = useRef(null);
   const [dragOver, setDragOver] = useState(false);
+
+  const onResizeStart = useCallback((e) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startW = sidebarWidth;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    const onMove = (ev) => {
+      onSidebarResize(Math.max(180, Math.min(500, startW + (ev.clientX - startX))));
+    };
+    const onUp = () => {
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, [sidebarWidth, onSidebarResize]);
 
   const handleFile = useCallback((file) => {
     if (file) onUpload(file);
@@ -120,7 +139,7 @@ function DocList({ docs, selectedId, onSelect, onUpload, onDelete, uploading, co
           <span className="sidebar-expand-arrow">▸</span>
         </div>
       )}
-      <div className={`doc-list${collapsed ? " collapsed" : ""}`}>
+      <div className={`doc-list${collapsed ? " collapsed" : ""}`} style={{ width: collapsed ? 0 : sidebarWidth }}>
         <div className="doc-list-header">
           <h2>Documents</h2>
           <button
@@ -181,6 +200,12 @@ function DocList({ docs, selectedId, onSelect, onUpload, onDelete, uploading, co
           ))}
         </div>
       </div>
+      {/* Resize handle — only when not collapsed */}
+      {!collapsed && (
+        <div className="sidebar-resize-handle" onMouseDown={onResizeStart}>
+          <span className="resize-grip-vert" />
+        </div>
+      )}
     </>
   );
 }
@@ -531,6 +556,7 @@ export default function App() {
   const [needConsent, setNeedConsent] = useState(false); // upload blocked on consent
   const [showSettings, setShowSettings] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(300);
 
   // Check existing session on mount
   useEffect(() => {
@@ -650,6 +676,8 @@ export default function App() {
           uploading={uploading}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
+          sidebarWidth={sidebarWidth}
+          onSidebarResize={setSidebarWidth}
         />
         <ChatPanel
           doc={selectedDoc}
