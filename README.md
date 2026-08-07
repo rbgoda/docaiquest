@@ -208,21 +208,6 @@ make down-clean    # stop + delete all data (fresh start)
 - **Schema = Alembic** — adding a table or column requires a new migration. Never use `create_all()`.
 - **Per-user isolation** — every query is filtered by owner. Never bypass it.
 
-### Running locally (without Docker)
-
-```bash
-cd backend
-pip install -e .
-alembic upgrade head
-uvicorn app.main:app --reload --port 8001
-```
-
-```bash
-cd frontend-oss
-npm ci
-npm run dev          # Vite dev server on :5173
-```
-
 ### Testing
 
 Tests use a throwaway PostgreSQL + pgvector instance — never point at a live
