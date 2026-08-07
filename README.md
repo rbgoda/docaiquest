@@ -3,14 +3,14 @@
 **Self-hosted Document Intelligence & GraphRAG Engine.** 
 Documents → Data → Intel.
 
-Upload any document, extract structured fields, build a knowledge graph, and
-chat with your data — all through a browser. 
+Upload any document, build a knowledge graph, and chat with your data —
+all through a browser. 
 Privacy-native. 
 BYO LLM keys.
 MIT licensed.
 
 > **Document parsing · OCR · chunking · embeddings · hybrid RAG (BM25 + vector) ·
-> knowledge graph · entity resolution · structured extraction · cross-document chat ·
+> knowledge graph · entity resolution · cross-document chat ·
 > Docker self-hosted**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -68,14 +68,6 @@ Your own LLM keys, your own server, your data never leaves.
 | Graph retrieval | Entity graph traversal across documents |
 | Citations | Per-sentence source citations with in-page jump links |
 | Abstention | Refuses to answer when evidence is insufficient |
-
-### Extraction & Structured Data
-
-| Capability | Detail |
-|-----------|------------|
-| Field extraction | Dates, amounts, parties, line items, IDs — from invoices, receipts, contracts, and more |
-| Schema system | Built-in schemas for common document types (invoices, contracts, IDs) |
-| Confidence scoring | Per-field confidence scores |
 
 ### Chat & Query
 
