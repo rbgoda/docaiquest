@@ -15,22 +15,144 @@ All through a browser. You bring your own LLM keys. Privacy-native by default.
 > or `OPENROUTER_API_KEY` in your `.env` file before starting. Without a key,
 > parsing and chunking work — but extraction and chat won't.
 
-## What you get
+## Capabilities
 
-DocAIQuest OSS is a **web console** you self-host — upload documents and chat
-with them. Your own LLM keys, your own server, your data never leaves.
+DocAIQuest is a **self-hosted web console** — upload documents and chat with
+them. Your own LLM keys, your own server, your data never leaves.
 
-| Feature | Detail |
-|---------|--------|
-| **Upload documents** | Drag & drop PDF, DOCX, XLSX, CSV, PPTX, images, EML, HTML, TXT, and legacy Office formats |
-| **View documents** | Rendered view with page navigation — see the original file as-is |
-| **Chat with documents** | Ask questions about a document, get answers with source citations and page references |
-| **Extract fields** | Pull out dates, amounts, parties, and line items from invoices, receipts, contracts, and more |
-| **Search** | Full-text search across all your documents |
-| **Multi-user** | Create accounts for your team — each user sees only their own documents |
-| **API access** | REST API + SDKs for Python and TypeScript |
-| **AI assistant integration** | MCP server — connect ChatGPT, Claude, or Cursor directly to your documents |
-| **Privacy built-in** | Sensitive info redacted before it reaches external AI providers |
+### Document Parsing
+
+| Capability | Detail |
+|-----------|------------|
+| PDF (text) | PyMuPDF + pdfplumber with layout preservation |
+| PDF (scanned/OCR) | RapidOCR engine + vision cascade (Gemini → Qwen-VL → Claude) |
+| DOCX / XLSX / PPTX | Native parsers (python-docx, openpyxl, python-pptx) + LibreOffice fallback |
+| CSV / TSV | Native CSV reader, quote/newline/delimiter-aware, rendered as structured tables |
+| Images (PNG, JPG, HEIC) | Vision model OCR with multi-pass quality scoring |
+| HTML | Native parser preserving structure |
+| EML (email) | Native parser extracting headers, body, attachments |
+| TXT / Markdown | Native with encoding detection |
+| Legacy Office (.doc, .xls, ODT, RTF) | LibreOffice conversion fallback |
+| Multi-column PDF layout | Word-level column reconstruction, content-gated to protect table-heavy docs |
+
+### Chunking & Embedding
+
+| Capability | Detail |
+|-----------|------------|
+| Chunking strategies | Block-aware chunking, semantic chunking, configurable overlap windows, NFKC normalization |
+| Embedding backends | 5 backends: local (MiniLM-L6-v2 384d, CPU, free), DashScope (BGE-M3 1024d), OpenAI, Gemini, OpenRouter |
+| Reranker | BGE-Reranker-v2-m3 and ms-marco-MiniLM cross-encoders, lazy singleton, configurable |
+| Semantic chunking | Document-model-aware section boundary detection |
+
+### Retrieval & RAG
+
+| Capability | Detail |
+|-----------|------------|
+| Vector search | pgvector cosine similarity with configurable dimension |
+| Keyword search | BM25 sparse retrieval with PostgreSQL native text search |
+| Hybrid retrieval | BM25 + pgvector cosine + Reciprocal Rank Fusion (RRF) |
+| Reranking | Cross-encoder reranker applied post-retrieval for precision |
+| Graph retrieval | Cross-doc entity graph traversal + entity profile resolution |
+| Citation & sourcing | Per-sentence source citations with bbox page-jump links |
+| Abstention | Calibrated abstention — refuses to answer when evidence is insufficient, with confidence scoring |
+| Faithfulness pipeline | Critic agent + claim verifier + guardrail, all configurable |
+
+### Extraction & Structured Data
+
+| Capability | Detail |
+|-----------|------------|
+| Field extraction | Dates, amounts, parties, line items, IDs — from invoices, receipts, contracts, and more |
+| Schema system | 123-type document taxonomy + curated schema library with HITL approval workflow |
+| Multi-pass verification | Verify pass with row-reconciliation loop for statement/invoice line items |
+| Confidence scoring | Per-field confidence with trust scoring |
+| Bulk operations | Re-extract across all documents; scoped reprocess via admin console |
+| Export formats | Structured JSON, Markdown, CSV; deterministic Markdown export for reproducibility |
+
+### Chat & Query
+
+| Capability | Detail |
+|-----------|------------|
+| Single-document chat | RAG with citations + deterministic fast-paths for counts, money, identity, dates |
+| Cross-document chat | Workspace chat with tool-using agent across all user documents |
+| Agentic chat (ReAct loop) | Document agent with 9 tools: search chunks, get extracted fields, search entities, cross-doc search, related documents, get doc summary, validate ID format, schema record, final answer |
+| Deterministic handlers | SQL-only path for accurate counts, money totals, identity lookups, watchlist — zero LLM cost |
+| Multi-turn conversations | Contextual query rewriting with full history awareness |
+| MCP server | Streamable HTTP JSON-RPC — connect ChatGPT, Claude, or Cursor directly to your documents |
+
+### Knowledge Graph
+
+| Capability | Detail |
+|-----------|------------|
+| Entity extraction | NER + fact extraction: persons, orgs, dates, monetary amounts, identifiers |
+| Cross-doc entity resolution | Union-find clustering, Levenshtein distance, Jaccard similarity, configurable thresholds |
+| Entity profiles | Per-entity aggregated view across all documents |
+| Graph insights | Dashboard analytics: entity relationships, document overlap, concentration metrics |
+| Graph retrieval | GraphRAG-enabled retrieval combining vector and entity graph traversal |
+| Durability | Persistent postgres-backed graph nodes, survives restarts |
+
+### Multimodal & Vision
+
+| Capability | Detail |
+|-----------|------------|
+| Image OCR | Vision cascade: Gemini → Qwen-VL → Claude, with quality scoring |
+| Table extraction | GFM table rendering with blockMap bounding-box overlays for in-page locate links |
+| Figure extraction | Configurable figure/embedded-image extraction from PDFs and Office docs |
+| Office image OCR | Embedded images in DOCX/PPTX extracted and OCR'd (configurable flag) |
+
+### Privacy & Security
+
+| Capability | Detail |
+|-----------|------------|
+| PII redaction | Sensitive identifiers and contact details masked before reaching external LLM providers |
+| Encryption at rest | Optional Drive encryption — files stored encrypted, openable only via DocAIQuest |
+| Data residency | All data (documents, embeddings, extracted fields) stays in your own postgres and MinIO volumes |
+| No telemetry | Zero outbound calls beyond the LLM providers you configure |
+| Per-user isolation | Tenant middleware + repository-layer filtering — each user sees only their own documents |
+| API key scoping | Owner-scoped API keys minted by users; partner keys via admin console |
+
+### API & SDK
+
+| Capability | Detail |
+|-----------|------------|
+| REST API | Full OpenAPI (Swagger) at `/api/docs` — upload, extract, chat, search, list, export |
+| Unified v1 API | Single `POST /api/v1` endpoint with action field: ask, extract, list_documents, get_document |
+| Python SDK | `pip install docaiquest` — typed client with async support |
+| TypeScript SDK | `npm install @docaiquest/sdk` — typed client for Node.js and browser |
+| MCP server | `/api/mcp` — Streamable HTTP JSON-RPC, tools: ask_documents, list_documents, get_watchlist |
+| Self-serve API keys | Users mint and revoke their own keys from Settings → API Keys |
+
+### Frontend & UX
+
+| Capability | Detail |
+|-----------|------------|
+| Document viewer | Rendered view with page navigation, blocks view with bounding boxes, raw Markdown with edit+reprocess |
+| Chat panel | Split-pane chat with thinking disclosure, source citations, inline stat cards and bar charts |
+| Document dashboard | Stats capsules (docs, pages, ready count, format), per-doc extraction coverage badges |
+| Search | Full-text search across all documents with relevance ranking |
+| Google Drive connector | OAuth-based Drive folder sync with auto-ingest and encrypted backup |
+| Responsive design | Mobile-responsive across all views — chat, documents, dashboards |
+
+### Operations & Admin
+
+| Capability | Detail |
+|-----------|------------|
+| Admin console | Standalone superadmin UI: user management, API clients, reprocess, LLM analytics |
+| Background jobs | Arq worker: ingestion, embedding, extraction, graph bootstrap, retention purge, cron scheduling |
+| LLM cost guard | Per-user hourly and daily caps; per-document cost tracking; provider-level analytics |
+| Retention policies | Configurable document retention purge (re-pullable from Drive) |
+| Feedback system | Per-answer user feedback with screenshot capture and triage dashboard |
+| Eval harness | 1,180-question QA bank runner with LLM judge, R4 stdlib metrics, Ragas integration |
+
+### Deployment
+
+| Capability | Detail |
+|-----------|------------|
+| Local deploy | `docker compose up` — single command, all services |
+| Stack | postgres (pgvector) + redis + minio + backend (FastAPI) + worker (Arq) + frontend (Vite/React) |
+| Resource requirements | 4 GB RAM minimum, 8 GB recommended; ~10 GB disk |
+| Air-gapped capable | Hash embedding backend + local models — zero external calls |
+| Configuration | Single `.env` file, 100+ knobs, sensible defaults for all |
+| Platform | Linux, macOS (Docker); ARM64 and AMD64 |
 
 ### Supported file formats
 
