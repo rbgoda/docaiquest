@@ -96,20 +96,9 @@ Your own LLM keys, your own server, your data never leaves.
 
 | Capability | Detail |
 |-----------|------------|
-| Document viewer | Rendered view, raw Markdown with edit support, page navigation |
-| Chat panel | Split-pane with source citations, inline charts |
-| Search | Full-text search across all documents |
-| Google Drive | OAuth-based folder sync and ingest |
+| Document viewer | Raw file preview with zoom controls |
+| Chat panel | Split-pane with source citations |
 | Responsive | Mobile-friendly across all views |
-
-### Operations & Admin
-
-| Capability | Detail |
-|-----------|------------|
-| Admin console | User management, reprocessing, analytics |
-| Background jobs | Async ingestion, embedding, extraction, graph updates |
-| LLM cost guard | Per-user hourly and daily caps |
-| Feedback | Per-answer user feedback with screenshot capture |
 
 ### Deployment
 
