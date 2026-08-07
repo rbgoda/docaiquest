@@ -5,6 +5,9 @@ upload documents, chat with them, and extract structured data.
 All through a browser. You bring your own LLM keys. Privacy-native by default.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
+[![Docker](https://img.shields.io/badge/Docker-self--hosted-2496ED.svg)](https://docs.docker.com/compose/)
+[![GitHub Discussions](https://img.shields.io/badge/Discussions-Q%26A-important.svg)](https://github.com/rbgoda/docaiquest/discussions)
 
 > **You need your own LLM provider key.** DocAIQuest OSS does not ship with
 > managed LLM access. Set at least one of `DASHSCOPE_API_KEY` (recommended),
