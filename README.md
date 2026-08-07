@@ -124,7 +124,6 @@ Your own LLM keys, your own server, your data never leaves.
 │   │   └── jobs/      Background cron jobs
 │   └── migrations/    Alembic (auto-run on boot)
 ├── frontend-oss/      OSS web console (Vite + React SPA)
-├── admin-ui/          Superadmin console (static HTML)
 └── docker-compose.yml
 ```
 

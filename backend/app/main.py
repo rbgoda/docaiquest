@@ -3,11 +3,8 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 
-import os as _os
-
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
 
 from app.config import get_settings
 from app.db import SessionLocal, set_current_tenant
@@ -233,19 +230,4 @@ app.include_router(keys_router.router, prefix="/api", tags=["api-keys"], depende
 app.include_router(mcp_router.router, prefix="/api/mcp", tags=["mcp"])
 
 app.include_router(usage_router.router, prefix="/api", tags=["usage"], dependencies=auth_dep)
-
-# ── Dev: serve admin console locally (prod serves it via nginx) ──────────
-_ADMIN_HTML = "/app/admin-ui-index.html"
-if _os.path.isfile(_ADMIN_HTML):
-    @app.get("/admin", response_class=HTMLResponse, include_in_schema=False)
-    @app.get("/admin/", response_class=HTMLResponse, include_in_schema=False)
-    @app.get("/admin/{rest:path}", response_class=HTMLResponse, include_in_schema=False)
-    async def serve_admin_ui(rest: str = ""):
-        """Serve admin console UI (dev only — nginx on prod)."""
-        # Re-read on every request so you can edit index.html without restarting
-        return HTMLResponse(open(_ADMIN_HTML, encoding="utf-8").read())
-
-    # The admin UI is served at /admin as a raw HTML page. The JS inside
-    # calls /api/superadmin/* (relative paths) which are still auth-gated
-    # by the superadmin router's dependencies.
 
