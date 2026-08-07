@@ -33,6 +33,8 @@ extraction schema; a **personal watchlist** that tracks renewals, expiries, and 
 reminders; and a **reflexion learning loop** where every 👍/👎 improves future answers — all with
 managed LLM access, Google Drive auto-sync, and per-document cost analytics.
 
+##DocAIQuest Console
+
 <p align="center">
   <img src="docs/screenshots/02-doc-list.png" width="48%" alt="Document list with upload zone" />
   <img src="docs/screenshots/03-chat-with-doc.png" width="48%" alt="Chat with document preview and citations" />
