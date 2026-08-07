@@ -114,12 +114,9 @@ them. Your own LLM keys, your own server, your data never leaves.
 
 | Capability | Detail |
 |-----------|------------|
-| PII redaction | Sensitive identifiers and contact details masked before reaching external LLM providers |
-| Encryption at rest | Optional Drive encryption — files stored encrypted, openable only via DocAIQuest |
 | Data residency | All data (documents, embeddings, extracted fields) stays in your own postgres and MinIO volumes |
 | No telemetry | Zero outbound calls beyond the LLM providers you configure |
 | Per-user isolation | Tenant middleware + repository-layer filtering — each user sees only their own documents |
-| API key scoping | Owner-scoped API keys minted by users; partner keys via admin console |
 
 ### API & SDK
 
@@ -310,34 +307,6 @@ Each format dispatches to the best available parser:
 All formats normalize into a single structured Document Model IR before
 chunking and embedding, so retrieval quality is consistent regardless of
 source format.
-
-## Privacy
-
-DocAIQuest is **privacy-native by default**. Sensitive data is redacted at
-the LLM boundary — before any text leaves your server for an external AI
-provider. After the LLM responds, the original values are restored in the
-answer shown to you.
-
-### What is redacted
-
-| Category | Examples | Redacted by default? |
-|----------|----------|:--:|
-| Account numbers, IBANs | `288-900557`, `DE89 3704 0044 …` | ✅ |
-| Government IDs | NRIC, SSN, passport numbers | ✅ |
-| Phone numbers, emails | `+65 1234 5678`, `a@b.com` | ✅ |
-| Street addresses | `123 Main St, #05-01` | ✅ |
-| Person names | `John Smith` | ❌ (they're the search key) |
-
-### Settings
-
-| Flag | Default | Effect |
-|------|---------|--------|
-| `DOCAIQ_PII_REDACT_BEFORE_LLM` | `true` | Enable the redaction round-trip |
-| `DOCAIQ_PII_PROTECT_AT_REST` | `true` | Encrypt stored PII in the DB |
-| `DOCAIQ_PII_REDACT_PERSON_NAMES` | `false` | Also mask person names (costs search quality) |
-
-When redaction is on, the LLM sees placeholders like `[ACCOUNT_1]`, `[EMAIL_1]`.
-The owner sees the real values — only in their own session.
 
 ## Layout
 
