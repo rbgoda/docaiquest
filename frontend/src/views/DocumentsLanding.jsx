@@ -121,7 +121,7 @@ function ContactModal({ open, onClose, isCloud }) {
 }
 
 export default function DocumentsLanding({ onSignIn }) {
-  const { config, isCloud } = useAuth();
+  const { config, isCloud, productName = "DocAIQuest" } = useAuth();
   const googleEnabled = config?.googleLoginEnabled;
   const [signingIn, setSigningIn] = React.useState(false);
   const [contactOpen, setContactOpen] = React.useState(false);
@@ -208,7 +208,7 @@ export default function DocumentsLanding({ onSignIn }) {
       {/* WHY DIFFERENT — the three genuinely unique values, tightened */}
       <section id="why" className="ld-sec">
         <div className="ld-wrap">
-          <div className="ld-kicker">Why DocAIQuest</div>
+          <div className="ld-kicker">Why {productName}</div>
           <h2 className="ld-h2">Three things <span className="ld-gold">no one else does together.</span></h2>
           <div className="ld-grid ld-g3 ld-why">
             <div className="ld-uc ld-uc1">
@@ -261,7 +261,7 @@ export default function DocumentsLanding({ onSignIn }) {
           <h2 className="ld-h2">They ground AI on your data — <span className="ld-gold">but keep it on their cloud.</span></h2>
           <div className="ld-tablewrap">
             <table className="ld-cmp">
-              <thead><tr><th>Capability</th><th>Office AI suite</th><th>Workspace AI</th><th>AI chatbot</th><th className="ld-col-us">DocAIQuest</th></tr></thead>
+              <thead><tr><th>Capability</th><th>Office AI suite</th><th>Workspace AI</th><th>AI chatbot</th><th className="ld-col-us">{productName}</th></tr></thead>
               <tbody>
                 <tr><td>Where your data lives</td><td>Vendor cloud</td><td>Vendor cloud</td><td>Vendor cloud</td><td className="ld-col-us ld-us">{isCloud ? "Your own Drive" : "Your own server"}</td></tr>
                 <tr><td>Keeps a copy of your originals</td><td className="ld-no">Yes</td><td className="ld-no">Yes</td><td className="ld-no">Yes</td><td className="ld-col-us ld-us">No — they stay in your Drive</td></tr>
@@ -407,7 +407,7 @@ export default function DocumentsLanding({ onSignIn }) {
         <div className="ld-wrap">
           <div className="ld-kicker">Self-hosted · MIT licensed</div>
           <h2 className="ld-h2">Free. Open source. <span className="ld-gold">Your server, your data.</span></h2>
-          <p className="ld-lead">DocAIQuest runs on your own infrastructure. Bring your own LLM keys — nothing leaves your server except the API calls you configure. Parse, chunk, embed, retrieve, and chat across your documents with cited answers. All <a href="https://github.com/rbgoda/docaiquest" style={{color: "var(--gold2)", textDecoration: "underline"}}>MIT licensed on GitHub</a>.</p>
+          <p className="ld-lead">{productName} runs on your own infrastructure. Bring your own LLM keys — nothing leaves your server except the API calls you configure. Parse, chunk, embed, retrieve, and chat across your documents with cited answers. All <a href="https://github.com/rbgoda/docaiquest" style={{color: "var(--gold2)", textDecoration: "underline"}}>MIT licensed on GitHub</a>.</p>
           <div className="ld-grid ld-g3" style={{marginTop: 28}}>
             {[
               ["📦","Self-hosted","One command: docker compose up. PostgreSQL, Redis, MinIO, FastAPI, React — all in one stack."],
@@ -442,12 +442,12 @@ export default function DocumentsLanding({ onSignIn }) {
             {[
               ['How does it work?',
                isCloud
-                 ? 'Upload documents or connect a Drive folder → DocAIQuest extracts the key facts, builds dashboards, and answers questions across everything — with answers you can trace to the source.'
-                 : 'Upload documents → DocAIQuest parses, chunks, embeds, and indexes them. Ask questions across your library and get cited answers traceable to the exact source. Everything runs on your server with your own LLM keys.'],
+                 ? `Upload documents or connect a Drive folder → ${productName} extracts the key facts, builds dashboards, and answers questions across everything — with answers you can trace to the source.`
+                 : `Upload documents → ${productName} parses, chunks, embeds, and indexes them. Ask questions across your library and get cited answers traceable to the exact source. Everything runs on your server with your own LLM keys.`],
               ['Where do my documents live? Do you keep a copy?',
                isCloud
                  ? 'Always in your own Google Drive (encryption optional) — delete your account anytime to purge all DocAIQuest metadata; your Drive and files stay with you.'
-                 : 'On your own server. DocAIQuest is self-hosted — all documents, embeddings, and metadata live in your own PostgreSQL and MinIO instances. No cloud dependency beyond the LLM providers you configure yourself.'],
+                 : `On your own server. ${productName} is self-hosted — all documents, embeddings, and metadata live in your own PostgreSQL and MinIO instances. No cloud dependency beyond the LLM providers you configure yourself.`],
               ['Is my private data safe?',
                isCloud
                  ? 'Yes — sensitive details (passport, account number, DOB, email…) are masked before processing; on paid plans your uploads are never used for training.'
@@ -457,7 +457,7 @@ export default function DocumentsLanding({ onSignIn }) {
               ['What does it cost?',
                isCloud
                  ? 'Test free (7 single-page docs + a 7-day full-feature trial), then pay only for what you use — no per-seat fees.'
-                 : 'DocAIQuest is free and MIT licensed. You only pay for your own LLM provider usage (DashScope, OpenAI, Anthropic, etc.) and your server costs.'],
+                 : `${productName} is free and MIT licensed. You only pay for your own LLM provider usage (DashScope, OpenAI, Anthropic, etc.) and your server costs.`],
             ].map(([q, a]) => (
               <details className="ld-q" key={q}>
                 <summary>{q}</summary>
@@ -471,7 +471,7 @@ export default function DocumentsLanding({ onSignIn }) {
       {/* CTA BAND */}
       <section className="ld-sec ld-ctaband">
         <div className="ld-wrap">
-          <h2 className="ld-h2">{isCloud ? <>Most document AI keeps your documents.<br/><span className="ld-gold">DocAIQuest keeps them in your Drive.</span></> : <>Self-hosted document intelligence.<br/><span className="ld-gold">Your server. Your data. Your keys.</span></>}</h2>
+          <h2 className="ld-h2">{isCloud ? <>Most document AI keeps your documents.<br/><span className="ld-gold">{productName} keeps them in your Drive.</span></> : <>Self-hosted document intelligence.<br/><span className="ld-gold">Your server. Your data. Your keys.</span></>}</h2>
           <p className="ld-ctap">{isCloud ? "Any document, in your own Drive, purge anytime — start free in seconds." : "One command to deploy. MIT licensed. Free forever."}</p>
           <div className="ld-cta-row" style={{ justifyContent: "center" }}>
             <GoogleBtn />
@@ -482,14 +482,14 @@ export default function DocumentsLanding({ onSignIn }) {
 
       <footer className="ld-foot">
         <div className="ld-wrap ld-footrow">
-          <span>DocAIQuest — universal, privacy-native document intelligence</span>
+          <span>{productName} — universal, privacy-native document intelligence</span>
           <span>
             <button type="button" className="ld-foot-link" onClick={() => setContactOpen(true)}>Contact us</button>
             {" · "}<a href="/privacy">Privacy</a> · <a href="/termsofservice">Terms</a>
             {isCloud
               ? " · PII-safe · GDPR · PDPA · your data stays yours"
               : " · PII-safe · self-hosted · MIT licensed"}
-            {" · "}<span className="ld-powered">Powered by DocAIQuest</span>
+            {" · "}<span className="ld-powered">Powered by {productName}</span>
           </span>
         </div>
       </footer>

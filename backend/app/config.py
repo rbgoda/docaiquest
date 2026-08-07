@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     # endpoints simply go unused in documents mode).
     product: Literal["auditing", "documents"] = "documents"
 
+    # Branding — display name shown in the app header, landing page, and emails.
+    # Override via DOCAIQ_PRODUCT_NAME for white-label deployments.
+    product_name: str = "DocAIQuest"       # DOCAIQ_PRODUCT_NAME
+
     # Deployment license mode: oss (open-source, self-hosted, BYO keys) |
     # cloud (DocAIQ-hosted premium with proxy). Gated by DOCAIQ_LICENSE_MODE.
     license_mode: Literal["oss", "cloud"] = "oss"

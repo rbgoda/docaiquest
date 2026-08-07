@@ -175,6 +175,7 @@ def health() -> dict:
         "tenant": settings.tenant_id,
         "environment": settings.environment,
         "license_mode": settings.license_mode,
+        "product_name": settings.product_name,
     }
     # Phase 4 · cloud proxy connectivity (cached 60s, non-blocking)
     from app.license import is_cloud as _is_cloud

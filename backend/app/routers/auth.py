@@ -98,6 +98,8 @@ class AuthConfigResponse(BaseModel):
     # cloud-only premium features are disabled and the UI hides their chrome.
     # "cloud" = managed cloud build with full feature set.
     licenseMode: str = "oss"
+    # Phase 3.5 · configurable display name for the app header, landing, emails.
+    productName: str = "DocAIQuest"
     # Dev mode only: enumerate the password-login accounts that exist so the
     # login page can offer click-to-prefill chips. Empty when dev mode is off
     # or when the tenant DB has no password users (Google-only deployments).
@@ -235,6 +237,7 @@ def auth_config(db: Session = Depends(get_session)) -> AuthConfigResponse:
         sharedMode=settings.shared_mode,
         product=settings.product,
         licenseMode=settings.license_mode,
+        productName=settings.product_name,
         devAccounts=accounts,
     )
 

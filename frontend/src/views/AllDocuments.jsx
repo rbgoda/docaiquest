@@ -80,7 +80,7 @@ const STATUS_COLORS = {
 
 
 export default function AllDocuments({ docsOverride = null, onDocsChanged, vendorPk = null, openDocId = null, onOpenGroups = () => {} }) {
-  const { hasRole, config } = useAuth();
+  const { hasRole, config, productName } = useAuth();
   const isDocsProduct = config?.product === "documents";
   // M46 · the Documents tab has scope tabs: "personal" + one per group. The
   // group rail comes from the user's groups (a removed member loses the tab).
@@ -377,7 +377,7 @@ export default function AllDocuments({ docsOverride = null, onDocsChanged, vendo
         if (!c.personalData) {
           const ok = await confirmDialog({
             title: "Before you upload",
-            body: "Your documents may contain personal or special-category (health) data. DocAIQuest processes them to extract and answer questions; redacted text may be sent to AI providers. By continuing you acknowledge this and consent to that processing.",
+            body: `Your documents may contain personal or special-category (health) data. ${productName} processes them to extract and answer questions; redacted text may be sent to AI providers. By continuing you acknowledge this and consent to that processing.`,
             confirmLabel: "I acknowledge & continue",
           });
           if (!ok) return;
@@ -387,7 +387,7 @@ export default function AllDocuments({ docsOverride = null, onDocsChanged, vendo
         if (c.modelTrainingRequired) {
           const ok = await confirmDialog({
             title: "Free plan — how your data is used",
-            body: "On the free plan, your uploaded documents may be used to help improve DocAIQuest's AI models (for example, learning better field schemas). Paid plans keep your data private and are never used for training. By continuing on the free plan you consent to this use.",
+            body: `On the free plan, your uploaded documents may be used to help improve ${productName}'s AI models (for example, learning better field schemas). Paid plans keep your data private and are never used for training. By continuing on the free plan you consent to this use.`,
             confirmLabel: "I agree — continue on Free",
           });
           if (!ok) return;

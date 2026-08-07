@@ -4,11 +4,11 @@ import Icon from "./Icon.jsx";
 // ─────────────────────────────────────────────────────────────
 // Logo
 // ─────────────────────────────────────────────────────────────
-export const Logo = () => (
+export const Logo = ({ productName = "DocAIQuest" }) => (
   <div className="row gap-2" style={{ gap: 10 }}>
     <div className="brand-mark">Aiq</div>
     <div className="serif font-semibold app-logo-text" style={{ fontSize: 17, letterSpacing: "-0.01em" }}>
-      DocAIQuest
+      {productName}
     </div>
   </div>
 );

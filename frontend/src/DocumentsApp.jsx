@@ -152,7 +152,7 @@ function MoreSheet({ onClose, setView, onFeedback, onSignOut }) {
 }
 
 function DocumentsShell() {
-  const { user, logout, isCloud } = useAuth();
+  const { user, logout, isCloud, productName } = useAuth();
   const mobile = useIsMobile(820);
   const [moreOpen, setMoreOpen] = useState(false);
   const [view, setView] = useState("dashboard");  // "dashboard" | "documents" | "connectors"
@@ -180,7 +180,7 @@ function DocumentsShell() {
     <div style={{ height: mobile ? "100dvh" : "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {mobile ? (
         <header className="row between" style={{ padding: "8px 14px", borderBottom: "1px solid var(--line)", flex: "0 0 auto", alignItems: "center" }}>
-          <Logo />
+          <Logo productName={productName} />
           <div className="row gap-2" style={{ alignItems: "center" }}>
             <PlanBadge sub={user?.subscription} isCloud={isCloud} />
             <button onClick={() => setFeedbackOpen(true)} title="Send feedback"
@@ -200,7 +200,7 @@ function DocumentsShell() {
       >
         <div className="row gap-4 app-left" style={{ alignItems: "center", minWidth: 0 }}>
           <div className="row gap-2" style={{ alignItems: "center" }}>
-            <Logo />
+            <Logo productName={productName} />
             <span className="serif app-brand" style={{ fontSize: 18 }}>Documents</span>
           </div>
           <nav className="row gap-4 app-nav" style={{ alignItems: "center", marginLeft: 8 }}>

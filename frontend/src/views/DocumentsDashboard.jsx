@@ -202,7 +202,7 @@ function AskPanel({ onOpenDocument, onCollapse, mobile }) {
       if (!c.personalData) {
         const ok = await confirmDialog({
           title: "Before you upload",
-          body: "Your documents may contain personal or special-category (health) data. DocAIQuest processes them to extract and answer questions; redacted text may be sent to AI providers. By continuing you acknowledge this and consent to that processing.",
+          body: `Your documents may contain personal or special-category (health) data. ${productName} processes them to extract and answer questions; redacted text may be sent to AI providers. By continuing you acknowledge this and consent to that processing.`,
           confirmLabel: "I acknowledge & continue",
         });
         if (!ok) return;
@@ -211,7 +211,7 @@ function AskPanel({ onOpenDocument, onCollapse, mobile }) {
       if (c.modelTrainingRequired) {
         const ok = await confirmDialog({
           title: "Free plan — how your data is used",
-          body: "On the free plan, your uploaded documents may be used to help improve DocAIQuest's AI models (for example, learning better field schemas). Paid plans keep your data private and are never used for training. By continuing on the free plan you consent to this use.",
+          body: `On the free plan, your uploaded documents may be used to help improve ${productName}'s AI models (for example, learning better field schemas). Paid plans keep your data private and are never used for training. By continuing on the free plan you consent to this use.`,
           confirmLabel: "I agree — continue on Free",
         });
         if (!ok) return;
@@ -292,7 +292,7 @@ function AskPanel({ onOpenDocument, onCollapse, mobile }) {
           <div className="ink3" style={{ fontSize: 12, fontStyle: "italic" }}>Ask anything across your documents — tap <b>+</b> to add a document, <b>⚡</b> for suggested prompts, or just type your own.</div>
         ) : messages.map((m) => (
           <div key={m.id} style={{ marginBottom: 12, textAlign: m.role === "user" ? "right" : "left" }}>
-            <div className="upper ink4" style={{ fontSize: 9, letterSpacing: ".08em", marginBottom: 3 }}>{m.role === "user" ? "You" : "DocAIQuest"}</div>
+            <div className="upper ink4" style={{ fontSize: 9, letterSpacing: ".08em", marginBottom: 3 }}>{m.role === "user" ? "You" : productName}</div>
             <div className={`bubble ${m.role === "user" ? "bubble-you" : "bubble-ai"}`} style={{ fontSize: 13 }}>
               {m.role === "user" ? <span style={{ whiteSpace: "pre-wrap" }}>{m.text}</span> : <RichMessage content={m.text} />}
             </div>
@@ -366,7 +366,7 @@ function AskPanel({ onOpenDocument, onCollapse, mobile }) {
 }
 
 export default function DocumentsDashboard({ onOpenDocuments, onOpenConnectors }) {
-  const { user } = useAuth();
+  const { user, productName } = useAuth();
   const mobile = useIsMobile(820);
   const { data, loading, error } = useApiResource(fetchDocumentsDashboard);
   const [search, setSearch] = useState("");

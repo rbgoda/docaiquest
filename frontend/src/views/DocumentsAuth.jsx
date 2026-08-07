@@ -12,7 +12,7 @@ import { useAuth } from "../auth/AuthContext.jsx";
 import { register as apiRegister } from "../api/documents";
 
 export default function DocumentsAuth({ onBack }) {
-  const { config, login } = useAuth();
+  const { config, login, productName } = useAuth();
   const [mode, setMode] = useState("signin");   // "signin" | "signup"
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -63,7 +63,7 @@ export default function DocumentsAuth({ onBack }) {
           </button>
         )}
         <div className="row gap-2 mb-2" style={{ alignItems: "center" }}>
-          <Logo />
+          <Logo productName={productName} />
           <span className="serif" style={{ fontSize: 18 }}>Documents</span>
         </div>
 
@@ -161,7 +161,7 @@ export default function DocumentsAuth({ onBack }) {
                 <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)}
                   style={{ marginTop: 2, accentColor: "var(--gold2)", flexShrink: 0 }} />
                 <span className="ink2">
-                  I consent to DocAIQuest processing my documents to extract data and answer
+                  I consent to {productName} processing my documents to extract data and answer
                   questions, including sending <strong>redacted</strong> text to third-party
                   AI providers. My original files stay in my own Google Drive. I agree to the{" "}
                   <a href="/terms.html" target="_blank" rel="noopener" style={{ color: "var(--gold2)" }}>Terms</a>

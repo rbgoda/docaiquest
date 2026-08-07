@@ -182,15 +182,23 @@ export function AuthProvider({ children }) {
   // P2 · license mode — deployment-wide constant from /api/auth/config.
   const isCloud = config?.licenseMode === "cloud";
 
+  // Phase 3.5 · configurable product name (DOCAIQ_PRODUCT_NAME env var).
+  const productName = config?.productName || "DocAIQuest";
+
+  // Keep document.title in sync with the configured product name.
+  useEffect(() => {
+    document.title = productName;
+  }, [productName]);
+
   // Memoise the whole context value so consumers don't re-render just
   // because AuthProvider re-rendered for an unrelated reason.
   const ctxValue = useMemo(
     () => ({
       status, user, config, login, logout, updateProfile, hasRole, isViewing,
-      viewAs, setViewAs, availablePersonas, effectiveRoles, isCloud,
+      viewAs, setViewAs, availablePersonas, effectiveRoles, isCloud, productName,
     }),
     [status, user, config, login, logout, updateProfile, hasRole, isViewing,
-     viewAs, setViewAs, availablePersonas, effectiveRoles, isCloud],
+     viewAs, setViewAs, availablePersonas, effectiveRoles, isCloud, productName],
   );
 
   return <AuthCtx.Provider value={ctxValue}>{children}</AuthCtx.Provider>;
