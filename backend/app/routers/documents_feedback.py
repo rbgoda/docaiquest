@@ -83,14 +83,6 @@ def submit_feedback(payload: FeedbackPayload, db: Session = Depends(get_session)
         _vote_on_chat_message(db, payload.messagePk, user, +1 if payload.direction == "up" else -1)
     except Exception:  # noqa: BLE001
         pass
-    # Chat-faithfulness corpus · a 👍/👎 is a human label → attach it to the case
-    # (no-op when there's no case, e.g. a paid chat). Best-effort.
-    try:
-        from app.services import faithfulness_corpus
-        faithfulness_corpus.attach_label(db, payload.messagePk, direction=payload.direction,
-                                         category=cat, suggestion=payload.suggestion, rating=rating)
-    except Exception:  # noqa: BLE001
-        pass
     db.commit()
     return {"recorded": True}
 

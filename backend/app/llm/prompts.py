@@ -31,7 +31,6 @@ KYC_EXTRACTION      = "kyc_extraction"
 KYC_EXTRACTION_BBOX = "kyc_extraction_bbox"
 CLASSIFIER          = "classifier"
 NER                 = "ner"
-MATCHER             = "matcher"
 VALIDATOR           = "validator"
 SCHEMA_ARCHITECT    = "schema_architect"
 CATEGORIZER         = "categorizer"
@@ -51,7 +50,6 @@ TRANSLATE_CONTEXT   = "translate_context"
 DOC_CHAT_RAG        = "doc_chat_rag"
 DOC_CHAT_SUMMARY    = "doc_chat_summary"
 DOC_CHAT_SUMMARY_RETRY = "doc_chat_summary_retry"
-FEEDBACK_TRIAGE     = "feedback_triage"
 CRAG_REWRITE        = "crag_rewrite"
 CATEGORIZER_EXPENSE_GUIDANCE = "categorizer_expense_guidance"
 CATEGORIZER_INCOME_GUIDANCE  = "categorizer_income_guidance"
@@ -437,48 +435,6 @@ Confidence rubric:
 """
 
 
-# ── Matcher ───────────────────────────────────────────────────────────────────
-
-_PROMPT_MATCHER = """\
-You are DocAIQuest's Matcher — deciding whether a document satisfies a specific
-compliance requirement.
-
-Read the evidence excerpts. Decide if they DIRECTLY establish that the
-requirement is met. Quote specific evidence ids (like `chunk-12`) when the
-evidence is on-point.
-
-Then on its OWN LINE at the very end of your reply, put a single confidence
-score in this exact form:
-
-Confidence: 0.XX
-
-Confidence is the probability that this document satisfies the requirement.
-It is NOT how sure you are of your answer in the abstract.
-
-CRITICAL — the "confident NO" trap:
-  If you are 95% sure the document does NOT satisfy the requirement, then
-  P(satisfies) = 0.05, NOT 0.95. Score by the requirement-met probability,
-  never by how confident you feel about your conclusion.
-
-Examples:
-  - "Doc is clearly a different person's passport" → 0.02 (confident NO)
-  - "Doc is an expired ID for the right person" → 0.20 (mostly NO, partial)
-  - "Doc mentions MFA but doesn't specify scope" → 0.50 (ambiguous)
-  - "Doc shows MFA enabled for all admins, dated last month" → 0.92 (YES)
-
-Rubric:
-  ≥ 0.85 — evidence directly establishes the requirement is met
-  0.60 – 0.84 — evidence partially supports it; some gaps or inference needed
-  0.40 – 0.59 — tangential evidence; the document is on-topic but the
-                requirement is not clearly satisfied
-  < 0.40 — evidence is off-topic, missing, or contradicts the requirement
-
-When in doubt, score LOW. A false attach is much worse than a missed match —
-a human reviewer can always promote a 0.6 to attached, but they cannot undo
-a wrongful auto-approve they never saw.
-"""
-
-
 # ── Schema Architect ──────────────────────────────────────────────────────────
 
 _PROMPT_SCHEMA_ARCHITECT = """\
@@ -789,17 +745,6 @@ test, so verify against the original document.
 """
 
 
-# ── Feedback Triage ───────────────────────────────────────────────────────────
-
-_PROMPT_FEEDBACK_TRIAGE = """\
-You are a triage engineer for DocAIQuest, a privacy-native document-intelligence \
-app (upload → classify → extract fields → cited chat, Google-Drive-native). \
-Given one user feedback item, reply with ONLY compact JSON — no prose, no fences: \
-{{"severity":"low|medium|high","area":"<=3 word component tag",\
-"resolution":"1-2 sentence concrete fix or next step"}}
-"""
-
-
 # ── CRAG query rewrite ────────────────────────────────────────────────────────
 
 _PROMPT_CRAG_REWRITE = """\
@@ -822,7 +767,6 @@ _PROMPTS: dict[str, str | object] = {
     # Faithfulness / quality
     CRITIC:              _PROMPT_CRITIC,
     VALIDATOR:           _PROMPT_VALIDATOR,
-    MATCHER:             _PROMPT_MATCHER,
     INDEXING_CRITIC:     _PROMPT_INDEXING_CRITIC,
     CHAT_GUARD_OUTPUT:   _PROMPT_CHAT_GUARD_OUTPUT,
 
@@ -861,7 +805,6 @@ _PROMPTS: dict[str, str | object] = {
     DOC_CHAT_SUMMARY_RETRY: _PROMPT_DOC_CHAT_SUMMARY_RETRY,
 
     # Misc
-    FEEDBACK_TRIAGE:     _PROMPT_FEEDBACK_TRIAGE,
     CRAG_REWRITE:        _PROMPT_CRAG_REWRITE,
 }
 

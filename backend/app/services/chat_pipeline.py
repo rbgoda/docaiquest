@@ -969,14 +969,6 @@ def execute_pipeline(ctx: ChatContext) -> ChatMessage | None:
             )
             _persist_reflexion_if_warranted(ctx, step.name, result)
             # Chat-faithfulness corpus — snapshot the answer for consented free users
-            # (gated inside). A SAVEPOINT isolates it so a capture hiccup can never
-            # affect the answer the user gets.
-            try:
-                with ctx.db.begin_nested():
-                    from app.services import faithfulness_corpus
-                    faithfulness_corpus.capture_case(ctx, result)
-            except Exception as e:  # noqa: BLE001
-                log.warning("faithfulness capture failed (non-fatal): %s", e)
             return result
     log.info("chat_pipeline · all steps missed · caller falls back")
     return None

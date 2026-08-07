@@ -31,7 +31,44 @@ curation is the required second gate before such a skeleton is ever served.
 from __future__ import annotations
 
 from app.pii import redact
-from app.services.learning_promoter import has_doc_specific_identifier
+import re as _re
+
+# ── Inlined from learning_promoter (removed) ──────────────────────────────
+
+_IDENT_PATTERNS: tuple[_re.Pattern[str], ...] = (
+    _re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"),          # emails
+    _re.compile(r"[$£€]\s?\d"),                         # money amounts
+    _re.compile(r"\b\d{4}-\d{2}-\d{2}\b"),              # ISO dates
+    _re.compile(r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b"),  # dd/mm/yyyy dates
+    _re.compile(r"\b[A-Z]{2,}-?\d+\b"),                 # control IDs
+    _re.compile(r"\b\d{4,}\b"),                         # long digit runs
+)
+
+_SENTENCE_SPLIT = _re.compile(r"(?<=[.?!])\s+")
+_CAPS_ALLOWED = {
+    "I", "The", "A", "An", "What", "Is", "Are", "Was", "Were", "Does", "Do",
+    "Did", "How", "Why", "When", "Which", "Who", "Whom", "Where", "Can",
+    "Could", "Should", "Would", "Will", "This", "That", "These", "Those",
+    "It", "Its",
+}
+
+
+def has_doc_specific_identifier(question: str) -> bool:
+    """True when the question references something tied to one document."""
+    if not question:
+        return False
+    for pat in _IDENT_PATTERNS:
+        if pat.search(question):
+            return True
+    for sentence in _SENTENCE_SPLIT.split(question.strip()):
+        for i, raw in enumerate(sentence.split()):
+            w = raw.strip(".,;:?!\"'()[]{}")
+            if i == 0 or not w or not w.isalpha():
+                continue
+            if w[0].isupper() and w not in _CAPS_ALLOWED:
+                return True
+    return False
+
 
 SUPPORTED_KINDS = ("extraction_correction", "agent_skill", "generated_schema")
 

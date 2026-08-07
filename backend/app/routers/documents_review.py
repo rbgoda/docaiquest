@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.db import get_current_tenant, get_session
 from app.models.documents import Document
-from app.queue import enqueue_rematch
 from app.repositories import documents as repo
 from app.security import CurrentUser, require_role
 
@@ -216,13 +215,6 @@ def review_document(
     ))
     db.commit()
 
-    # M28.6 · Audit-Risk Loop · re-fire matcher when status changes. The
-    # reviewer's signoff (or HITL field edits captured pre-signoff) may
-    # have changed the doc's match strength against requirements in
-    # active audit runs. Skipped on no-op flips (same status as prior).
-    if prior != payload.status:
-        background.add_task(enqueue_rematch, doc.pk, user.org_id)
-
     return repo.get(db, doc_id)
 
 
@@ -251,7 +243,6 @@ def review_bulk(
     now = datetime.now(timezone.utc)
     note = (payload.reason or "").strip() or None
     updated = 0
-    rematch_pks: list[int] = []
     for doc_id in payload.doc_ids:
         doc = repo.get_row(db, doc_id)
         if doc is None:
@@ -272,11 +263,5 @@ def review_bulk(
             metadata_json=meta,
         ))
         updated += 1
-        if prior != payload.status:
-            rematch_pks.append(doc.pk)
     db.commit()
-    # M28.6 · re-fire matcher after the bulk commit. Each doc gets its own
-    # queue job so a single failure doesn't block the others.
-    for pk in rematch_pks:
-        background.add_task(enqueue_rematch, pk, user.org_id)
     return {"updated": updated}

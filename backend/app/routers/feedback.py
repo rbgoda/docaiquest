@@ -104,9 +104,6 @@ def submit(payload: FeedbackIn, background_tasks: BackgroundTasks,
     )
     db.add(row)
     db.commit()
-    # Auto-triage off the request path (LLM draft + status→in_progress); best-effort.
-    from app.services import feedback_triage
-    background_tasks.add_task(feedback_triage.triage_feedback, row.pk, get_current_tenant())
     return {"ok": True, "id": row.pk}
 
 

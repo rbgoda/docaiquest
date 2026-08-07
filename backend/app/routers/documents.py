@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import secrets
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -13,7 +13,7 @@ from app import storage
 from app.config import get_settings
 from app.db import get_current_tenant, get_session
 from app.models.documents import Document
-from app.queue import enqueue_ingest, enqueue_rematch
+from app.queue import enqueue_ingest
 from app.repositories import documents as repo
 from app.security import CurrentUser, get_current_user, require_role
 from app.services import documents as docs_service
@@ -926,33 +926,6 @@ def export_document(doc_id: str,
     )
 
 
-@router.get("/{doc_id}/recall-gaps")
-def recall_gaps(doc_id: str, db: Session = Depends(get_session)) -> dict:
-    """Structured-looking spans (dates, money, emails, IDs, …) in the parsed text that NO
-    extracted field covers — candidate *missed* fields the reviewer can locate on the page
-    and add (region→field). Each gap carries a located bbox where findable. Best-effort."""
-    from app.services import recall_gap
-    from app.agents.fact_extractor import _build_text_excerpt, _locate_field_bboxes
-
-    doc = repo.get_row(db, doc_id)
-    if doc is None:
-        raise HTTPException(status_code=404, detail=f"Document {doc_id} not found")
-    try:
-        text, refs = _build_text_excerpt(db, doc.pk, full=True)
-    except Exception:  # noqa: BLE001
-        text, refs = "", []
-    covered = recall_gap.collect_covered_values(doc.extracted_fields)
-    gaps = recall_gap.find_gaps(text, covered, limit=20)
-    try:
-        gap_fields = {f"__gap_{i}": g["value"] for i, g in enumerate(gaps)}
-        boxes = _locate_field_bboxes(db, doc.pk, gap_fields, refs)
-        for i, g in enumerate(gaps):
-            g["bbox"] = boxes.get(f"__gap_{i}")
-    except Exception:  # noqa: BLE001
-        pass
-    return {"docId": doc_id, "gaps": gaps}
-
-
 # ---- Streamed file download -------------------------------------------------
 @router.get("/{doc_id}/file")
 async def download_file(
@@ -1339,7 +1312,6 @@ class DocTypePayload(BaseModel):
 def set_document_type(
     doc_id: str,
     payload: DocTypePayload,
-    background: BackgroundTasks,
     db: Session = Depends(get_session),
     user: CurrentUser = Depends(require_role("admin", "reviewer")),
 ) -> dict:
@@ -1347,8 +1319,7 @@ def set_document_type(
     enum and can be wrong (or lack a matching type); this lets a reviewer set
     it by hand. Recorded as a field_edits row (field_path='doc_type') so it's
     audit-logged AND available to the P10 learning engine to bias future
-    classification of similar docs. Sets confidence to 1.0 (human-verified)
-    and re-fires the matcher (type affects requirement scoring)."""
+    classification of similar docs. Sets confidence to 1.0 (human-verified)."""
     new_type = (payload.docType or "").strip()
     if not new_type:
         raise HTTPException(status_code=422, detail="docType is required")
@@ -1384,8 +1355,6 @@ def set_document_type(
     logging.getLogger("docaiq.routers.documents").info(
         "HITL doc_type override · doc=%s %r → %r by %s", doc_id, original, new_type, user.email,
     )
-    # Type affects requirement matching — re-fire the matcher.
-    background.add_task(enqueue_rematch, doc.pk, user.org_id)
     return repo.get(db, doc_id)
 
 
@@ -1763,15 +1732,6 @@ def delete_document(
 ) -> dict:
     """Hard-delete a document while only ACTIVE audits reference it.
 
-    Two-phase delete (M44.P10) when ``DOCAIQ_DELETE_WITH_LEARNING`` is on:
-      · Phase 1 · learn-and-promote — lift generalizable knowledge (helpful
-        reflexion pairs, repeated field corrections, successful agent skills,
-        org/person canonicals) into the tenant UNDERSTANDING tables so it
-        survives the cascade. Runs under a row lock; any failure rolls the
-        whole request back (get_session) so the doc stays put.
-      · Phase 2 · cascade delete — the existing sync-delete below.
-    Flag-off, Phase 1 is skipped and behavior is exactly as before.
-
     Policy (M29 · 2026-05-23):
       · No-reference docs (dummy/mock uploads) → delete freely.
       · Referenced only by active audits → delete + cascade-clean orphan
@@ -1787,8 +1747,7 @@ def delete_document(
     artifacts via FK CASCADE + requirements/highlights/chat/diffs/reflexion
     cleanup) is the same complete sync-delete path for every role.
 
-    Returns ``{id, learningPromoted}`` — `learningPromoted` is the Phase-1
-    telemetry summary, or null when the flag is off.
+    Returns ``{id, learningPromoted}`` — `learningPromoted` is always null.
     """
     # Ownership FIRST (M17): get_row carries the vendor clause, so a vendor
     # asking about a doc they don't own gets a clean 404 — before we reveal
@@ -1814,32 +1773,9 @@ def delete_document(
             },
         )
 
-    # ── Phase 1 · learn-and-promote (flag-gated) ──────────────────────────
     promoted: dict | None = None
-    if get_settings().delete_with_learning:
-        import logging
-        from app.services.learning_promoter import promote_doc_learnings
-        try:
-            promoted = promote_doc_learnings(db, pre.pk, lock=True)
-        except Exception:  # noqa: BLE001
-            # Roll back the whole request (get_session does this on raise) so
-            # deletion_status reverts to NULL and the doc is NOT deleted.
-            logging.getLogger("docaiq.routers.documents").exception(
-                "Phase-1 learning promotion failed for %s; aborting delete", doc_id
-            )
-            raise HTTPException(
-                status_code=500,
-                detail={
-                    "code": "learning_promotion_failed",
-                    "message": "Learning promotion failed; document was NOT deleted. Retry.",
-                },
-            )
-        else:
-            logging.getLogger("docaiq.routers.documents").info(
-                "delete-with-learning %s: %s", doc_id, promoted
-            )
 
-    # ── Phase 2 · cascade delete ──────────────────────────────────────────
+    # ── Cascade delete ────────────────────────────────────────────────────
     row = repo.delete_row(db, doc_id)
     if row is None:
         raise HTTPException(status_code=404, detail=f"Document {doc_id} not found")
@@ -1877,92 +1813,6 @@ def unarchive_document(
     row = repo.unarchive_row(db, doc_id)
     if row is None:
         raise HTTPException(status_code=404, detail=f"Document {doc_id} not found")
-    return repo.get(db, doc_id)
-
-
-# ─────────────────────────────────────────────────────────────────────────
-# M29.2 · per-doc Actions surface (admin+reviewer).
-#
-# When a doc shows "Reqs matched = 0" in AllDocuments, the reviewer needs
-# a quick way to either delete it, re-fire the matcher, manually attach
-# it to a specific requirement, or escalate via RFI. Delete + archive
-# already exist; these two endpoints add the matcher + attach actions.
-# ─────────────────────────────────────────────────────────────────────────
-@router.post("/{doc_id}/rematch", status_code=202)
-def rematch_document(
-    doc_id: str,
-    background: BackgroundTasks,
-    db: Session = Depends(get_session),
-    user: CurrentUser = Depends(require_role("admin", "reviewer")),
-) -> dict:
-    """Re-fire the matcher cascade for one already-ingested document.
-
-    The same enqueue_rematch path used after a review-status flip — but
-    on-demand. Returns 202 immediately; results update via the standard
-    document-status polling once the worker drains the job.
-    """
-    row = repo.get_row(db, doc_id)
-    if row is None:
-        raise HTTPException(status_code=404, detail=f"Document {doc_id} not found")
-    if row.ingestion_status != "ready":
-        raise HTTPException(
-            status_code=409,
-            detail=f"Document {doc_id} is not ready (status={row.ingestion_status}); cannot re-match.",
-        )
-    background.add_task(enqueue_rematch, row.pk, user.org_id)
-    return {"enqueued": True, "docId": doc_id}
-
-
-class _AttachPayload(BaseModel):
-    requirementId: str
-
-
-@router.post("/{doc_id}/attach", response_model=Document)
-def attach_document(
-    doc_id: str,
-    payload: _AttachPayload,
-    db: Session = Depends(get_session),
-    user: CurrentUser = Depends(require_role("admin", "reviewer")),
-) -> dict:
-    """Manually attach an unmatched document to a requirement.
-
-    Differs from /api/requirements/{id}/attach-evidence (M28.7) — that one
-    requires doc.review_status='reviewed' (reuse of already-vetted docs).
-    This one accepts any ready doc, mirroring the wizard's HITL attach
-    path for fresh uploads. Sets Requirement.doc_id_external = this doc,
-    bumps status to 'warn' so the reviewer's verdict is still required.
-    Confidence is left NULL — this is a human attach, not an AI match.
-    """
-    from sqlalchemy import select as sa_select
-    from app.db import get_current_tenant
-    from app.orm import Requirement as ReqORM
-
-    tid = get_current_tenant()
-    # M46 · owner-scoped lookup (no-op in auditing) so a documents-product user
-    # can't attach another user's document by guessing its id (IDOR).
-    doc = repo.get_row(db, doc_id)
-    if doc is None:
-        raise HTTPException(status_code=404, detail=f"Document {doc_id} not found")
-
-    req = db.scalar(
-        sa_select(ReqORM).where(ReqORM.tenant_id == tid, ReqORM.id_external == payload.requirementId)
-    )
-    if req is None:
-        raise HTTPException(status_code=404, detail=f"Requirement {payload.requirementId} not found")
-
-    # M31.6 · Multi-evidence. If primary already set, keep it as primary
-    # but ALSO append this doc as additional evidence. If unset, this
-    # becomes the primary AND first evidence entry.
-    if not req.doc_id_external:
-        req.doc_id_external = doc.id_external
-        if req.status in ("todo", "miss"):
-            req.status = "warn"
-    from app.agents.matcher import _append_evidence
-    _append_evidence(
-        db, tid, req.pk, doc.id_external,
-        confidence=None, source="manual", attached_by=user.email,
-    )
-    db.commit()
     return repo.get(db, doc_id)
 
 
@@ -2024,7 +1874,6 @@ async def create_annotation(doc_id: str, payload: AnnotationCreate,
                             db: Session = Depends(get_session),
                             user: CurrentUser = Depends(get_current_user)) -> dict:
     from app.repositories import annotations as arepo
-    from app.services.region_capture import capture_region_text
     if not payload.bbox or len(payload.bbox) != 4:
         raise HTTPException(status_code=400, detail="bbox must be [x0,y0,x1,y1] normalized 0..1")
     d = arepo.resolve_doc(db, doc_id)
@@ -2033,9 +1882,6 @@ async def create_annotation(doc_id: str, payload: AnnotationCreate,
     x0, y0, x1, y1 = (float(v) for v in payload.bbox)
     body = await _doc_bytes(db, d)   # local blob, or Drive re-pull (purged docs)
     captured = ""
-    if body:
-        captured = capture_region_text(
-            body, payload.page, x0, y0, x1, y1, db=db, tenant_id=get_current_tenant())
     res = arepo.create(db, doc_id, page=payload.page, x0=x0, y0=y0, x1=x1, y1=y1,
                        captured_text=captured, note=payload.note, color=payload.color)
     if res is None:

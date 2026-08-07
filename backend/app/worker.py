@@ -2,9 +2,9 @@
 
 Two tasks today:
   * `ingest_document_task(document_pk, tenant_id)` — parse PDF, chunk, embed,
-    write `document_chunks` rows. On success, enqueues the matcher.
-  * `match_document_task(document_pk, tenant_id)` — M11 matcher agent: walks
-    open requirements and auto-attaches the doc to any it satisfies.
+    write `document_chunks` rows. On success, enqueues the classifier.
+  * `classify_document_task(document_pk, tenant_id)` — classify the doc, run
+    fact extraction, and bootstrap the graph.
 
 Tenant flows through task args, never the cookie — workers don't run inside
 a request and have no cookie to read.
@@ -22,7 +22,6 @@ from arq.connections import RedisSettings
 
 from app.agents.classifier import classify_document, persist as persist_classification
 from app.agents import categorizer, fact_extractor
-from app.agents.matcher import match_document
 from app.config import get_settings
 from app.db import SessionLocal, set_current_tenant
 from app.feature_flags import is_enabled, get_int
@@ -36,8 +35,6 @@ from app.jobs.reap_stuck import reap_stuck_ingest_task
 from app.jobs.purge_llm_ledger import purge_llm_ledger_task
 from app.jobs.llm_rollup import llm_rollup_task
 from app.jobs.workspace_sync import workspace_sync_task
-from app.jobs.knowledge_promoter import knowledge_promote_task
-from app.jobs.knowledge_sync import knowledge_sync_task
 from app.jobs.materialize_artifacts import materialize_artifacts_task
 from app.jobs.reflexion_curator import reflexion_curate_task
 from app.jobs.schema_crystallize import schema_crystallize_task
@@ -132,9 +129,8 @@ async def ingest_document_task(ctx, document_pk: int, tenant_id: str) -> dict:
     with SessionLocal() as session:
         result = ingest_document(session, document_pk, tenant_id)
 
-    # Chain · ingest → classify → match. Classify runs synchronously so its
-    # output is on the row by the time the matcher fires; the matcher then
-    # uses doc_type to narrow its candidate set (M11.6 targeted matching).
+    # Chain · ingest → classify. Classify runs synchronously so its output
+    # is on the row before downstream tasks fire.
     pool = ctx.get("redis")
     if pool is not None:
         await pool.enqueue_job("classify_document_task", document_pk, tenant_id)
@@ -144,12 +140,10 @@ async def ingest_document_task(ctx, document_pk: int, tenant_id: str) -> dict:
 async def classify_document_task(ctx, document_pk: int, tenant_id: str) -> dict:
     """M11.6 · classify the doc, then (layer 1 of structured facts) run the
     text-based fact extractor for its type. Both are best-effort: failure
-    here just means the matcher falls back to the broader behaviour and the
-    chat path falls back to retrieval — no documents are lost. The fact
-    extractor only fires when classifier confidence ≥ 0.5 and the doc_type
-    maps to a fact schema (agreements, invoices, receipts, bank statements,
-    policies, certificates today). Other types — and the KYC types, which
-    have their own vision-based extractor downstream — are skipped."""
+    here just means the chat path falls back to retrieval — no documents are
+    lost. The fact extractor only fires when classifier confidence ≥ 0.5 and
+    the doc_type maps to a fact schema (agreements, invoices, receipts, bank
+    statements, policies, certificates today). Other types are skipped."""
     log = logging.getLogger("docaiq.classify")
     facts_persisted = False
     classified_type: str | None = None
@@ -188,14 +182,6 @@ async def classify_document_task(ctx, document_pk: int, tenant_id: str) -> dict:
                                     doc.extracted_fields["text_layer"] = _tl
                                 session.commit()
                                 facts_persisted = True
-                                # Golden eval corpus — snapshot the extraction for
-                                # consented free docs only (gated inside; best-effort).
-                                try:
-                                    from app.services import eval_corpus
-                                    if eval_corpus.capture_case(session, doc):
-                                        session.commit()
-                                except Exception:  # noqa: BLE001
-                                    session.rollback()
                                 log.info(
                                     "fact_extractor: doc pk=%s → %s, conf=%.2f, %d top-level fields",
                                     document_pk, fx.schema_key, fx.confidence, len(fx.fields),
@@ -334,7 +320,7 @@ async def classify_document_task(ctx, document_pk: int, tenant_id: str) -> dict:
 
             # L3.2 · bootstrap the graph from the fresh fact-extracted blob.
             # Idempotent — re-runs replace prior bootstrap entries for this
-            # doc. Best-effort: graph failure doesn't block the matcher.
+            # doc. Best-effort: graph failure doesn't block ingestion.
             if facts_persisted:
                 try:
                     result = graph_bootstrap.run(session, document_pk)
@@ -425,10 +411,8 @@ async def classify_document_task(ctx, document_pk: int, tenant_id: str) -> dict:
 
     pool = ctx.get("redis")
     if pool is not None:
-        await pool.enqueue_job("match_document_task", document_pk, tenant_id)
         # M44.P4 · materialize persistent doc artifacts (markdown / summary /
         # JSON / entities / TOC). Strategy is size-gated inside the task.
-        # Runs in parallel with the matcher — neither depends on the other.
         await pool.enqueue_job(
             "materialize_artifacts_task", document_pk, tenant_id,
         )
@@ -515,84 +499,6 @@ async def backup_to_drive_task(ctx, document_pk: int, tenant_id: str) -> dict:
             finally:
                 set_current_owner_user_pk(None)
     return {"document_pk": document_pk, "backed_up": done}
-
-
-async def match_document_task(ctx, document_pk: int, tenant_id: str) -> dict:
-    with SessionLocal() as session:
-        # Audit-heritage guard. The matcher attaches documents to compliance REQUIREMENTS; the
-        # documents product has none, so skip the per-doc walk entirely. Cheap + self-adjusting
-        # (re-activates if a tenant ever adds requirements). The matcher/kyc_extractor/
-        # structured_match + kyc_records/kyc_subjects subsystem is left intact on purpose — it's
-        # woven into user endpoints + audit ORM tables — it
-        # just does no work here.
-        from sqlalchemy import func as _func, select as _select
-        from app.orm import Requirement
-        if session.scalar(_select(_func.count(Requirement.pk)).where(
-                Requirement.tenant_id == tenant_id)) == 0:
-            return {"skipped": "no requirements (audit-only matcher)"}
-        decisions = match_document(session, document_pk, tenant_id)
-    attached = [d.requirement_id_external for d in decisions if d.action == "attached"]
-
-    # KYC vision extraction is enqueued as a separate job — it does a
-    # 60s blocking httpx call that would starve the matcher's DB
-    # connection if run inline. Only fires when at least one KYC-*
-    # requirement was actually attached.
-    kyc_attached = [r for r in attached if r and r.startswith("KYC")]
-    if kyc_attached:
-        pool = ctx.get("redis")
-        if pool is not None:
-            await pool.enqueue_job(
-                "extract_kyc_fields_task", document_pk, tenant_id, kyc_attached,
-            )
-
-    return {
-        "document_pk": document_pk,
-        "evaluated": len(decisions),
-        "attached_to": attached,
-        "attached_count": len(attached),
-        "kyc_extract_enqueued": bool(kyc_attached),
-    }
-
-
-async def extract_kyc_fields_task(
-    ctx, document_pk: int, tenant_id: str, attached_kyc_req_ids: list[str],
-) -> dict:
-    """Vision-OCR extraction for KYC documents. Decoupled from
-    `match_document_task` so the 60s vision call doesn't tie up the
-    matcher's DB connection (see TODO #13)."""
-    set_current_tenant(tenant_id)
-    with SessionLocal() as session:
-        from app.repositories import documents as docs_repo
-        from app.agents.matcher import _maybe_extract_kyc_fields, MatchDecision
-
-        doc = docs_repo.get_row_by_pk(session, document_pk, tenant_id=tenant_id)
-        if doc is None:
-            return {"document_pk": document_pk, "skipped": "doc_not_found"}
-
-        # Reconstruct the minimum-viable MatchDecision list the helper
-        # expects. Only fields it reads are `requirement_id_external`
-        # and `action`; everything else is cosmetic.
-        decisions = [
-            MatchDecision(
-                requirement_id_external=req_id,
-                requirement_title="",
-                confidence=None,
-                action="attached",
-                answer_excerpt="",
-            )
-            for req_id in attached_kyc_req_ids
-        ]
-        try:
-            _maybe_extract_kyc_fields(session, doc, decisions)
-            session.commit()
-        except Exception as e:  # noqa: BLE001
-            session.rollback()
-            log.warning(
-                "extract_kyc_fields_task: doc pk=%s tenant=%s · %s",
-                document_pk, tenant_id, e,
-            )
-            return {"document_pk": document_pk, "status": "failed", "error": str(e)[:200]}
-    return {"document_pk": document_pk, "status": "ok", "attached_kyc_req_count": len(attached_kyc_req_ids)}
 
 
 def _redis_settings() -> RedisSettings:
@@ -708,13 +614,13 @@ async def refresh_config_task(ctx) -> dict:
 
 
 async def _on_startup(ctx: dict) -> None:
-    """M44.P13 PR3 · best-effort one-shot global-knowledge seed when the
-    worker boots. Lets a freshly provisioned vanilla container come up
-    pre-loaded with curated global knowledge. Non-fatal — a failure here must
-    never block the worker from starting."""
+    """Best-effort boot warm: apply DB-stored LLM provider keys + refresh the
+    feature-flag / embedding-config caches so the worker sees the same config
+    as the backend. Non-fatal — a failure here must never block the worker
+    from starting."""
     # Fail fast if the embedding model's native width ≠ DOCAIQ_EMBED_DIM. The
     # worker is the ingestion writer — a mismatch here silently corrupts every
-    # vector it writes, so this MUST raise (unlike the best-effort sync below).
+    # vector it writes, so this MUST raise.
     from app.embeddings import assert_embed_dim
     assert_embed_dim()
 
@@ -753,11 +659,6 @@ async def _on_startup(ctx: dict) -> None:
             "__warm_llm_overrides: boot warm failed (non-fatal)")
     finally:
         set_current_tenant(None)
-
-    try:
-        await knowledge_sync_task(ctx)
-    except Exception:  # noqa: BLE001
-        logging.getLogger("docaiq.worker").warning("startup knowledge sync failed", exc_info=True)
 
 
 async def reextract_type_task(ctx, type_slug: str, tenant_id: str) -> dict:
@@ -836,16 +737,12 @@ class WorkerSettings:
     functions = [
         ingest_document_task,
         classify_document_task,
-        match_document_task,
-        extract_kyc_fields_task,
         backup_to_drive_task,
         reconcile_type_task,
         reextract_type_task,
         schema_autopilot_task,
         materialize_artifacts_task,
         reflexion_curate_task,
-        knowledge_promote_task,
-        knowledge_sync_task,
         schema_crystallize_task,
         drive_autosync_task,
         retention_purge_task,
@@ -858,21 +755,14 @@ class WorkerSettings:
     # peak for tenants in IN+SG (08:47 IST / 11:17 SGT) and US (23:17 ET).
     # The job is light (<1s for empty store, single-digit seconds at
     # 100K rows) so the time window doesn't need to be exotic.
-    # M44.P13 · nightly knowledge promoter · 03:42 UTC — runs AFTER the
-    # curator so it contributes the freshly-curated local understanding.
-    # M44.P13 PR3 · nightly knowledge sync · 04:05 UTC — pulls the curated
-    # global pool into local tables (source='global'). After promote so the
-    # day's contributions can be curated+served on the next cycle.
     # Periodic config refresh — re-warms the settings singleton from DB so
     # admin-console key/flag changes propagate to the worker without a restart.
     # Runs every 5 min at :03/:08/:13/… (off the :00/:30 fleet stampede).
     cron_jobs = [
         cron(refresh_config_task, minute={3, 8, 13, 18, 23, 28, 33, 38, 43, 48, 53, 58}),
         cron(reflexion_curate_task, hour={3}, minute={17}),
-        cron(knowledge_promote_task, hour={3}, minute={42}),
-        cron(knowledge_sync_task, hour={4}, minute={5}),
         # Move-1 PR3 · nightly schema crystallizer · 03:05 UTC — before the
-        # curator/promoter; gated inside on schema_crystallize_enabled (dormant
+        # curator; gated inside on schema_crystallize_enabled (dormant
         # by default). Light: reads learned_schemas counts, no LLM.
         cron(schema_crystallize_task, hour={3}, minute={5}),
         # M46 · §5 · auto-sync the docaiq_docs Drive inbox every 15 min
@@ -893,9 +783,8 @@ class WorkerSettings:
     redis_settings = _redis_settings()
     # Per-task safety net. Real ingestion of a 50MB PDF + OpenAI embedding
     # round-trips can take a minute; 5 minutes is enough headroom without
-    # masking a true hang. The matcher's per-call latency is bounded by the
-    # LLM cascade timeout × candidate count, comfortably under this cap for
-    # typical fixtures.
+    # masking a true hang. The LLM cascade timeout keeps per-call latency
+    # comfortably under this cap for typical fixtures.
     job_timeout = int(os.environ.get("DOCAIQ_WORKER_JOB_TIMEOUT", "300") or "300")
     # RAG-roadmap #1 · throughput knob — concurrent jobs per worker process.
     # Env-tunable (default 4 = unchanged); raise it (or run more worker replicas)

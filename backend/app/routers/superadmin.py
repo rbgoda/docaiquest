@@ -98,50 +98,6 @@ def _last_upload(db: Session, tenant_id: str, owner_user_id: int) -> str | None:
     return ts.isoformat() if ts else None
 
 
-@router.get("/eval-corpus")
-def eval_corpus_summary(db: Session = Depends(get_session),
-                        _su: CurrentUser = Depends(require_superadmin)) -> dict:
-    """Golden eval corpus coverage — total, verified, and per-doc-type breakdown.
-    Captured from consented free-tier documents only."""
-    from app.services import eval_corpus
-    return eval_corpus.coverage(db, get_current_tenant())
-
-
-@router.get("/eval-corpus.jsonl")
-def eval_corpus_export(verifiedOnly: bool = Query(False),
-                       db: Session = Depends(get_session),
-                       _su: CurrentUser = Depends(require_superadmin)) -> Response:
-    """Export the golden eval corpus as JSONL (one case per line) for the eval/
-    harness. `verifiedOnly=1` restricts to human-confirmed ground-truth cases."""
-    from app.services import eval_corpus
-    cases = eval_corpus.export_cases(db, get_current_tenant(), verified_only=verifiedOnly)
-    body = "\n".join(_json.dumps(c, ensure_ascii=False) for c in cases)
-    return Response(content=body, media_type="application/x-ndjson",
-                    headers={"Content-Disposition": "attachment; filename=golden_eval_corpus.jsonl"})
-
-
-@router.get("/faithfulness")
-def faithfulness_summary(db: Session = Depends(get_session),
-                         _su: CurrentUser = Depends(require_superadmin)) -> dict:
-    """Chat-faithfulness corpus coverage — total, labeled (👍/👎), abstained, and
-    per-answer-path breakdown. Captured from consented free-tier chats only."""
-    from app.services import faithfulness_corpus
-    return faithfulness_corpus.coverage(db, get_current_tenant())
-
-
-@router.get("/faithfulness.jsonl")
-def faithfulness_export(labeledOnly: bool = Query(False),
-                        db: Session = Depends(get_session),
-                        _su: CurrentUser = Depends(require_superadmin)) -> Response:
-    """Export the chat-faithfulness corpus as JSONL (Ragas/R4 shape: question · contexts
-    · answer · groundTruth). `labeledOnly=1` → only human-labeled cases."""
-    from app.services import faithfulness_corpus
-    cases = faithfulness_corpus.export_cases(db, get_current_tenant(), labeled_only=labeledOnly)
-    body = "\n".join(_json.dumps(c, ensure_ascii=False) for c in cases)
-    return Response(content=body, media_type="application/x-ndjson",
-                    headers={"Content-Disposition": "attachment; filename=faithfulness_corpus.jsonl"})
-
-
 @router.get("/users")
 def list_users(db: Session = Depends(get_session),
                _su: CurrentUser = Depends(require_superadmin)) -> dict:

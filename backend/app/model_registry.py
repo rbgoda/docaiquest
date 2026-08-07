@@ -347,17 +347,6 @@ REGISTRY: dict[str, ModelOperation] = {
         cost_tier="cheap",
         description="Breaks multi-hop questions into sub-questions. Uses routing config cascade.",
     ),
-    "feedback_triage": ModelOperation(
-        id="feedback_triage",
-        label="Feedback Triage",
-        category="Chat & Agent",
-        default_model="deepseek/deepseek-v4-flash",
-        env_var=None,
-        provider="deepseek",
-        editable=True,
-        cost_tier="paid",
-        description="Triages user feedback: categorizes and routes for review. Reuses classifier model.",
-    ),
     # ═══ Embeddings ═════════════════════════════════════════════════════════
     "embed_v1_local": ModelOperation(
         id="embed_v1_local",

@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 
 from app.db import get_current_tenant, get_session
 from app.models.documents import Document
-from app.queue import enqueue_rematch
 from app.repositories import documents as repo
 from app.security import CurrentUser, require_role
 from app.services import documents as docs_service
@@ -119,14 +118,6 @@ def edit_document_field(
     flag_modified(doc, "extracted_fields")
     db.commit()
 
-    # Golden eval corpus — a human correction is ground truth: mark this doc's
-    # eval case verified (no-op when there's no case, e.g. a paid doc). Best-effort.
-    try:
-        from app.services import eval_corpus
-        eval_corpus.mark_verified(db, doc.pk)
-        db.commit()
-    except Exception:  # noqa: BLE001
-        db.rollback()
 
     # Downstream propagation — graph bootstrap reads the live facts, so
     # we re-emit graph entities to keep the audit graph in sync with the
@@ -161,13 +152,6 @@ def edit_document_field(
             "post-edit auto-approve failed for doc pk=%s: %s", doc.pk, e,
         )
 
-    # M28.6 · re-fire matcher after every field edit. The reviewer may
-    # have changed the vendor name, date, or category — all of which
-    # affect requirement match scoring. Fire-and-forget; the response
-    # returns immediately with the current doc, and matches refresh
-    # asynchronously (visible on next /api/audit-runs/{id} fetch).
-    background.add_task(enqueue_rematch, doc.pk, user.org_id)
-
     fresh = repo.get(db, doc_id)
     return fresh
 
@@ -190,14 +174,6 @@ def _extract_region_text(doc, page_num: int | None, bbox) -> str:
         from app import storage as app_storage
         buf = b"".join(app_storage.stream_object(doc.s3_key))
         mime = (doc.mime_type or "").lower()
-        if mime.startswith("application/pdf"):
-            # Use the SAME robust capture the annotation endpoint uses: PDF text
-            # layer first, then OCR fallback for scanned/image PDFs (which have no
-            # text layer). Without this, add-field/line-item returned "No text found"
-            # on scanned docs (e.g. photographed IDs) where highlights worked fine.
-            from app.services.region_capture import capture_region_text
-            return (capture_region_text(buf, page_num or 1, x0, y0, x1, y1,
-                                        tenant_id=get_current_tenant()) or "").strip()
         if mime.startswith("image/"):
             from app.agents import ocr as ocr_mod
             words, iw, ih = ocr_mod.extract_words(buf)
@@ -414,12 +390,6 @@ def add_field_from_region(
             db.rollback()
     # Human placement = ground truth (mirror the field-edit endpoint).
     try:
-        from app.services import eval_corpus
-        eval_corpus.mark_verified(db, doc.pk)
-        db.commit()
-    except Exception:  # noqa: BLE001
-        db.rollback()
-    try:
         from app.graph import bootstrap as graph_bootstrap, reconcile as graph_reconcile
         graph_bootstrap.run(db, doc.pk)
         db.commit()
@@ -510,12 +480,6 @@ def add_field(
                 db.commit()
         except Exception:  # noqa: BLE001
             db.rollback()
-    try:
-        from app.services import eval_corpus
-        eval_corpus.mark_verified(db, doc.pk)
-        db.commit()
-    except Exception:  # noqa: BLE001
-        db.rollback()
     return {"appended": appended, "field": label, "value": value, "document": repo.get(db, doc_id)}
 
 
@@ -606,12 +570,6 @@ def add_line_item_from_region(
     try:
         from app.repositories import learned_schemas as _ls
         _ls.record(db, doc.doc_type, ["line_items"], [])
-        db.commit()
-    except Exception:  # noqa: BLE001
-        db.rollback()
-    try:
-        from app.services import eval_corpus
-        eval_corpus.mark_verified(db, doc.pk)
         db.commit()
     except Exception:  # noqa: BLE001
         db.rollback()
