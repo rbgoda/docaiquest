@@ -507,10 +507,6 @@ class Settings(BaseSettings):
     # low-confidence (G3) scanned pages and keeps the higher-quality transcript
     # (extra cost only on bad pages). DOCAIQ_DOCUMENTS_MULTIPASS_OCR=true.
     documents_multipass_ocr: bool = False
-    # llm_audit_enabled · always logs gateway.call to llm_call_audit
-    # with HASHES (not contents) of prompt/response. Cheap, safe,
-    # required for any compliance-grade deployment.
-    llm_audit_enabled: bool = True
     # llm_provider_allowlist · comma-separated. Empty = all providers
     # allowed. Set to (e.g.) 'anthropic,stub' to block cross-border
     # routes that violate residency policy.

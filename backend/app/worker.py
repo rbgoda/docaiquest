@@ -29,15 +29,8 @@ from app.license import is_cloud
 from app.graph import bootstrap as graph_bootstrap
 from app.graph import reconcile as graph_reconcile
 from app.ingestion import ingest_document
-from app.jobs.drive_autosync import drive_autosync_task
-from app.jobs.retention_purge import retention_purge_task
 from app.jobs.reap_stuck import reap_stuck_ingest_task
-from app.jobs.purge_llm_ledger import purge_llm_ledger_task
-from app.jobs.llm_rollup import llm_rollup_task
-from app.jobs.workspace_sync import workspace_sync_task
 from app.jobs.materialize_artifacts import materialize_artifacts_task
-from app.jobs.reflexion_curator import reflexion_curate_task
-from app.jobs.schema_crystallize import schema_crystallize_task
 from app.orm import Document
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s · %(message)s")
@@ -416,13 +409,7 @@ async def classify_document_task(ctx, document_pk: int, tenant_id: str) -> dict:
         await pool.enqueue_job(
             "materialize_artifacts_task", document_pk, tenant_id,
         )
-        # M46 · auto-mirror a direct upload to the user's Drive, then purge the
-        # server copy. The task no-ops unless Drive is connected and the doc is
-        # a direct upload. Runs AFTER classify/extract so the original is no
-        # longer needed server-side.
         _s = get_settings()
-        if _s.product == "documents" and _s.documents_drive_autobackup:
-            await pool.enqueue_job("backup_to_drive_task", document_pk, tenant_id)
         # M46 · self-learning classification. When the closed-enum classifier
         # landed on 'other'/nothing, reconcile the type from the doc's own AI
         # read (Phase 1). Cheap — the task early-returns if already confident.
@@ -476,29 +463,6 @@ async def reconcile_type_task(ctx, document_pk: int, tenant_id: str) -> dict:
             finally:
                 set_current_owner_user_pk(None)
     return {"document_pk": document_pk, "reconciled_to": new_type, "reextracted": reextracted}
-
-
-async def backup_to_drive_task(ctx, document_pk: int, tenant_id: str) -> dict:
-    """M46 · copy a direct-upload doc into the owner's docaiq_docs Drive folder
-    and purge the server copy. No-op if the doc is already Drive-backed, has no
-    blob, or the owner hasn't connected Drive."""
-    from app.documents_scope import set_current_owner_user_pk
-    from app.repositories import documents as _repo
-    from app.services.drive_backup import backup_doc_to_drive
-    set_current_tenant(tenant_id)
-    done = False
-    with SessionLocal() as session:
-        doc = _repo.get_row_by_pk(session, document_pk, tenant_id=tenant_id)
-        if doc is not None and doc.source != "drive" and doc.s3_key:
-            set_current_owner_user_pk(doc.owner_user_id)
-            try:
-                done = await backup_doc_to_drive(session, doc)
-            except Exception as e:  # noqa: BLE001 — best-effort, never fail ingestion
-                logging.getLogger("docaiq.worker").warning(
-                    "backup_to_drive_task failed for pk=%s: %s", document_pk, e)
-            finally:
-                set_current_owner_user_pk(None)
-    return {"document_pk": document_pk, "backed_up": done}
 
 
 def _redis_settings() -> RedisSettings:
@@ -737,48 +701,19 @@ class WorkerSettings:
     functions = [
         ingest_document_task,
         classify_document_task,
-        backup_to_drive_task,
         reconcile_type_task,
         reextract_type_task,
         schema_autopilot_task,
         materialize_artifacts_task,
-        reflexion_curate_task,
-        schema_crystallize_task,
-        drive_autosync_task,
-        retention_purge_task,
-        workspace_sync_task,
         reap_stuck_ingest_task,
-        purge_llm_ledger_task,
-        llm_rollup_task,
     ]
-    # M44.P3.C · nightly reflexion curator · 03:17 UTC chosen to be off-
-    # peak for tenants in IN+SG (08:47 IST / 11:17 SGT) and US (23:17 ET).
-    # The job is light (<1s for empty store, single-digit seconds at
-    # 100K rows) so the time window doesn't need to be exotic.
     # Periodic config refresh — re-warms the settings singleton from DB so
     # admin-console key/flag changes propagate to the worker without a restart.
     # Runs every 5 min at :03/:08/:13/… (off the :00/:30 fleet stampede).
     cron_jobs = [
         cron(refresh_config_task, minute={3, 8, 13, 18, 23, 28, 33, 38, 43, 48, 53, 58}),
-        cron(reflexion_curate_task, hour={3}, minute={17}),
-        # Move-1 PR3 · nightly schema crystallizer · 03:05 UTC — before the
-        # curator; gated inside on schema_crystallize_enabled (dormant
-        # by default). Light: reads learned_schemas counts, no LLM.
-        cron(schema_crystallize_task, hour={3}, minute={5}),
-        # M46 · §5 · auto-sync the docaiq_docs Drive inbox every 15 min
-        # (documents product only · gated inside the task).
-        cron(drive_autosync_task, minute={0, 15, 30, 45}),
-        # M46 · §compliance · daily retention purge · 04:30 UTC (gated inside).
-        cron(retention_purge_task, hour={4}, minute={30}),
-        # M46 · §5 · nightly workspace-to-Drive sync · 04:50 UTC (gated inside).
-        cron(workspace_sync_task, hour={4}, minute={50}),
         # M49 · reap docs stuck in pending/processing (crash recovery) every 10 min.
         cron(reap_stuck_ingest_task, minute={4, 14, 24, 34, 44, 54}),
-        # LLM ledger retention purge · 05:10 UTC (gated inside on llm_calls_retention_days).
-        # Refresh the LLM utilization rollup hourly at :07 (keeps the admin panel fresh and
-        # always runs before the 05:10 ledger purge, so monthly history is captured first).
-        cron(llm_rollup_task, minute={7}),
-        cron(purge_llm_ledger_task, hour={5}, minute={10}),
     ]
     redis_settings = _redis_settings()
     # Per-task safety net. Real ingestion of a 50MB PDF + OpenAI embedding

@@ -123,8 +123,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
                             vendor_pk = vp
                     elif _is_reviewer_only(roles):
                         # Reviewer scoping · the user's email is the scope key
-                        # (matches both AuditRun.lead_reviewer and
-                        # Vendor.primary_reviewer string fields). Same
+                        # (matches the lead-reviewer / primary-reviewer string
+                        # fields on the audit/vendor models). Same
                         # ContextVar-in-middleware reasoning as vendor scope.
                         em = claims.get("email")
                         if isinstance(em, str) and em:

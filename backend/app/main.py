@@ -11,10 +11,8 @@ from app.db import SessionLocal, set_current_tenant
 from app.middleware import RequestIdFilter, RequestIdMiddleware, TenantMiddleware
 from app.routers import (
     alerts as alerts_router,
-    analytics as analytics_router,
     auth as auth_router,
     categories as categories_router,
-    connectors as connectors_router,
     dashboard as dashboard_router,
     doc_chat,
     doc_chat_export as doc_chat_export_router,
@@ -27,7 +25,6 @@ from app.routers import (
     documents_analytics as documents_analytics_router,
     documents_feedback as documents_feedback_router,
     feedback as feedback_router,
-    fleet as fleet_router,
     intelligence as intelligence_router,
     assistant as assistant_router,
     extraction as extraction_router,
@@ -35,14 +32,10 @@ from app.routers import (
     keys as keys_router,
     mcp as mcp_router,
     groups as groups_router,
-    data_rights as data_rights_router,
     graph as graph_router,
-    learning as learning_router,
-    llm_calls,
     llm_settings as llm_settings_router,
     retrieve as retrieve_router,
     superadmin as superadmin_router,
-    usage as usage_router,
     users,
     workspace_chat as workspace_chat_router,
 )
@@ -131,13 +124,6 @@ async def lifespan(app: FastAPI):
         raise
     finally:
         set_current_tenant(None)
-    # Fleet MEMBER: if this is a dedicated container pointed at a central
-    # registry, register + heartbeat in the background (best-effort).
-    if settings.fleet_admin_url and settings.instance_id and settings.fleet_token:
-        import asyncio
-        from app.routers.fleet import member_loop
-        asyncio.create_task(member_loop())
-        log.info("fleet: member heartbeat started → %s", settings.fleet_admin_url)
     yield
 
 
@@ -198,13 +184,9 @@ app.include_router(documents_upload_router.router, prefix="/api/documents", tags
 app.include_router(categories_router.router, prefix="/api/categories", tags=["categories"], dependencies=auth_dep)
 app.include_router(users.router, prefix="/api/users", tags=["users"], dependencies=auth_dep)
 app.include_router(retrieve_router.router, prefix="/api", tags=["retrieve"], dependencies=auth_dep)
-app.include_router(llm_calls.router, prefix="/api", tags=["llm"], dependencies=auth_dep)
-app.include_router(analytics_router.router, prefix="/api", tags=["analytics"], dependencies=auth_dep)
-app.include_router(learning_router.router, prefix="/api/learning", tags=["learning"], dependencies=auth_dep)
 app.include_router(doc_chat.router, prefix="/api", tags=["doc-chat"], dependencies=auth_dep)
 app.include_router(doc_chat_export_router.router, prefix="/api", tags=["doc-chat"], dependencies=auth_dep)
 app.include_router(workspace_chat_router.router, prefix="/api", tags=["workspace-chat"], dependencies=auth_dep)
-app.include_router(connectors_router.router, prefix="/api", tags=["connectors"], dependencies=auth_dep)
 app.include_router(documents_dashboard_router.router, prefix="/api", tags=["documents-dashboard"], dependencies=auth_dep)
 app.include_router(documents_analytics_router.router, prefix="/api", tags=["documents-analytics"], dependencies=auth_dep)
 app.include_router(intelligence_router.router, prefix="/api", tags=["intelligence"], dependencies=auth_dep)
@@ -213,10 +195,7 @@ app.include_router(alerts_router.router, prefix="/api", tags=["alerts"], depende
 app.include_router(dashboard_router.router, prefix="/api", tags=["dashboard"], dependencies=auth_dep)
 app.include_router(documents_feedback_router.router, prefix="/api", tags=["documents-feedback"], dependencies=auth_dep)
 app.include_router(feedback_router.router, prefix="/api", tags=["product-feedback"], dependencies=auth_dep)
-# Fleet sync — PUBLIC (token-gated, not session) so dedicated containers can register.
-app.include_router(fleet_router.router, prefix="/api", tags=["fleet"])
 app.include_router(groups_router.router, prefix="/api", tags=["documents-groups"], dependencies=auth_dep)
-app.include_router(data_rights_router.router, prefix="/api", tags=["documents-data-rights"], dependencies=auth_dep)
 app.include_router(graph_router.router, prefix="/api/graph", tags=["graph"], dependencies=auth_dep)
 app.include_router(superadmin_router.router, prefix="/api/superadmin", tags=["superadmin"], dependencies=auth_dep)
 # M46 · Documents self-registration is public (no auth_dep — you can't be logged in yet).
@@ -228,6 +207,4 @@ app.include_router(api_v1_router.router, prefix="/api/v1", tags=["api-v1"])
 app.include_router(llm_settings_router.router, prefix="/api", tags=["llm-settings"], dependencies=auth_dep)
 app.include_router(keys_router.router, prefix="/api", tags=["api-keys"], dependencies=auth_dep)
 app.include_router(mcp_router.router, prefix="/api/mcp", tags=["mcp"])
-
-app.include_router(usage_router.router, prefix="/api", tags=["usage"], dependencies=auth_dep)
 

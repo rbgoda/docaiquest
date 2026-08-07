@@ -130,22 +130,6 @@ def bulk_action(payload: BulkPayload, db: Session = Depends(get_session),
     return {"action": payload.action, "done": done, "count": len(done)}
 
 
-@router.post("/workspace/sync")
-async def workspace_sync(db: Session = Depends(get_session),
-                         user: CurrentUser = Depends(get_current_user)) -> dict:
-    """§5 · build the caller's encrypted workspace.sqlite and store it in THEIR
-    Google Drive (`docaiq_docs/.workspace/`). Documents product only."""
-    if get_settings().product != "documents":
-        raise HTTPException(status_code=404, detail="Not available")
-    from app.documents_scope import get_current_owner_user_pk
-    from app.services import subscriptions as subs
-    from app.services import workspace_export
-    uid = get_current_owner_user_pk()
-    subs.enforce_feature(db, owner_user_id=uid, feature="workspace")  # M47 · Pro feature
-    return await workspace_export.sync_to_drive(
-        db, tenant_id=get_current_tenant(), owner_user_id=uid)
-
-
 @router.get("/workspace/status")
 def workspace_status(db: Session = Depends(get_session),
                      user: CurrentUser = Depends(get_current_user)) -> dict:

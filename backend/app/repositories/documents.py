@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app import doc_trust as _doc_trust
@@ -8,8 +8,8 @@ from app import field_confidence as _field_conf
 from app.db import get_current_tenant, get_current_vendor_pk
 from app.documents_scope import get_current_owner_user_pk
 from app.orm import (
-    AuditRun, AuditRunRequirement, ChatMessage, Diff, Document, DocumentChunk,
-    FieldEdit, Highlight, ReflexionPair, Requirement,
+    ChatMessage, Diff, Document, DocumentChunk, FieldEdit, Highlight,
+    ReflexionPair,
 )
 
 
@@ -418,37 +418,13 @@ def referenced_by_closed_audit(db: Session, id_external: str) -> list[str]:
     """Return the list of CLOSED audit_run id_externals whose requirements
     reference this document. Empty list → safe to hard-delete.
 
-    The audit-history snapshots are aggregate counts, not per-doc, so the
-    history itself doesn't reference docs directly. But the underlying
-    audit_run rows (closed_at IS NOT NULL) still have audit_run_requirements
-    pointing at requirements whose doc_id_external points at this doc.
-    Deleting the doc would break the next-cycle clone (which inherits
-    doc_id_external from the closed cycle) and break "open in compare"
-    on history rows. So we refuse hard-delete in that case and tell the
-    caller to archive instead.
+    Audit-product only: the audit_runs / audit_run_requirements /
+    requirements models were pruned from this repo, and the documents
+    product never creates audit runs — so there is nothing to check here.
+    Always returns [] → hard-delete is always safe (matches the M49
+    short-circuit that previously returned [] for the documents product).
     """
-    # M49 · the Documents product never creates audit_runs, so this 3-table audit
-    # join always returns []. Short-circuit it off the hot hard-delete path.
-    from app.config import get_settings as _gs
-    if _gs().product == "documents":
-        return []
-    tid = get_current_tenant()
-    closed_audit_ids = db.scalars(
-        select(AuditRun.id_external)
-        .distinct()
-        .join(AuditRunRequirement, AuditRunRequirement.audit_run_pk == AuditRun.pk)
-        .join(Requirement,
-              (Requirement.pk == AuditRunRequirement.requirement_pk)
-              & (Requirement.tenant_id == tid))
-        .where(
-            AuditRun.tenant_id == tid,
-            AuditRun.closed_at.is_not(None),
-            (Requirement.doc_id_external == id_external)
-            | (Requirement.prior_doc_id_external == id_external),
-        )
-        .order_by(AuditRun.id_external)
-    ).all()
-    return list(closed_audit_ids)
+    return []
 
 
 def delete_row(db: Session, id_external: str) -> Document | None:
@@ -456,10 +432,9 @@ def delete_row(db: Session, id_external: str) -> Document | None:
 
     Postgres FK CASCADE handles document_chunks, entities, entity_relations,
     kyc_records, graph_runs, field_edits, document_reviews. But the
-    references in `requirements.doc_id_external`, `highlights.doc_id_external`,
-    `chat_messages.doc_id_external`, and `diffs.{current,prior}_doc_id_external`
-    are TEXT columns (not FKs) and would otherwise dangle. We clean them
-    in the same transaction.
+    references in `highlights.doc_id_external`, `chat_messages.doc_id_external`,
+    and `diffs.{current,prior}_doc_id_external` are TEXT columns (not FKs)
+    and would otherwise dangle. We clean them in the same transaction.
 
     The policy check (referenced_by_closed_audit) lives in the router —
     by the time we get here the caller has decided hard-delete is OK.
@@ -468,19 +443,6 @@ def delete_row(db: Session, id_external: str) -> Document | None:
     if row is None:
         return None
     tid = get_current_tenant()
-
-    # NULL out requirement links — the requirement row keeps its history
-    # but loses the dangling doc pointer. UI will then show "no evidence".
-    db.execute(
-        update(Requirement)
-        .where(Requirement.tenant_id == tid, Requirement.doc_id_external == id_external)
-        .values(doc_id_external=None, status="todo", confidence=None)
-    )
-    db.execute(
-        update(Requirement)
-        .where(Requirement.tenant_id == tid, Requirement.prior_doc_id_external == id_external)
-        .values(prior_doc_id_external=None)
-    )
 
     # Drop dangling citation overlays + chat references + diffs.
     db.execute(

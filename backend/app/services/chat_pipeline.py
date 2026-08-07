@@ -815,61 +815,10 @@ def _step_rag_retrieval(ctx: ChatContext) -> ChatMessage | None:
 
 
 def _step_agent(ctx: ChatContext) -> ChatMessage | None:
-    """Tool-using ReAct agent · max 8 steps · for complex queries that
-    need multi-step reasoning or tool dispatch (search_chunks +
-    validate_id_format + cross_doc_search etc).
-
-    If the agent hits MAX_STEPS without converging OR returns the
-    'could not produce / converge' fallback string, we delete its
-    message + traces and return None so the next step (artifact_fallback)
-    gets a turn with a useful deterministic answer."""
-    # M46 · run for the documents product (agentic chat) OR when the operator
-    # flips on agent mode in audit. Gated here (not via enabled_flag) so audit
-    # stays unchanged while documents always gets the agent.
-    # P2 · cloud-only — OSS deployments fall through to RAG.
-    from app.license import is_cloud
-    _s = get_settings()
-    if not (_s.agent_mode_enabled or (is_cloud() and _s.product == "documents" and _s.documents_agentic_chat)):
-        return None
-    try:
-        from app.agents import document_agent
-        result = document_agent.run(ctx.db, ctx.doc, ctx.text, tenant_id=ctx.tenant_id)
-    except Exception as e:  # noqa: BLE001
-        log.warning("agent failed: %s · falling through", e)
-        return None
-
-    msg = result.chat_message
-    text = (msg.text or "").strip()
-    # The agent's well-known unhelpful outputs · these are the
-    # forced-terminate cases where the loop ran but couldn't synthesize.
-    is_unhelpful = (
-        (msg.meta or "").endswith("forced_terminate")
-        or text.startswith("The agent could not produce")
-        or text.startswith("The agent could not converge")
-        or text.startswith("(agent produced no parseable answer)")
-    )
-    if is_unhelpful:
-        # Delete the message · CASCADE on agent_traces drops the traces too.
-        # Avoids persisting useless rows AND lets the pipeline fall through
-        # to artifact_fallback for an actually-useful deterministic answer.
-        log.info(
-            "agent · unhelpful output detected (meta=%r) · dropping msg pk=%d "
-            "to let pipeline fall through",
-            msg.meta, msg.pk,
-        )
-        ctx.db.delete(msg)
-        ctx.db.flush()
-        return None
-
-    # Surface the agent's ReAct thoughts as the inline "Thinking" disclosure — same UX as the
-    # other chat paths. The full step-by-step trace (thought · action · observation) stays
-    # available via "Show reasoning" (the /trace endpoint over agent_traces).
-    thoughts = [s.thought.strip() for s in result.steps
-                if getattr(s, "thought", None) and s.thought.strip()]
-    if thoughts:
-        msg.trace = thoughts[:8]
-        ctx.db.flush()
-    return msg
+    """Document-agent step · retired — the document_agent integration was
+    removed. Always returns None so the pipeline falls through to the next
+    step (artifact_fallback) and then the legacy retrieval fallback."""
+    return None
 
 
 # ── THE PIPELINE · order is the source of truth ───────────────────────────
@@ -899,8 +848,8 @@ PIPELINE: tuple[ChatStep, ...] = (
     ),
     ChatStep(
         "agent", CostClass.MULTI_LLM, _step_agent,
-        "Document Agent · ReAct loop with tools · for complex queries. "
-        "Gated INSIDE the handler (agent_mode_enabled OR documents product).",
+        "Document Agent · retired (document_agent integration removed) · "
+        "always falls through to artifact_fallback.",
     ),
     ChatStep(
         "artifact_fallback", CostClass.ZERO_LLM_FALLBACK, _step_artifact_fallback,
@@ -984,10 +933,8 @@ def _persist_reflexion_if_warranted(
       · cache_hit · already from a prior reflexion row · re-persisting
         would double-count
       · identity_guard · refusal answer, not generally reusable
-      · agent · the agent path already persists its own reflexion via
-        document_agent.run() with richer trace metadata · don't double up
     """
-    if step_name in ("cache_hit", "identity_guard", "agent"):
+    if step_name in ("cache_hit", "identity_guard"):
         return
     try:
         from app.embeddings import embed as _embed_fn

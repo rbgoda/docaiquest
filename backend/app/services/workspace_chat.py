@@ -889,36 +889,8 @@ def post_message(
             citations=[], meta="workspace · aggregate_overview",
         )
 
-    # HYBRID · the tool-using workspace agent handles everything the deterministic fast-paths above
-    # didn't. It ALWAYS runs for ACTION / STRUCTURED requests (group / rename / tag / export / table /
-    # compare / duplicates); with `documents_agent_fallback` on it ALSO handles the general long tail
-    # (content, analysis, cross-doc reasoning) over the shared tool set — instead of straight-to-RAG.
-    # Runs before the empty-scope guard so actions work with 0 docs. Agent errors fall back to RAG.
-    # P2 · cloud-only — OSS deployments fall through to RAG.
-    if (is_cloud() and _docs_mode and is_enabled("documents_agentic_chat", True) and not doc_ids and group_id is None
-            and (is_enabled("documents_agent_fallback", True)
-                 or _wants_agent(q, _history(db, tenant_id, wkey, exclude_pk=user_msg.pk)))):
-        try:
-            from app.agents import workspace_agent
-            prior = _history(db, tenant_id, wkey, exclude_pk=user_msg.pk)
-            result = workspace_agent.run(db, question=q, tenant_id=tenant_id, prior=prior)
-            answer = result.get("answer") if isinstance(result, dict) else result
-            if answer and answer.strip():
-                # A bare 'not found in your documents' may be an OFF-TOPIC / general question
-                # (greeting, weather, world fact) — let the general assistant try before dead-ending.
-                low = answer.strip().lower()
-                if ("not found in your documents" in low[:80] and len(low) < 140):
-                    g = _general_assistant(q, prior)
-                    if g:
-                        return _persist_ai(db, tenant_id, wkey, text=g, citations=[],
-                                           meta="workspace · general_assistant")
-                return _persist_ai(db, tenant_id, wkey, text=answer,
-                                   citations=(result.get("citations") if isinstance(result, dict) else None) or [],
-                                   meta="workspace · agent",
-                                   trace=(result.get("steps") if isinstance(result, dict) else None),
-                                   artifacts=(result.get("artifacts") if isinstance(result, dict) else None))
-        except Exception as e:  # noqa: BLE001
-            log.warning("workspace agent failed, falling back to RAG: %s", e)
+    # Workspace-agent step removed — requests now fall straight through to
+    # the RAG path below (retrieval over the resolved scope).
 
     # Cap the cross-doc retrieval scope so a huge library doesn't load every row
     # + scan every chunk; content questions retrieve over the most-recent N.

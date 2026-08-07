@@ -15,7 +15,7 @@ import datetime as _dt
 
 import json as _json
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response
 from pydantic import BaseModel
 from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
@@ -301,14 +301,6 @@ def llm_usage(bucket: str = "day", scope: str = "tenant",
             "rows": sorted(agg.values(), key=lambda x: -x["calls"])[:100]}
 
 
-@router.post("/llm-usage/refresh")
-def llm_usage_refresh(db: Session = Depends(get_session),
-                      _su: CurrentUser = Depends(require_superadmin)) -> dict:
-    """Rebuild the utilization rollup now (also runs hourly in the worker)."""
-    from app.jobs.llm_rollup import refresh
-    return {"ok": True, **refresh(db)}
-
-
 @router.get("/llm-analytics")
 def llm_analytics(days: int = 30,
                   db: Session = Depends(get_session),
@@ -517,28 +509,6 @@ def list_schemas(db: Session = Depends(get_session),
                       .order_by(SchemaLibrary.domain, SchemaLibrary.type_slug,
                                 SchemaLibrary.version.desc())).all()
     return {"schemas": [_schema_row(r) for r in rows]}
-
-
-@router.post("/schema-library/generate")
-def generate_schema(payload: SchemaGenPayload, db: Session = Depends(get_session),
-                    su: CurrentUser = Depends(require_superadmin)) -> dict:
-    from app.license import is_cloud
-    if not is_cloud():
-        raise HTTPException(status_code=403, detail={
-            "code": "cloud_feature",
-            "message": "Schema Architect is a DocAIQuest Cloud feature — not available on this OSS deployment.",
-        })
-    import re as _re
-    from app.agents import schema_architect
-    slug = _re.sub(r"[^a-z0-9_]+", "_", (payload.typeSlug or "").strip().lower()).strip("_")[:64]
-    if not slug:
-        raise HTTPException(status_code=422, detail="typeSlug required")
-    try:
-        drafted = schema_architect.draft_schema(db, type_slug=slug, label=payload.label)
-    except Exception as e:  # noqa: BLE001
-        raise HTTPException(status_code=502, detail=f"Schema-Architect failed: {e}")
-    row = _store_drafted_schema(db, get_current_tenant(), slug, drafted, su.email)
-    return _schema_row(row)
 
 
 @router.post("/schema-library/autopilot")
@@ -1715,66 +1685,3 @@ def update_plan(plan: str, payload: PlanConfigPayload,
         return subs.set_plan_config(db, plan, tenant_id=get_current_tenant(), **fields)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
-# ── Scoped reprocessing ─────────────────────────────────────────────────────
-# After a root-cause parse/extract fix lands, find every affected doc across ALL
-# owners and re-run the pipeline on just those (not a blind whole-corpus rerun).
-# See services/reprocess.py.
-
-class ReprocessScanPayload(BaseModel):
-    symptom: str
-    docType: str | None = None
-
-
-class ReprocessRunPayload(BaseModel):
-    symptom: str | None = None
-    docType: str | None = None
-    docPks: list[int] | None = None
-    limit: int = 500
-
-
-@router.get("/reprocess/symptoms")
-def reprocess_symptoms(_su: CurrentUser = Depends(require_superadmin)) -> dict:
-    from app.services import reprocess
-    return {"symptoms": reprocess.list_symptoms()}
-
-
-@router.post("/reprocess/scan")
-def reprocess_scan(payload: ReprocessScanPayload,
-                   db: Session = Depends(get_session),
-                   _su: CurrentUser = Depends(require_superadmin)) -> dict:
-    """Read-only. Count + sample the documents (across all owners) that still show
-    the given symptom, so an operator can review before re-running the pipeline."""
-    from app.services import reprocess
-    try:
-        return reprocess.scan(db, get_current_tenant(), payload.symptom, payload.docType)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@router.post("/reprocess/run")
-async def reprocess_run(payload: ReprocessRunPayload,
-                        db: Session = Depends(get_session),
-                        _su: CurrentUser = Depends(require_superadmin)) -> dict:
-    """Enqueue a full re-ingest (re-parse → chunk → embed → extract) for the given
-    doc pks, or for the whole candidate set of a symptom. Bounded by `limit`."""
-    from app.services import reprocess
-    try:
-        return await reprocess.run(db, get_current_tenant(), symptom=payload.symptom,
-                                   doc_type=payload.docType, doc_pks=payload.docPks,
-                                   limit=payload.limit)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-# ── block_map one-shot ──────────────────────────────────────────────────────
-# Populates the block_map JSONB column (migration 0107) for all existing docs
-# that have source bytes.  Parse-only: no re-chunk / re-embed / re-extract.
-
-@router.post("/reprocess/populate-block-maps")
-def populate_block_maps(dryRun: bool = Query(False),
-                        db: Session = Depends(get_session),
-                        _su: CurrentUser = Depends(require_superadmin)) -> dict:
-    from app.services import reprocess
-    return reprocess.populate_block_maps(db, get_current_tenant(), dry_run=dryRun)

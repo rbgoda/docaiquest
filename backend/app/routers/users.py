@@ -37,21 +37,13 @@ class InvitePayload(BaseModel):
         default=None,
         description="Optional dev-mode password. Ignored in non-dev environments.",
     )
-    # M17 phase 4 · when inviting a user with role=vendor, the admin must
-    # also pick which vendor row the user belongs to. The repo binds them
-    # via user.vendor_pk so all subsequent vendor-scoped queries filter to
-    # this single vendor's data.
-    vendorId: str | None = Field(
-        default=None,
-        description="Vendor.id_external this user belongs to. Required when roles includes 'vendor'.",
-    )
 
 
 class RolesPayload(BaseModel):
     roles: list[str]
 
 
-_VALID_ROLES = {"owner", "admin", "reviewer", "vendor"}
+_VALID_ROLES = {"owner", "admin", "reviewer"}
 
 
 def _validate_roles(roles: list[str]) -> list[str]:
@@ -98,44 +90,12 @@ def invite_user(
     if get_settings().auth_provider == "dev" and payload.devPassword:
         password_hash = hash_password(payload.devPassword)
 
-    # Validate / resolve the vendor binding when role=vendor.
-    vendor_pk: int | None = None
-    is_vendor_role = "vendor" in (payload.roles or [])
-    if is_vendor_role:
-        if not payload.vendorId:
-            raise HTTPException(
-                status_code=400,
-                detail="vendorId is required when inviting a user with the 'vendor' role",
-            )
-        from app.orm import Vendor
-        from sqlalchemy import select
-        from app.db import get_current_tenant
-        row = db.scalar(
-            select(Vendor).where(
-                Vendor.tenant_id == get_current_tenant(),
-                Vendor.id_external == payload.vendorId,
-            )
-        )
-        if row is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Vendor {payload.vendorId} not found in this tenant",
-            )
-        vendor_pk = row.pk
-    elif payload.vendorId:
-        # vendorId passed without vendor role — reject; would be confusing.
-        raise HTTPException(
-            status_code=400,
-            detail="vendorId provided but 'vendor' is not in roles",
-        )
-
     user = repo.create(
         db,
         email=str(payload.email),
         name=payload.name,
         roles=payload.roles or ["reviewer"],
         password_hash=password_hash,
-        vendor_pk=vendor_pk,
     )
     return repo._to_dict(user)  # noqa: SLF001 — internal module use
 

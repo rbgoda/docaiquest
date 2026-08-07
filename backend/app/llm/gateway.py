@@ -118,7 +118,7 @@ def call(
         is detokenized back to original values.
       · If `llm_provider_allowlist` is set and the resolved provider
         isn't on it, a `LLMProviderBlockedError` is raised.
-      · Every call writes an audit row (when `llm_audit_enabled`) with
+      · Every call writes a cost ledger row (when enabled) with
         SHA-256 of the FINAL post-redaction prompt and the response.
     """
     settings = get_settings()
@@ -270,34 +270,6 @@ def call(
         parsed = _try_parse_json(result.text)
         if parsed is not None:
             result.structured = parsed
-
-    # M44.P11 · audit ledger · hashes only, never content
-    if settings.llm_audit_enabled and tenant_id:
-        try:
-            from app.llm_audit import record_call
-            from app.pii import fingerprint
-            prompt_concat = "".join(
-                m.content if isinstance(m.content, str) else "" for m in messages
-            )
-            record_call(
-                tenant_id=tenant_id,
-                user_email=user_email,
-                provider=backend,
-                model=model_id,
-                task_kind=task_kind,
-                doc_id_external=doc_id_external,
-                prompt_sha256=fingerprint(prompt_concat),
-                response_sha256=fingerprint(result.text) if result.text else None,
-                input_tokens=result.input_tokens,
-                output_tokens=result.output_tokens,
-                pii_entities_redacted=sum(pii_counts.values()),
-                pii_kinds=pii_counts or None,
-                latency_ms=elapsed_ms,
-                http_status=http_status,
-                failure_kind=failure_kind,
-            )
-        except Exception:  # noqa: BLE001
-            pass  # audit must never break the caller
 
     return result
 

@@ -81,10 +81,6 @@ class DevSeedAccount(BaseModel):
     email: str
     name: str | None = None
     roles: list[str]
-    # When the role is `vendor`, which vendor this user belongs to —
-    # surfaced so the login UI can render a sensible hint ("vendor for
-    # Atlas Logistics Group") instead of a bare email.
-    vendor: str | None = None
 
 
 class AuthConfigResponse(BaseModel):
@@ -216,7 +212,7 @@ def auth_config(db: Session = Depends(get_session)) -> AuthConfigResponse:
         # returns the right tenant's seed users.
         from sqlalchemy import select as sa_select
         from sqlalchemy.orm import joinedload
-        from app.orm import User, Vendor
+        from app.orm import User
         tid = settings.tenant_id
         users = db.scalars(
             sa_select(User)
@@ -224,18 +220,12 @@ def auth_config(db: Session = Depends(get_session)) -> AuthConfigResponse:
             .where(User.tenant_id == tid, User.password_hash.is_not(None))
             .order_by(User.pk)
         ).unique().all()
-        vendor_names = {
-            v.pk: v.name for v in db.scalars(
-                sa_select(Vendor).where(Vendor.tenant_id == tid)
-            ).all()
-        }
         for u in users:
             roles = sorted({r.role for r in u.roles})
             accounts.append(DevSeedAccount(
                 email=u.email,
                 name=u.name,
                 roles=roles,
-                vendor=vendor_names.get(u.vendor_pk) if u.vendor_pk else None,
             ))
 
     return AuthConfigResponse(
@@ -346,7 +336,7 @@ def login_with_password(
     token = issue_session_token(
         user_id=user.pk, email=user.email, name=user.name,
         org_id=org_id, roles=roles,
-        vendor_pk=user.vendor_pk, token_version=getattr(user, "token_version", 0),
+        token_version=getattr(user, "token_version", 0),
     )
     _set_session_cookie(response, token)
     return MeResponse(id=user.pk, email=user.email, name=user.name,
@@ -479,7 +469,7 @@ def google_callback(
         user_id=user.pk, email=user.email,
         name=user.name or claims.get("name") or user.email,
         org_id=org_id, roles=roles,
-        vendor_pk=user.vendor_pk, token_version=getattr(user, "token_version", 0),
+        token_version=getattr(user, "token_version", 0),
     )
     dest = _safe_next(request.cookies.get("docaiq_oauth_next")) if request else "/"
     response = RedirectResponse(url=dest, status_code=status.HTTP_302_FOUND)
@@ -669,6 +659,6 @@ def change_my_password(
     db.flush()
     fresh = issue_session_token(
         user_id=row.pk, email=row.email, name=row.name or row.email,
-        org_id=user.org_id, roles=list(user.roles), vendor_pk=row.vendor_pk,
+        org_id=user.org_id, roles=list(user.roles),
         token_version=row.token_version)
     _set_session_cookie(response, fresh)
