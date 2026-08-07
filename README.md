@@ -1,14 +1,17 @@
 ##DocAIQ
 
-**Self-hosted Document Intelligence Engine.** 
+**Self-hosted or Cloud-Subscription Document Intelligence Engine.** 
 Documents → Data → Intel.
 
 Upload any document and chat with your data — all through a browser.
 Privacy-native. 
 BYO LLM keys.
 MIT licensed.
+
+
 Opensource #DocAIQuest
 Cloud Advance model #DocAIQ cloud
+
 
 > **Document parsing · chunking · embeddings · hybrid RAG (BM25 + vector) ·
 > cross-document chat · Docker self-hosted**
@@ -25,7 +28,9 @@ Cloud Advance model #DocAIQ cloud
 > or `OPENROUTER_API_KEY` in your `.env` file before starting.
 > Without a key, parsing and chunking work — but extraction and chat won't.
 
+
 ## DocAIQ Cloud
+
 
 For teams that need more than self-hosted RAG, **DocAIQ Cloud** ([docaiq.jicama.tech](https://docaiq.jicama.tech)) layers
 proprietary intelligence on top of the open-source engine: a **tool-using ReAct agent** that searches,
