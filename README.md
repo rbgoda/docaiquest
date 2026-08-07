@@ -59,7 +59,6 @@ Your own LLM keys, your own server, your data never leaves.
 |-----------|------------|
 | Chunking | Block-aware + semantic chunking, configurable overlap windows |
 | Embedding backends | Local (free, CPU), DashScope, OpenAI, Gemini — bring your own key |
-| Reranker | Cross-encoder reranking for improved retrieval precision |
 
 ### Retrieval
 
