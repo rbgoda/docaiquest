@@ -15,6 +15,15 @@ All through a browser. You bring your own LLM keys. Privacy-native by default.
 > or `OPENROUTER_API_KEY` in your `.env` file before starting. Without a key,
 > parsing and chunking work — but extraction and chat won't.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/02-doc-list.png" width="48%" alt="Document list with upload zone" />
+  <img src="docs/screenshots/03-chat-with-doc.png" width="48%" alt="Chat with document preview and citations" />
+  <img src="docs/screenshots/04-sidebar-collapsed.png" width="48%" alt="Collapsible sidebar — more room for chat" />
+  <img src="docs/screenshots/05-preview-collapsed.png" width="48%" alt="Collapsible document preview — maximize chat area" />
+</p>
+
 ## Capabilities
 
 DocAIQuest is a **self-hosted web console** — upload documents and chat with
