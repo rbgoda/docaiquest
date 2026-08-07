@@ -1,7 +1,8 @@
 ## DocAIQ
 
 **Self-hosted or Cloud-Subscription Document Intelligence Engine.** 
-Documents → Data → Intel.
+
+## Documents → Data → Intel.
 
 Upload any document and chat with your data — all through a browser.
 Privacy-native. 
