@@ -1,8 +1,12 @@
 # DocAIQuest
 
-**Self-hosted Document Intelligence & GraphRAG Engine.** Documents → Data → Intel.
+**Self-hosted Document Intelligence & GraphRAG Engine.** 
+Documents → Data → Intel.
+
 Upload any document, extract structured fields, build a knowledge graph, and
-chat with your data — all through a browser. Privacy-native. BYO LLM keys.
+chat with your data — all through a browser. 
+Privacy-native. 
+BYO LLM keys.
 MIT licensed.
 
 > **Document parsing · OCR · chunking · embeddings · hybrid RAG (BM25 + vector) ·
@@ -14,11 +18,12 @@ MIT licensed.
 [![Docker](https://img.shields.io/badge/Docker-self--hosted-2496ED.svg)](https://docs.docker.com/compose/)
 [![GitHub Discussions](https://img.shields.io/badge/Discussions-Q%26A-important.svg)](https://github.com/rbgoda/docaiquest/discussions)
 
-> **You need your own LLM provider key.** DocAIQuest OSS does not ship with
-> managed LLM access. Set at least one of `DASHSCOPE_API_KEY` (recommended),
+> **You need your own LLM provider key.** D
+> ocAIQuest OSS does not ship with managed LLM access.
+> Set at least one of `DASHSCOPE_API_KEY` (recommended),
 > `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`,
-> or `OPENROUTER_API_KEY` in your `.env` file before starting. Without a key,
-> parsing and chunking work — but extraction and chat won't.
+> or `OPENROUTER_API_KEY` in your `.env` file before starting.
+> Without a key, parsing and chunking work — but extraction and chat won't.
 
 ## Screenshots
 
@@ -31,8 +36,10 @@ MIT licensed.
 
 ## Capabilities
 
-DocAIQuest is a **self-hosted web console** — upload documents and chat with
-them. Your own LLM keys, your own server, your data never leaves.
+DocAIQuest is a **self-hosted web console** — upload documents and chat with them. 
+Your own LLM keys, your own server, your data never leaves.
+
+**Pipeline:** Upload → Parse → Chunk → Embed → Store → Retrieve → Generate answer.
 
 ### Document Parsing
 
@@ -155,7 +162,38 @@ them. Your own LLM keys, your own server, your data never leaves.
 - **Docker** + Docker Compose v2
 - **4 GB RAM** minimum / **8 GB** recommended (multilingual embeddings use more memory)
 - **~10 GB** free disk space (Docker images + database + file storage)
-- **An LLM provider key** — you bring your own (see below)
+- **An LLM provider key** — you bring your own
+- Python 3.11+
+- Node.js 22+
+- PostgreSQL with pgvector extension
+- Redis
+
+### Stack
+
+- **Backend:** FastAPI + SQLAlchemy + Alembic + PostgreSQL (pgvector)
+- **Worker:** Arq (Redis-backed async task queue)
+- **Frontend:** Vite + React (SPA)
+- **Storage:** MinIO (S3-compatible, local dev) / AWS S3
+
+## Layout
+
+```
+├── backend/           FastAPI application (package: `app`)
+│   ├── app/
+│   │   ├── agents/    Extraction, OCR, chat agents
+│   │   ├── routers/   API endpoints
+│   │   ├── services/  Business logic (chat pipeline, workspace)
+│   │   ├── llm/       LLM gateway, prompts, routing
+│   │   ├── graph/     Entity resolution & knowledge graph
+│   │   └── jobs/      Background cron jobs
+│   └── migrations/    Alembic (auto-run on boot)
+├── frontend-oss/      OSS web console (Vite + React SPA)
+├── admin-ui/          Superadmin console (static HTML)
+├── sdks/              Python + TypeScript API clients
+└── docker-compose.yml
+```
+
+
 
 ### 1. Deploy
 
@@ -202,18 +240,6 @@ curl http://localhost:8085/api/health
 make down          # stop containers, keep data
 make down-clean    # stop + delete all data (fresh start)
 ```
-
-### Optional configuration
-
-| Variable | What it does |
-|----------|-------------|
-| `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` | Store originals in users' own Google Drive instead of local storage |
-| `DOCAIQ_EMBED_BACKEND` | `local` (default, CPU embeddings) or `dashscope` (API) or `hash` (offline, no model needed) |
-| `DOCAIQ_EMBED_V2_ACTIVE` | Set to `true` for higher-quality multilingual embeddings (needs ~2.2 GB extra disk) |
-| `DOCAIQ_RERANKER_ENABLED` | Set to `true` for smarter search ranking (improves answer quality, CPU-friendly) |
-| `DOCAIQ_ENVIRONMENT` | `local` (default) or `production` (enables stricter security) |
-
-See `.env.example` for every available setting.
 
 ### Troubleshooting
 
