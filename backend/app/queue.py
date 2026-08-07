@@ -42,11 +42,3 @@ async def enqueue_reextract_type(type_slug: str, tenant_id: str) -> str:
     pool = await get_pool()
     job = await pool.enqueue_job("reextract_type_task", type_slug, tenant_id)
     return job.job_id if job else ""
-
-
-async def enqueue_schema_autopilot(tenant_id: str, document_pk: int | None = None) -> str:
-    """Adaptive Schema Loop — draft schemas for underserved docs. document_pk=None sweeps the whole
-    corpus; a pk assesses+drafts just that doc (fired real-time after ingest)."""
-    pool = await get_pool()
-    job = await pool.enqueue_job("schema_autopilot_task", tenant_id, document_pk)
-    return job.job_id if job else ""

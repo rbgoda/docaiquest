@@ -111,6 +111,11 @@ def propose_views(db: Session, *, tenant_id: str, owner_user_id: int,
                   user_email: str | None = None) -> dict:
     """Build the profile, ask the LLM for views, validate, upsert as saved
     (source='ai'). Returns {created, profileTypes}."""
+    # P2 · cloud-only — LLM proposal requires the cloud proxy.
+    from app.license import is_cloud
+    if not is_cloud():
+        return {"created": 0, "profileTypes": 0, "reason": "oss license — cloud feature"}
+
     profile = build_corpus_profile(db, tenant_id=tenant_id, owner_user_id=owner_user_id)
     valid_types = {p["type"] for p in profile}
     if not profile:

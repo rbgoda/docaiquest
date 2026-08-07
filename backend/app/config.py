@@ -409,14 +409,6 @@ class Settings(BaseSettings):
     # provider. Override via DOCAIQ_INTELLIGENCE_MODEL.
     intelligence_model: str = "dashscope/qwen-max"
 
-    # Adaptive Schema Loop (schema_autopilot): auto-draft a schema for underserved docs (no schema,
-    # or typed but poorly extracted), escalating to a stronger model. Drafts land `proposed` for HITL
-    # review; the on-approval trigger re-extracts on approve. `_model` empty → strong_extract_model
-    # (point it at a frontier id via DOCAIQ_SCHEMA_AUTOPILOT_MODEL once a funded key is wired).
-    schema_autopilot_enabled: bool = True
-    schema_autopilot_model: str = ""
-    schema_autopilot_min_coverage: float = 0.4   # typed doc below this coverage = underserved
-
     # General-assistant fallback: when a chat question is OFF-TOPIC (not about the user's documents
     # and no evidence retrieved) — e.g. "what's the weather", general knowledge — answer it with the
     # LLM instead of a dead "not found". `_model` empty → strong_extract_model (qwen via DashScope);

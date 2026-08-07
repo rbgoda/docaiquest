@@ -379,15 +379,6 @@ def add_field_from_region(
             db.commit()
         except Exception:  # noqa: BLE001
             db.rollback()
-        # Adaptive Schema Loop — propagate the new field into the doc's APPROVED schema so every
-        # future doc of this type captures it (bidirectional learning: one correction → all docs).
-        try:
-            from app.agents import schema_autopilot as _ap
-            if _ap.learn_field(db, doc, label,
-                               description=f"{label} (added from a document region during review)"):
-                db.commit()
-        except Exception:  # noqa: BLE001
-            db.rollback()
     # Human placement = ground truth (mirror the field-edit endpoint).
     try:
         from app.graph import bootstrap as graph_bootstrap, reconcile as graph_reconcile
@@ -472,12 +463,6 @@ def add_field(
             from app.repositories import learned_schemas as _ls
             _ls.record(db, doc.doc_type, [label], [])
             db.commit()
-        except Exception:  # noqa: BLE001
-            db.rollback()
-        try:
-            from app.agents import schema_autopilot as _ap
-            if _ap.learn_field(db, doc, label, description=f"{label} (added manually during review)"):
-                db.commit()
         except Exception:  # noqa: BLE001
             db.rollback()
     return {"appended": appended, "field": label, "value": value, "document": repo.get(db, doc_id)}

@@ -185,20 +185,6 @@ async def classify_document_task(ctx, document_pk: int, tenant_id: str) -> dict:
                             document_pk, tenant_id, e,
                         )
 
-            # Adaptive Schema Loop — if the doc came out underserved (no typed schema, or typed but
-            # poorly extracted), enqueue an autopilot draft (async; deduped per type; lands proposed
-            # for HITL review). Cheap assess() inline gates the expensive stronger-model draft.
-            try:
-                # P2 · cloud-only
-                if is_cloud() and get_settings().schema_autopilot_enabled:
-                    from app.agents import schema_autopilot as _ap
-                    _d = session.get(Document, document_pk)
-                    if _d is not None and _ap.assess(session, _d).get("underserved"):
-                        await ctx["redis"].enqueue_job("schema_autopilot_task", tenant_id, document_pk)
-                        log.info("autopilot: doc pk=%s underserved → draft enqueued", document_pk)
-            except Exception:  # noqa: BLE001 — never block ingest
-                pass
-
             # P9.4 · vision-aware extraction. For image-heavy (image MIME) or
             # low-confidence docs, a vision read of page 1 captures signature /
             # stamp / checkbox / table / photo signals the flat OCR text loses.
@@ -662,48 +648,12 @@ async def reextract_type_task(ctx, type_slug: str, tenant_id: str) -> dict:
     return {"type_slug": type_slug, "reextracted": n}
 
 
-async def schema_autopilot_task(ctx, tenant_id: str, document_pk: int | None = None) -> dict:
-    """Adaptive Schema Loop driver. With a document_pk, assess+draft that one doc (fired real-time
-    after ingest when it's underserved). Without, sweep the whole corpus for underserved docs and
-    draft schemas for them. Drafts land `proposed` for HITL review; approval re-extracts (#224)."""
-    # P2 · cloud-only
-    from app.license import is_cloud as _ic
-    if not _ic():
-        return {"status": "skipped", "reason": "oss license"}
-    from sqlalchemy import select
-    from app.orm import Document
-    from app.agents import schema_autopilot as ap
-    log = logging.getLogger("docaiq.autopilot")
-    drafted = []
-    with SessionLocal() as session:
-        set_current_tenant(tenant_id)
-        if document_pk is not None:
-            d = session.get(Document, document_pk)
-            docs = [d] if d is not None else []
-        else:
-            docs = session.scalars(select(Document).where(
-                Document.tenant_id == tenant_id, Document.ingestion_status == "ready")).all()
-        for d in docs:
-            try:
-                a = ap.assess(session, d)
-                if a["underserved"]:
-                    r = ap.autopilot_draft(session, d)
-                    if r and not r.get("skipped"):
-                        drafted.append(r)
-            except Exception as e:  # noqa: BLE001
-                session.rollback()
-                log.warning("schema_autopilot_task: doc pk=%s failed: %s", getattr(d, "pk", "?"), e)
-    log.info("schema_autopilot_task: drafted %d schema(s) (tenant=%s)", len(drafted), tenant_id)
-    return {"drafted": len(drafted), "schemas": drafted}
-
-
 class WorkerSettings:
     functions = [
         ingest_document_task,
         classify_document_task,
         reconcile_type_task,
         reextract_type_task,
-        schema_autopilot_task,
         materialize_artifacts_task,
         reap_stuck_ingest_task,
     ]

@@ -181,17 +181,6 @@ REGISTRY: dict[str, ModelOperation] = {
         cost_tier="paid",
         description="Categorizes transactions/merchants into standard accounting categories.",
     ),
-    "schema_autopilot": ModelOperation(
-        id="schema_autopilot",
-        label="Schema Autopilot",
-        category="Extraction & Classification",
-        default_model="qwen-max",
-        env_var="DOCAIQ_SCHEMA_AUTOPILOT_MODEL",
-        provider="dashscope",
-        editable=True,
-        cost_tier="paid",
-        description="Auto-drafts schemas for underserved docs. Falls back to strong_extract_model when env is empty.",
-    ),
     "indexing_critic": ModelOperation(
         id="indexing_critic",
         label="Indexing Quality Critic",

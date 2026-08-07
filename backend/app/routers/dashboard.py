@@ -213,6 +213,10 @@ def propose_widgets(
     values-free pattern as intelligence/proposals.py — only field names and
     doc-type counts are sent to the LLM, never field values."""
     _guard()
+    # P2 · cloud-only — LLM proposal requires the cloud proxy.
+    from app.license import is_cloud
+    if not is_cloud():
+        raise HTTPException(status_code=402, detail="Dashboard widget proposals require DocAIQuest Cloud")
     tid = get_current_tenant()
     uid = get_current_owner_user_pk()
     docs = _owner_docs(db, tid, uid)

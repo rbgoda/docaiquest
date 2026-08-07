@@ -108,6 +108,10 @@ def propose(db: Session = Depends(get_session),
     """Phase C — ask the LLM to assemble views from the (values-free) corpus
     profile, cache them, and return the refreshed view set."""
     _guard()
+    # P2 · cloud-only — LLM proposal gated (defense-in-depth; proposals.py also gates)
+    from app.license import is_cloud
+    if not is_cloud():
+        raise HTTPException(status_code=402, detail="Intelligence view proposals require DocAIQuest Cloud")
     tid = get_current_tenant()
     uid = get_current_owner_user_pk()
     summary = proposals.propose_views(db, tenant_id=tid, owner_user_id=uid,
