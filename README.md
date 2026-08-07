@@ -23,7 +23,15 @@ MIT licensed.
 > or `OPENROUTER_API_KEY` in your `.env` file before starting.
 > Without a key, parsing and chunking work — but extraction and chat won't.
 
-## Screenshots
+## DocAIQ Cloud
+
+For teams that need more than self-hosted RAG, **DocAIQ Cloud** ([docaiq.jicama.tech](https://docaiq.jicama.tech)) layers
+proprietary intelligence on top of the open-source engine: a **tool-using ReAct agent** that searches,
+cross-references, and validates across documents; **multi-pass extraction** with row-level reconciliation
+for statements and invoices; an **AI Schema Architect** that reads a document and proposes the optimal
+extraction schema; a **personal watchlist** that tracks renewals, expiries, and deadlines with calendar
+reminders; and a **reflexion learning loop** where every 👍/👎 improves future answers — all with
+managed LLM access, Google Drive auto-sync, and per-document cost analytics.
 
 <p align="center">
   <img src="docs/screenshots/02-doc-list.png" width="48%" alt="Document list with upload zone" />
