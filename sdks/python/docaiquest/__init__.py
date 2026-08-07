@@ -2,6 +2,6 @@
 
 from .client import Client, DocaiquestError
 
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 
 __all__ = ["Client", "DocaiquestError", "__version__"]
