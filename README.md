@@ -153,6 +153,21 @@ Your own LLM keys, your own server, your data never leaves.
 | Configuration | Single `.env` file, 100+ knobs, sensible defaults for all |
 | Platform | Linux, macOS (Docker); ARM64 and AMD64 |
 
+## Architecture
+
+```
+┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│   Frontend   │    │   Backend    │    │    Worker    │
+│  React       │───▶│   Python     │───▶│  Background  │
+│  web :8085   │    │   API :8001  │    │  processing  │
+└──────────────┘    └──────┬───────┘    └──────┬───────┘
+                           │                   │
+                    ┌──────┴───────┐    ┌──────┴───────┐
+                    │  PostgreSQL  │    │  File storage │
+                    │  (+ vectors) │    │  (S3 compat)  │
+                    └──────────────┘    └──────────────┘
+```
+
 ## Quick start
 
 ### Prerequisites
@@ -160,7 +175,38 @@ Your own LLM keys, your own server, your data never leaves.
 - **Docker** + Docker Compose v2
 - **4 GB RAM** minimum / **8 GB** recommended (multilingual embeddings use more memory)
 - **~10 GB** free disk space (Docker images + database + file storage)
-- **An LLM provider key** — you bring your own (see below)
+- **An LLM provider key** — you bring your own
+- Python 3.11+
+- Node.js 22+
+- PostgreSQL with pgvector extension
+- Redis
+
+### Stack
+
+- **Backend:** FastAPI + SQLAlchemy + Alembic + PostgreSQL (pgvector)
+- **Worker:** Arq (Redis-backed async task queue)
+- **Frontend:** Vite + React (SPA)
+- **Storage:** MinIO (S3-compatible, local dev) / AWS S3
+
+## Layout
+
+```
+├── backend/           FastAPI application (package: `app`)
+│   ├── app/
+│   │   ├── agents/    Extraction, OCR, chat agents
+│   │   ├── routers/   API endpoints
+│   │   ├── services/  Business logic (chat pipeline, workspace)
+│   │   ├── llm/       LLM gateway, prompts, routing
+│   │   ├── graph/     Entity resolution & knowledge graph
+│   │   └── jobs/      Background cron jobs
+│   └── migrations/    Alembic (auto-run on boot)
+├── frontend-oss/      OSS web console (Vite + React SPA)
+├── admin-ui/          Superadmin console (static HTML)
+├── sdks/              Python + TypeScript API clients
+└── docker-compose.yml
+```
+
+
 
 ### 1. Deploy
 
@@ -188,24 +234,6 @@ This builds and starts 6 services: PostgreSQL (with vector search), Redis,
 file storage, the API backend, a background worker, and the web frontend.
 On first boot, database tables are created automatically. Wait ~30 seconds
 for all services to settle.
-
-## Layout
-
-```
-├── backend/           FastAPI application (package: `app`)
-│   ├── app/
-│   │   ├── agents/    Extraction, OCR, chat agents
-│   │   ├── routers/   API endpoints
-│   │   ├── services/  Business logic (chat pipeline, workspace)
-│   │   ├── llm/       LLM gateway, prompts, routing
-│   │   ├── graph/     Entity resolution & knowledge graph
-│   │   └── jobs/      Background cron jobs
-│   └── migrations/    Alembic (auto-run on boot)
-├── frontend-oss/      OSS web console (Vite + React SPA)
-├── admin-ui/          Superadmin console (static HTML)
-├── sdks/              Python + TypeScript API clients
-└── docker-compose.yml
-```
 
 ### 2. Verify
 
@@ -251,39 +279,6 @@ make down-clean    # stop + delete all data (fresh start)
 | **Out of disk space** | `docker builder prune -f --keep-storage 30GB && docker image prune -f` to reclaim build cache. |
 | **Fresh start (wipe everything)** | `make down-clean && make up` — deletes all containers, volumes, and data. |
 
-## Architecture
-
-```
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│   Frontend   │    │   Backend    │    │    Worker    │
-│  React       │───▶│   Python     │───▶│  Background  │
-│  web :8085   │    │   API :8001  │    │  processing  │
-└──────────────┘    └──────┬───────┘    └──────┬───────┘
-                           │                   │
-                    ┌──────┴───────┐    ┌──────┴───────┐
-                    │  PostgreSQL  │    │  File storage │
-                    │  (+ vectors) │    │  (S3 compat)  │
-                    └──────────────┘    └──────────────┘
-```
-
-
-
-
-## Development
-
-### Prerequisites
-
-- Python 3.11+
-- Node.js 22+
-- PostgreSQL with pgvector extension
-- Redis
-
-### Stack
-
-- **Backend:** FastAPI + SQLAlchemy + Alembic + PostgreSQL (pgvector)
-- **Worker:** Arq (Redis-backed async task queue)
-- **Frontend:** Vite + React (SPA)
-- **Storage:** MinIO (S3-compatible, local dev) / AWS S3
 
 ### Running locally (without Docker)
 
