@@ -65,7 +65,6 @@ Your own LLM keys, your own server, your data never leaves.
 | Capability | Detail |
 |-----------|------------|
 | Hybrid retrieval | BM25 keyword + vector similarity, fused with Reciprocal Rank Fusion |
-| Cross-encoder reranking | Second-pass precision reranking of retrieved chunks |
 | Graph retrieval | Entity graph traversal across documents |
 | Citations | Per-sentence source citations with in-page jump links |
 | Abstention | Refuses to answer when evidence is insufficient |
