@@ -61,18 +61,4 @@ def test_picks_always_subset_of_fragments():
 
 def test_1088_question_sweep():
     """Every real question routes without raising, picks ⊆ fragments, shape is known."""
-    qa = Path(__file__).resolve().parents[2] / "qa" / "qa_data.json"
-    if not qa.exists():
-        pytest.skip("qa/qa_data.json not present in this checkout")
-    data = json.loads(qa.read_text())
-    n = 0
-    for _cat, qs in data["questions"].items():
-        if not isinstance(qs, list):
-            continue
-        for q in qs:
-            if not isinstance(q, str) or not q.strip():
-                continue
-            n += 1
-            assert set(select_answer_fragments(q)) <= _FRAG_KEYS
-            assert expected_format(q) in _SHAPES
-    assert n >= 1000        # the bank ships 1088
+    pytest.skip("qa/qa_data.json removed from OSS repo")
