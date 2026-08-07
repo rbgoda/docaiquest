@@ -106,7 +106,8 @@ Your own LLM keys, your own server, your data never leaves.
 ### Prerequisites
 
 - **Docker** + Docker Compose v2
-- **4 GB RAM** minimum / **8 GB** recommended (multilingual embeddings use more memory)
+- **git** and **make**
+- **4 GB RAM** minimum / **8 GB** recommended
 - **~10 GB** free disk space (Docker images + database + file storage)
 - **An LLM provider key** — you bring your own
 
