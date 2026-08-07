@@ -18,8 +18,8 @@ MIT licensed.
 [![Docker](https://img.shields.io/badge/Docker-self--hosted-2496ED.svg)](https://docs.docker.com/compose/)
 [![GitHub Discussions](https://img.shields.io/badge/Discussions-Q%26A-important.svg)](https://github.com/rbgoda/docaiquest/discussions)
 
-> **You need your own LLM provider key.** D
-> ocAIQuest OSS does not ship with managed LLM access.
+> **You need your own LLM provider key.** DocAIQuest OSS does not ship with
+> managed LLM access.
 > Set at least one of `DASHSCOPE_API_KEY` (recommended),
 > `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`,
 > or `OPENROUTER_API_KEY` in your `.env` file before starting.
