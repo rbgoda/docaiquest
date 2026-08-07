@@ -1,4 +1,4 @@
-# DocAIQuest
+##DocAIQ
 
 **Self-hosted Document Intelligence Engine.** 
 Documents → Data → Intel.
@@ -7,6 +7,8 @@ Upload any document and chat with your data — all through a browser.
 Privacy-native. 
 BYO LLM keys.
 MIT licensed.
+Opensource #DocAIQuest
+Cloud Advance model #DocAIQ cloud
 
 > **Document parsing · chunking · embeddings · hybrid RAG (BM25 + vector) ·
 > cross-document chat · Docker self-hosted**
