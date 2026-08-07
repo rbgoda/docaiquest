@@ -1,4 +1,4 @@
-##DocAIQ
+## DocAIQ Cloud
 
 **Self-hosted or Cloud-Subscription Document Intelligence Engine.** 
 Documents → Data → Intel.
