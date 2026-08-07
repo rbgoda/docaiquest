@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   whoami, login, signup,
   listDocuments, uploadDocument, deleteDocument, documentFileUrl,
-  fetchChat, sendMessage,
+  fetchDocChat, sendDocMessage, fetchWorkspaceChat, sendWorkspaceMessage,
   setConsent,
   getLlmSettings, setLlmSettings, probeProvider,
 } from "./api";
@@ -223,13 +223,19 @@ function ChatPanel({ doc, docId, docs, onClose }) {
   const previewRef = useRef(null);
   const bottomRef = useRef(null);
 
-  // Load chat history when doc changes
+  // Load chat history when doc changes (or switch to workspace chat)
   useEffect(() => {
-    if (!docId) { setMessages([]); return; }
-    setFileUrl(documentFileUrl(docId));
-    fetchChat(docId)
-      .then((data) => setMessages(data.messages || []))
-      .catch(() => setMessages([]));
+    if (docId) {
+      setFileUrl(documentFileUrl(docId));
+      fetchDocChat(docId)
+        .then((data) => setMessages(data.messages || []))
+        .catch(() => setMessages([]));
+    } else {
+      setFileUrl("");
+      fetchWorkspaceChat()
+        .then((data) => setMessages(data.messages || []))
+        .catch(() => setMessages([]));
+    }
   }, [docId]);
 
   // Reset zoom and height when doc changes
@@ -268,7 +274,7 @@ function ChatPanel({ doc, docId, docs, onClose }) {
   const send = async (e) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || loading || !docId) return;
+    if (!text || loading) return;
     setInput("");
     setLoading(true);
 
@@ -277,8 +283,9 @@ function ChatPanel({ doc, docId, docs, onClose }) {
     setMessages((prev) => [...prev, userMsg]);
 
     try {
-      const data = await sendMessage(docId, text);
-      // Response is the AI message object directly: {id, role:"ai", text, citations, ...}
+      const data = docId
+        ? await sendDocMessage(docId, text)
+        : await sendWorkspaceMessage(text);
       setMessages((prev) => [...prev, { ...data, role: data.role || "ai" }]);
     } catch (err) {
       setMessages((prev) => [...prev, { role: "ai", text: `Error: ${err.message}`, id: (Date.now() + 2).toString(), error: true }]);
@@ -296,7 +303,7 @@ function ChatPanel({ doc, docId, docs, onClose }) {
   return (
     <div className="chat-panel">
       <div className="chat-header">
-        <h2>{doc ? doc.name : "Chat"}</h2>
+        <h2>{doc ? doc.name : "All Documents"}</h2>
         <div className="chat-header-actions">
           {fileUrl && previewOpen && (
             <>
@@ -314,7 +321,7 @@ function ChatPanel({ doc, docId, docs, onClose }) {
               {previewOpen ? "▼" : "▲"} Preview
             </button>
           )}
-          {onClose && <button className="chat-close" onClick={onClose}>×</button>}
+          {doc && onClose && <button className="chat-close" onClick={onClose}>×</button>}
         </div>
       </div>
 
@@ -396,12 +403,12 @@ function ChatPanel({ doc, docId, docs, onClose }) {
       <form className="chat-input" onSubmit={send}>
         <input
           type="text"
-          placeholder={docId ? "Ask about this document…" : "Select a document to chat"}
+          placeholder={docId ? "Ask about this document…" : "Ask about all documents…"}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          disabled={!docId || loading}
+          disabled={loading}
         />
-        <button type="submit" disabled={!docId || loading || !input.trim()}>Send</button>
+        <button type="submit" disabled={loading || !input.trim()}>Send</button>
       </form>
     </div>
   );

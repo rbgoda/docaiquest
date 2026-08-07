@@ -84,7 +84,13 @@ export const probeProvider = (provider) =>
   request("POST", `/llm/settings/${provider}/probe`);
 
 // -- Chat --
-export const fetchChat = (docId) => request("GET", `/documents/${docId}/chat`);
+export const fetchDocChat = (docId) => request("GET", `/documents/${docId}/chat`);
 
-export const sendMessage = (docId, text) =>
+export const sendDocMessage = (docId, text) =>
   request("POST", `/documents/${docId}/chat/messages`, { body: { text } });
+
+// -- Workspace (cross-document) chat --
+export const fetchWorkspaceChat = () => request("GET", "/workspace-chat");
+
+export const sendWorkspaceMessage = (text) =>
+  request("POST", "/workspace-chat/messages", { body: { text } });
