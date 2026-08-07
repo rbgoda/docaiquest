@@ -77,15 +77,6 @@ Your own LLM keys, your own server, your data never leaves.
 | Cross-document chat | Ask across all your documents at once |
 | Multi-turn conversations | Follow-up questions with full conversation history |
 
-### Knowledge Graph
-
-| Capability | Detail |
-|-----------|------------|
-| Entity extraction | Persons, orgs, dates, amounts, identifiers — extracted from every document |
-| Cross-doc entity resolution | Same person or org recognized across documents |
-| Entity profiles | Aggregated view of each entity across all documents |
-| Graph retrieval | Combine vector search with entity graph traversal for richer answers |
-
 ### Multimodal & Vision
 
 | Capability | Detail |
