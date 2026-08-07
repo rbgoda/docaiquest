@@ -1,6 +1,6 @@
 [project]
 name = "docaiquest-backend"
-version = "1.0.1"
+version = "1.0.2"
 description = "DocAIQuest API — FastAPI backend for document intelligence"
 requires-python = ">=3.11"
 dependencies = [
