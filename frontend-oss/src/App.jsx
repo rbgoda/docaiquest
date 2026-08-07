@@ -193,6 +193,9 @@ function ChatPanel({ doc, docId, docs, onClose }) {
   const [loading, setLoading] = useState(false);
   const [fileUrl, setFileUrl] = useState("");
   const [previewOpen, setPreviewOpen] = useState(true);
+  const [previewHeight, setPreviewHeight] = useState(260);
+  const [zoom, setZoom] = useState(1.0);
+  const previewRef = useRef(null);
   const bottomRef = useRef(null);
 
   // Load chat history when doc changes
@@ -204,10 +207,38 @@ function ChatPanel({ doc, docId, docs, onClose }) {
       .catch(() => setMessages([]));
   }, [docId]);
 
+  // Reset zoom and height when doc changes
+  useEffect(() => {
+    setZoom(1.0);
+    setPreviewHeight(260);
+  }, [docId]);
+
   // Scroll to bottom on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Drag resize handler for document preview
+  const onResizeStart = useCallback((e) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startH = previewRef.current?.offsetHeight || previewHeight;
+    document.body.style.cursor = "row-resize";
+    document.body.style.userSelect = "none";
+
+    const onMove = (ev) => {
+      const delta = ev.clientY - startY;
+      setPreviewHeight(Math.max(100, Math.min(600, startH + delta)));
+    };
+    const onUp = () => {
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, [previewHeight]);
 
   const send = async (e) => {
     e.preventDefault();
@@ -242,6 +273,13 @@ function ChatPanel({ doc, docId, docs, onClose }) {
       <div className="chat-header">
         <h2>{doc ? doc.name : "Chat"}</h2>
         <div className="chat-header-actions">
+          {fileUrl && previewOpen && (
+            <>
+              <button className="zoom-btn" onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))} title="Zoom out">−</button>
+              <span className="zoom-label">{Math.round(zoom * 100)}%</span>
+              <button className="zoom-btn" onClick={() => setZoom((z) => Math.min(2.0, z + 0.25))} title="Zoom in">+</button>
+            </>
+          )}
           {fileUrl && (
             <button
               className="preview-toggle"
@@ -257,9 +295,31 @@ function ChatPanel({ doc, docId, docs, onClose }) {
 
       {/* Document embed */}
       {fileUrl && (
-        <div className={`doc-preview${previewOpen ? "" : " collapsed"}`}>
-          <iframe src={fileUrl} title="Document preview" />
-        </div>
+        <>
+          <div
+            className={`doc-preview${previewOpen ? "" : " collapsed"}`}
+            ref={previewRef}
+            style={{ height: previewOpen ? previewHeight : 0 }}
+          >
+            <div className="doc-preview-viewport">
+              <iframe
+                src={fileUrl}
+                title="Document preview"
+                style={{
+                  transform: `scale(${zoom})`,
+                  transformOrigin: "top left",
+                  width: `${100 / zoom}%`,
+                  height: `${100 / zoom}%`,
+                }}
+              />
+            </div>
+          </div>
+          {previewOpen && (
+            <div className="preview-resize-handle" onMouseDown={onResizeStart}>
+              <span className="resize-grip" />
+            </div>
+          )}
+        </>
       )}
 
       {/* Messages */}

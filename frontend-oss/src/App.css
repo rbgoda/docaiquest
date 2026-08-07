@@ -232,6 +232,16 @@ a { color: var(--accent); }
 .chat-header-actions {
   display: flex; align-items: center; gap: 8px; flex-shrink: 0;
 }
+.zoom-btn {
+  background: none; border: 1px solid var(--border); border-radius: 4px;
+  font-size: 13px; color: var(--text2); padding: 2px 7px; cursor: pointer;
+  line-height: 1; font-family: monospace;
+}
+.zoom-btn:hover { background: #f3f4f6; color: var(--text); }
+.zoom-label {
+  font-size: 11px; color: var(--text2); min-width: 34px; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
 .preview-toggle {
   background: none; border: 1px solid var(--border); border-radius: 4px;
   font-size: 11px; color: var(--text2); padding: 3px 8px; cursor: pointer;
@@ -249,12 +259,31 @@ a { color: var(--accent); }
   height: 260px; flex-shrink: 0;
   border-bottom: 1px solid var(--border); background: #e5e7eb;
   transition: height 0.2s ease;
+  overflow: hidden;
 }
 .doc-preview.collapsed {
   height: 0; overflow: hidden; border-bottom: none;
 }
+.doc-preview-viewport {
+  width: 100%; height: 100%; overflow: auto;
+}
 .doc-preview iframe {
-  width: 100%; height: 100%; border: none;
+  border: none;
+}
+
+/* Resize handle */
+.preview-resize-handle {
+  height: 6px; flex-shrink: 0;
+  background: var(--border);
+  cursor: row-resize;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.preview-resize-handle:hover { background: #c4c9d0; }
+.resize-grip {
+  width: 32px; height: 3px;
+  background: var(--text2); border-radius: 2px;
+  opacity: 0.4;
 }
 
 /* Messages */
