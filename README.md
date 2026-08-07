@@ -46,7 +46,6 @@ Your own LLM keys, your own server, your data never leaves.
 
 
 <p align="center">
-  <img src="docs/screenshots/02-doc-list.png" width="48%" alt="Document list with upload zone" />
   <img src="docs/screenshots/03-chat-with-doc.png" width="48%" alt="Chat with document preview and citations" />
   <img src="docs/screenshots/04-sidebar-collapsed.png" width="48%" alt="Collapsible sidebar — more room for chat" />
   <img src="docs/screenshots/05-preview-collapsed.png" width="48%" alt="Collapsible document preview — maximize chat area" />
